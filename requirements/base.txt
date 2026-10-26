@@ -9,7 +9,6 @@ django-constance[database]>=4.0,<5
 
 # Seguridad: límite de intentos de ingreso y de publicaciones
 django-axes
-django-ratelimit
 
 # Notificaciones push
 pywebpush>=2.0
