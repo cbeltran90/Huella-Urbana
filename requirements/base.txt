@@ -4,11 +4,11 @@ psycopg[binary]>=3.2,<4
 gunicorn>=23.0
 
 # Backoffice y configuración
-django-unfold
+django-unfold==0.110.0
 django-constance[database]>=4.0,<5
 
 # Seguridad: límite de intentos de ingreso y de publicaciones
-django-axes
+django-axes==8.3.1
 
 # Notificaciones push
 pywebpush>=2.0
