@@ -1,0 +1,20 @@
+services:
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+
+  web:
+    build:
+      args:
+        REQUIREMENTS: dev
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+
+
+  caddy:
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro

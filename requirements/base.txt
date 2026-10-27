@@ -1,0 +1,20 @@
+# Núcleo
+Django>=5.2,<5.3
+psycopg[binary]>=3.2,<4
+gunicorn>=23.0
+
+# Backoffice y configuración
+django-unfold==0.110.0
+django-constance[database]>=4.0,<5
+
+# Seguridad: límite de intentos de ingreso y de publicaciones
+django-axes==8.3.1
+
+# Notificaciones push
+pywebpush>=2.0
+
+# Visión por computadora e imágenes
+onnxruntime>=1.19
+numpy>=1.26
+Pillow>=11.0
+imagehash>=4.3

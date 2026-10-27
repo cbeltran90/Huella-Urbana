@@ -1,0 +1,19 @@
+:80 {
+	encode gzip
+
+
+	request_body {
+		max_size 20MB
+	}
+
+
+	handle /media/* {
+		root * /srv
+		file_server
+	}
+
+
+	handle {
+		reverse_proxy web:8000
+	}
+}
