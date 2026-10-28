@@ -1,4 +1,3 @@
-```gitignore
 # Python
 __pycache__/
 *.py[cod]
@@ -9,13 +8,11 @@ venv/
 .coverage
 htmlcov/
 
-
 # Django
 media/
 staticfiles/
 *.sqlite3
 *.log
-
 
 # Entorno y secretos
 .env
@@ -23,18 +20,14 @@ staticfiles/
 !.env.example
 *.pem
 
-
 # Tailwind CLI y CSS compilado
 bin/
 static/css/app.css
 
-
 # Modelos de IA (pesados; se descargan aparte)
 models/*.onnx
-
 
 # Editor / SO
 .vscode/
 .idea/
 .DS_Store
-```
