@@ -28,6 +28,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), 2)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
     volumes:
       - static:/app/staticfiles
       - media:/app/media
@@ -37,7 +43,9 @@ services:
   caddy:
     image: caddy:2
     restart: unless-stopped
-    depends_on: [web]
+    depends_on:
+      web:
+        condition: service_healthy
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS}
     volumes:
