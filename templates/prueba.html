@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block titulo %}Prueba del stack · Huella Urbana{% endblock %}
+
+{% block contenido %}
+  <h1 class="mb-6 text-2xl font-bold">Prueba del stack frontend</h1>
+
+  <section class="mb-8 rounded-lg border bg-white p-4">
+    <h2 class="mb-2 font-semibold">HTMX</h2>
+    <button class="rounded bg-emerald-600 px-3 py-1 text-white"
+            hx-get="{% url 'core:prueba_saludo' %}"
+            hx-target="#resultado-htmx"
+            hx-swap="innerHTML">
+      Pedir saludo al servidor
+    </button>
+    <p id="resultado-htmx" class="mt-2 text-sm text-stone-600">(sin pedir todavía)</p>
+  </section>
+
+  <section class="mb-8 rounded-lg border bg-white p-4" x-data="{ abierto: false }">
+    <h2 class="mb-2 font-semibold">Alpine.js</h2>
+    <button class="rounded bg-sky-600 px-3 py-1 text-white" @click="abierto = !abierto">
+      Mostrar / ocultar filtro
+    </button>
+    <p x-show="abierto" x-cloak class="mt-2 text-sm">Panel de filtro (estado en el cliente).</p>
+  </section>
+
+  <section class="rounded-lg border bg-white p-4">
+    <h2 class="mb-2 font-semibold">Leaflet + OpenStreetMap + cluster + calor</h2>
+    <div id="mapa" class="h-96 w-full rounded"></div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+{{ mapa_config|json_script:"mapa-config" }}
+<script>
+  const config = JSON.parse(document.getElementById("mapa-config").textContent);
+  const mapa = L.map("mapa").setView([-54.8019, -68.3030], 13);
+  L.tileLayer(config.tiles_url, {
+    maxZoom: 19,
+    attribution: config.atribucion
+  }).addTo(mapa);
+
+  const puntos = [];
+  const grupo = L.markerClusterGroup();
+  for (let i = 0; i < 40; i++) {
+    const lat = -54.8019 + (Math.random() - 0.5) * 0.04;
+    const lng = -68.3030 + (Math.random() - 0.5) * 0.08;
+    puntos.push([lat, lng, 0.6]);
+    grupo.addLayer(L.marker([lat, lng]));
+  }
+  mapa.addLayer(grupo);
+  L.heatLayer(puntos, { radius: 25 }).addTo(mapa);
+</script>
+{% endblock %}

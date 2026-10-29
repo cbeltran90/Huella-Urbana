@@ -74,6 +74,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context.mapa",
             ],
         },
     },
@@ -186,3 +187,16 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+# --- Mapas ---
+MAPA_TILES_URL = os.environ.get(
+    "MAPA_TILES_URL", "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+)
+MAPA_TILES_ATRIBUCION = os.environ.get(
+    "MAPA_TILES_ATRIBUCION",
+    '&copy; Colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+)
+
+# La política de uso de OpenStreetMap exige que el navegador envíe el Referer.
+# El valor por defecto de Django ("same-origin") no lo manda a otros dominios.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"

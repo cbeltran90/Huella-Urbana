@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Dónde buscar clases utilitarias (rutas relativas a este archivo) */
+@source "../../templates";
+@source "../../apps";
+
+/* Alpine: oculta elementos hasta que se inicializa */
+[x-cloak] {
+  display: none !important;
+}
