@@ -128,10 +128,8 @@ STORAGES = {
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 
-# --- Correo (solo confirmación de registro, recuperación de contraseña y cambio de correo; RF1.2) ---
-EMAIL_BACKEND = os.environ.get(
-    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
-)
+# --- Correo (solo cuentas: confirmación, recuperación y cambio de correo; RF1.2) ---
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
@@ -154,11 +152,23 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_CONFIG = {
     # Valores del documento unificado v4:
-    "DIAS_AUSENCIA_RESPONSABLE": (30, "Días sin responsable, con alguien a cargo, antes de pasar a adopción (CU-52)"),
-    "DIAS_AVISO_VENCIMIENTO": (10, "Días antes del fin de un tránsito para avisar al hogar (CU-57)"),
-    "DIAS_PUBLICAR_VENCIMIENTO": (5, "Días antes del fin de un tránsito para publicar el animal en adopción (CU-57)"),
+    "DIAS_AUSENCIA_RESPONSABLE": (
+        30,
+        "Días sin responsable, con alguien a cargo, antes de pasar a adopción (CU-52)",
+    ),
+    "DIAS_AVISO_VENCIMIENTO": (
+        10,
+        "Días antes del fin de un tránsito para avisar al hogar (CU-57)",
+    ),
+    "DIAS_PUBLICAR_VENCIMIENTO": (
+        5,
+        "Días antes del fin de un tránsito para publicar el animal en adopción (CU-57)",
+    ),
     "RADIO_DOMICILIO_METROS": (150, "Radio de desplazamiento del punto de un domicilio (RNF3)"),
-    "DURACION_MINIMA_TRANSITO_DIAS": (7, "Duración máxima mínima que puede declarar un hogar de tránsito (CU-06)"),
+    "DURACION_MINIMA_TRANSITO_DIAS": (
+        7,
+        "Duración máxima mínima que puede declarar un hogar de tránsito (CU-06)",
+    ),
     "DIAS_PRIMERA_SUSPENSION": (7, "Días de la primera suspensión de una cuenta (CU-59)"),
     # Por definir: el documento los nombra pero no da el valor (el de abajo es provisorio):
     "MAX_PUBLICACIONES_HORA": (10, "Publicaciones por hora y por usuario (RNF15)"),
@@ -177,9 +187,7 @@ VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
 VAPID_CLAIM_EMAIL = os.environ.get("VAPID_CLAIM_EMAIL", "admin@localhost")
 
 # --- Visión (Fase 7) ---
-VISION_MODEL_PATH = BASE_DIR / "models" / os.environ.get(
-    "VISION_MODEL_FILE", "mobilenetv2-12.onnx"
-)
+VISION_MODEL_PATH = BASE_DIR / "models" / os.environ.get("VISION_MODEL_FILE", "mobilenetv2-12.onnx")
 
 LOGGING = {
     "version": 1,
@@ -189,9 +197,7 @@ LOGGING = {
 }
 
 # --- Mapas ---
-MAPA_TILES_URL = os.environ.get(
-    "MAPA_TILES_URL", "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-)
+MAPA_TILES_URL = os.environ.get("MAPA_TILES_URL", "https://tile.openstreetmap.org/{z}/{x}/{y}.png")
 MAPA_TILES_ATRIBUCION = os.environ.get(
     "MAPA_TILES_ATRIBUCION",
     '&copy; Colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',

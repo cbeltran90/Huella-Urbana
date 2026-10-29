@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff djlint
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: djlint templates apps --check
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: huella
+          POSTGRES_USER: huella
+          POSTGRES_PASSWORD: huella-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U huella -d huella"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: clave-solo-para-ci
+      DJANGO_DEBUG: "1"
+      POSTGRES_DB: huella
+      POSTGRES_USER: huella
+      POSTGRES_PASSWORD: huella-ci
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+      - name: Librerías de sistema para GeoDjango
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev libgeos-dev libproj-dev
+      - run: pip install -r requirements/dev.txt
+      - run: pytest --create-db
