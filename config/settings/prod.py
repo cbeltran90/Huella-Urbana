@@ -13,7 +13,5 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 # Nombres con hash: permite el "immutable" de 1 año que configura Caddy en /static
 STORAGES = {
     **STORAGES,  # noqa: F405
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
-    },
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"},
 }
