@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titulo %}Huella Urbana{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/markercluster/MarkerCluster.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/markercluster/MarkerCluster.Default.css' %}">
+    <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
+    <script src="{% static 'vendor/alpine/alpine.min.js' %}" defer></script>
+    <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+    <script src="{% static 'vendor/markercluster/leaflet.markercluster.js' %}"></script>
+    <script src="{% static 'vendor/leaflet-heat/leaflet-heat.js' %}"></script>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="min-h-screen bg-stone-50 text-stone-900"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <header class="border-b bg-white">
+      <nav class="mx-auto flex max-w-5xl items-center justify-between p-4">
+        <a href="{% url 'core:inicio' %}" class="text-lg font-semibold">Huella Urbana</a>
+        {% block nav %}{% endblock %}
+      </nav>
+    </header>
+    <main class="mx-auto max-w-5xl p-4">
+      {% block contenido %}{% endblock %}
+    </main>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>
