@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install ruff djlint
+      - run: pip install -r requirements/lint.txt
       - run: ruff check .
       - run: ruff format --check .
       - run: djlint templates apps --check
