@@ -54,4 +54,5 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev libgeos-dev libproj-dev
       - run: pip install -r requirements/dev.txt
+      - run: python manage.py makemigrations --check --dry-run
       - run: pytest --create-db
