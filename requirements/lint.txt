@@ -1,0 +1,4 @@
+# Herramientas de calidad: única fuente de versiones para Docker y CI.
+# Si se cambia una versión, actualizá también `rev` en .pre-commit-config.yaml.
+ruff==0.17.3
+djlint==1.47.1
