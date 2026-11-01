@@ -3,16 +3,18 @@
 import logging
 
 from django.core import signing
+from django.core.cache import caches
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
 
-from .models import Usuario
+from .models import EstadoCuenta, Usuario, normalizar_email
 
 logger = logging.getLogger(__name__)
 
 SAL_CONFIRMACION = "cuentas.confirmar-correo"
 DIAS_VIGENCIA_ENLACE = 1
+ESPERA_REENVIO_SEGUNDOS = 5 * 60
 
 
 def correo_con_suspension_permanente(email):
@@ -59,3 +61,20 @@ def enviar_correo_confirmacion(usuario, request):
         logger.exception("No se pudo enviar el correo de confirmación (usuario %s)", usuario.pk)
         return False
     return True
+
+
+def reenviar_confirmacion(email, request):
+    """Reenvía el enlace a una cuenta pendiente (CU-01 5C).
+
+    No devuelve nada a propósito: la vista responde igual exista o no la cuenta.
+    """
+    usuario = Usuario.objects.filter(
+        email=normalizar_email(email), estado_cuenta=EstadoCuenta.PENDIENTE
+    ).first()
+    if usuario is None:
+        return
+    if not caches["reenvios"].add(
+        f"reenvio-confirmacion:{usuario.pk}", True, ESPERA_REENVIO_SEGUNDOS
+    ):
+        return
+    enviar_correo_confirmacion(usuario, request)

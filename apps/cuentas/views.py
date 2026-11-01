@@ -2,7 +2,7 @@ from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 
 from . import servicios
-from .forms import RegistroForm
+from .forms import ReenviarConfirmacionForm, RegistroForm
 from .models import EstadoCuenta
 
 MENSAJE_ERROR_GENERAL = "Error al crear cuenta. Revisar nombre de usuario y correo."
@@ -40,3 +40,18 @@ def confirmar(request, token):
         usuario.estado_cuenta = EstadoCuenta.ACTIVA
         usuario.save(update_fields=["estado_cuenta"])
     return render(request, "cuentas/confirmar_listo.html")
+
+
+def reenviar_confirmacion(request):
+    if request.method == "POST":
+        form = ReenviarConfirmacionForm(request.POST)
+        if form.is_valid():
+            servicios.reenviar_confirmacion(form.cleaned_data["email"], request)
+            return redirect("cuentas:reenvio_listo")
+    else:
+        form = ReenviarConfirmacionForm()
+    return render(request, "cuentas/reenviar.html", {"form": form})
+
+
+def reenvio_listo(request):
+    return render(request, "cuentas/reenvio_listo.html")

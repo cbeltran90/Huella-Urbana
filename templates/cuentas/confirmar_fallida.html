@@ -4,5 +4,8 @@
   <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
     <h1 class="text-2xl font-bold">El enlace no es válido</h1>
     <p class="mt-2">El enlace está dañado o ya venció.</p>
+    <p class="mt-4 text-sm">
+      <a href="{% url 'cuentas:reenviar' %}" class="underline">Pedir un enlace nuevo</a>
+    </p>
   </section>
 {% endblock %}
