@@ -54,7 +54,7 @@ def test_estados_con_los_que_puede_nacer_una_ficha(estado, esperado):
 @pytest.mark.django_db
 def test_cambios_se_guardan_junto_con_el_estado(django_user_model):
     adoptante = django_user_model.objects.create_user(
-        nombre_usuario="ana", email="ana@ejemplo.com", password="clave-de-prueba"
+        "ana", "ana@ejemplo.com", password="clave-de-prueba"
     )
     ficha = baker.make(FichaAnimal, estado=Estado.EN_ADOPCION, responsable=None)
 
