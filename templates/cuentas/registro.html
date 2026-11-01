@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block titulo %}Crear cuenta · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6"
+           x-data="{ sinConexion: !navigator.onLine }"
+           @online.window="sinConexion = false"
+           @offline.window="sinConexion = true">
+    <h1 class="text-2xl font-bold">Crear cuenta</h1>
+    <p class="mt-1 text-sm text-stone-600">Completá tus datos para registrarte.</p>
+    <p x-show="sinConexion"
+       x-cloak
+       role="alert"
+       class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+      Sin conexión a internet, conéctese a una red para registrarse
+    </p>
+    <form method="post" novalidate class="mt-4 space-y-4">
+      {% csrf_token %}
+      {% for error in form.non_field_errors %}
+        <p role="alert"
+           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+      {% endfor %}
+      <div>
+        <label for="id_nombre_usuario" class="block text-sm font-medium">Nombre de usuario</label>
+        <input type="text"
+               name="nombre_usuario"
+               id="id_nombre_usuario"
+               value="{{ form.nombre_usuario.value|default_if_none:'' }}"
+               maxlength="150"
+               autocomplete="nickname"
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.nombre_usuario.errors %}
+      </div>
+      <div>
+        <label for="id_email" class="block text-sm font-medium">Correo electrónico</label>
+        <input type="email"
+               name="email"
+               id="id_email"
+               value="{{ form.email.value|default_if_none:'' }}"
+               autocomplete="email"
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.email.errors %}
+      </div>
+      <div>
+        <label for="id_password1" class="block text-sm font-medium">Contraseña</label>
+        <p class="text-sm text-stone-600">Mínimo 10 caracteres.</p>
+        <input type="password"
+               name="password1"
+               id="id_password1"
+               autocomplete="new-password"
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.password1.errors %}
+      </div>
+      <div>
+        <label for="id_password2" class="block text-sm font-medium">Confirmar contraseña</label>
+        <input type="password"
+               name="password2"
+               id="id_password2"
+               autocomplete="new-password"
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.password2.errors %}
+      </div>
+      <div>
+        <label class="flex min-h-11 items-start gap-3 text-sm">
+          <input type="checkbox"
+                 name="acepta_condiciones"
+                 id="id_acepta_condiciones"
+                 required
+                 class="mt-1 size-5">
+          <span>{{ form.fields.acepta_condiciones.label }}</span>
+        </label>
+        {% include "cuentas/_errores.html" with errores=form.acepta_condiciones.errors %}
+      </div>
+      <button type="submit"
+              :disabled="sinConexion"
+              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+        Crear cuenta
+      </button>
+    </form>
+  </section>
+{% endblock %}
