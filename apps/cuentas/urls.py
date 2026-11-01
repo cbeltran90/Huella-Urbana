@@ -7,4 +7,5 @@ app_name = "cuentas"
 urlpatterns = [
     path("registro/", views.registro, name="registro"),
     path("registro/listo/", views.registro_listo, name="registro_listo"),
+    path("confirmar/<str:token>/", views.confirmar, name="confirmar"),
 ]
