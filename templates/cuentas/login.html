@@ -19,6 +19,11 @@
         <p role="alert"
            class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
       {% endfor %}
+      {% if form.cuenta_pendiente %}
+        <p class="text-sm">
+          <a href="{% url 'cuentas:reenviar' %}" class="underline">Pedir un enlace nuevo</a>
+        </p>
+      {% endif %}
       <div>
         <label for="id_username" class="block text-sm font-medium">Correo electrónico</label>
         <input type="email"
