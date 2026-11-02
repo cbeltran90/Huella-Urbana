@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Dar de baja · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Dar de baja la ficha</h1>
+    <p class="mt-2 text-sm">
+      Vas a eliminar la ficha de <strong>{{ ficha.nombre|default:"este animal" }}</strong>. Esta acción no se puede deshacer.
+    </p>
+    <form method="post" class="mt-4 flex gap-3">
+      {% csrf_token %}
+      <button type="submit"
+              class="min-h-11 flex-1 rounded bg-red-700 px-4 py-2 font-semibold text-white">Sí, dar de baja</button>
+      <a href="{% url 'fichas:detalle' ficha.pk %}"
+         class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar</a>
+    </form>
+  </section>
+{% endblock %}

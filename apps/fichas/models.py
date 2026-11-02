@@ -11,10 +11,19 @@ class FichaAnimal(models.Model):
         EN_ADOPCION = "en_adopcion", "En adopción"
         EN_TRANSITO = "en_transito", "En tránsito"
 
+    class Especie(models.TextChoices):
+        PERRO = "perro", "Perro"
+        GATO = "gato", "Gato"
+
+    class Tamano(models.TextChoices):  # ordenados: sirve para comparar con tamano_maximo
+        PEQUENO = "pequeno", "Pequeño"
+        MEDIANO = "mediano", "Mediano"
+        GRANDE = "grande", "Grande"
+
     nombre = models.CharField(max_length=100, blank=True)  # opcional
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.REGISTRADO)
-    especie = models.CharField(max_length=400)
-    tamano = models.CharField("tamaño", max_length=40, blank=True)
+    especie = models.CharField(max_length=20, choices=Especie.choices)
+    tamano = models.CharField("tamaño", max_length=20, choices=Tamano.choices, blank=True)
     edad_estimada = models.CharField(max_length=40, blank=True)
     color = models.CharField(max_length=60, blank=True)
     raza = models.CharField(max_length=80, blank=True)
@@ -22,11 +31,12 @@ class FichaAnimal(models.Model):
     desparasitado = models.BooleanField(default=False)
     vacunado = models.BooleanField(default=False)
     chip = models.CharField(max_length=40, blank=True)
+    temperamento = models.CharField(max_length=120, blank=True)
     requiere_medicacion = models.BooleanField(default=False)  # se cruza con acepta_medicacion
     problemas_conducta = models.BooleanField(default=False)  # se cruza con acepta_conducta
     compatible_ninos = models.BooleanField(default=False)
     compatible_animales = models.BooleanField(default=False)
-    es_privada = models.BooleanField(default=False)  # alta preventiva
+    es_privada = models.BooleanField(default=True)  # alta preventiva
 
     responsable = models.ForeignKey(  # nulo si no tiene o no es usuario
         settings.AUTH_USER_MODEL,
@@ -42,7 +52,7 @@ class FichaAnimal(models.Model):
         on_delete=models.SET_NULL,
         related_name="fichas_a_cargo",
     )
-    cuidador_contado = models.CharField(max_length=100, blank=True)  # si no es usuario
+    cuidador_contacto = models.CharField(max_length=100, blank=True)  # si no es usuario
 
     # Incio del plazo de ausencia: solo corre si hay cuidador.
     sin_responsable_desde = models.DateField(null=True, blank=True)
