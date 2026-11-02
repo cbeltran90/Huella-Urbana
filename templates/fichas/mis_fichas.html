@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Mis fichas · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-2xl">
+    <div class="flex items-center justify-between gap-4">
+      <h1 class="text-2xl font-bold">Mis fichas</h1>
+      <a href="{% url 'fichas:nueva' %}"
+         class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+        Nueva ficha
+      </a>
+    </div>
+    {% if fichas %}
+      <ul class="mt-4 space-y-3">
+        {% for ficha in fichas %}
+          {% include "fichas/_ficha_tarjeta.html" %}
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="mt-6 rounded-lg border bg-white p-6 text-center text-stone-600">
+        Todavía no tenés fichas. Creá la primera para registrar a un animal.
+      </p>
+    {% endif %}
+  </section>
+{% endblock %}

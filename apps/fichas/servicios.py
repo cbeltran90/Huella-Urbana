@@ -57,3 +57,48 @@ def cambiar_estado(ficha, nuevo_estado, *, actor, cambios=None):
         actor if actor is not None else "sistema",
     )
     return ficha
+
+
+# Campos que el usuario carga y edita en la ficha.
+CAMPOS_EDITABLES = (
+    "nombre",
+    "especie",
+    "tamano",
+    "edad_estimada",
+    "color",
+    "raza",
+    "castrado",
+    "desparasitado",
+    "vacunado",
+    "chip",
+    "temperamento",
+    "requiere_medicacion",
+    "problemas_conducta",
+    "compatible_ninos",
+    "compatible_animales",
+)
+
+
+def crear_ficha(usuario, datos):
+    """Alta preventiva: ficha registrada, privada y con el usuario como responsable."""
+    datos = {campo: datos[campo] for campo in CAMPOS_EDITABLES if campo in datos}
+    return FichaAnimal.objects.create(
+        responsable=usuario,
+        estado=FichaAnimal.Estado.REGISTRADO,
+        es_privada=True,
+        **datos,
+    )
+
+
+def editar_ficha(ficha, datos):
+    """Edición: solo se tocan los campos de CAMPOS_EDITABLES."""
+    campos = [campo for campo in CAMPOS_EDITABLES if campo in datos]
+    for campo in campos:
+        setattr(ficha, campo, datos[campo])
+    ficha.save(update_fields=campos)
+    return ficha
+
+
+def dar_de_baja(ficha):
+    """Borra la ficha. Quien llama ya comprobó "permisos.puede_dar_de_baja"."""
+    ficha.delete()

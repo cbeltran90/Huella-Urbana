@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block titulo %}{{ ficha.nombre|default:"Ficha" }} · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">{{ ficha.nombre|default:"Sin nombre" }}</h1>
+    <p class="mt-1 text-sm text-stone-600">
+      {{ ficha.get_especie_display }} · {{ ficha.get_estado_display }}
+      {% if ficha.es_privada %}· Privada{% endif %}
+    </p>
+    <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+      {% if ficha.tamano %}
+        <dt class="text-stone-600">Tamaño</dt>
+        <dd>
+          {{ ficha.get_tamano_display }}
+        </dd>
+      {% endif %}
+      {% if ficha.edad_estimada %}
+        <dt class="text-stone-600">Edad estimada</dt>
+        <dd>
+          {{ ficha.edad_estimada }} años
+        </dd>
+      {% endif %}
+      {% if ficha.color %}
+        <dt class="text-stone-600">Color</dt>
+        <dd>
+          {{ ficha.color }}
+        </dd>
+      {% endif %}
+      {% if ficha.raza %}
+        <dt class="text-stone-600">Raza</dt>
+        <dd>
+          {{ ficha.raza }}
+        </dd>
+      {% endif %}
+      {% if ficha.temperamento %}
+        <dt class="text-stone-600">Temperamento</dt>
+        <dd>
+          {{ ficha.temperamento }}
+        </dd>
+      {% endif %}
+      {% if ficha.chip %}
+        <dt class="text-stone-600">Chip</dt>
+        <dd>
+          {{ ficha.chip }}
+        </dd>
+      {% endif %}
+      <dt class="text-stone-600">Castrado</dt>
+      <dd>
+        {{ ficha.castrado|yesno:"Sí,No" }}
+      </dd>
+      <dt class="text-stone-600">Desparasitado</dt>
+      <dd>
+        {{ ficha.desparasitado|yesno:"Sí,No" }}
+      </dd>
+      <dt class="text-stone-600">Vacunado</dt>
+      <dd>
+        {{ ficha.vacunado|yesno:"Sí,No" }}
+      </dd>
+      <dt class="text-stone-600">Requiere medicación</dt>
+      <dd>
+        {{ ficha.requiere_medicacion|yesno:"Sí,No" }}
+      </dd>
+      <dt class="text-stone-600">Problemas de conducta</dt>
+      <dd>
+        {{ ficha.problemas_conducta|yesno:"Sí,No" }}
+      </dd>
+      <dt class="text-stone-600">Compatible con niños</dt>
+      <dd>
+        {{ ficha.compatible_ninos|yesno:"Sí,No" }}
+      </dd>
+      <dt class="text-stone-600">Compatible con animales</dt>
+      <dd>
+        {{ ficha.compatible_animales|yesno:"Sí,No" }}
+      </dd>
+    </dl>
+    <div class="mt-6 flex flex-wrap gap-3">
+      {% if puede_editar %}
+        <a href="{% url 'fichas:editar' ficha.pk %}"
+           class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+          Editar
+        </a>
+      {% endif %}
+      {% if puede_baja %}
+        <a href="{% url 'fichas:baja' ficha.pk %}"
+           class="inline-flex min-h-11 items-center rounded border border-red-300 px-4 py-2 text-red-800">
+          Dar de baja
+        </a>
+      {% endif %}
+      <a href="{% url 'fichas:mis_fichas' %}"
+         class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Volver</a>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,10 @@
+<li class="rounded-lg border bg-white p-4">
+  <a href="{% url 'fichas:detalle' ficha.pk %}" class="block min-h-11">
+    <span class="text-lg font-semibold">{{ ficha.nombre|default:"Sin nombre" }}</span>
+    <span class="block text-sm text-stone-600">
+      {{ ficha.get_especie_display }}
+      {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
+      · {{ ficha.get_estado_display }}
+    </span>
+  </a>
+</li>

@@ -1,1 +1,72 @@
-# Create your views here.
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.db.models import Q
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
+
+from . import permisos, servicios
+from .forms import FichaForm
+from .models import FichaAnimal
+
+
+def _ficha_visible(request, pk):
+    """La ficha, o 404 si no existe o el usuario no puede verla (no se revela que existe)."""
+    ficha = get_object_or_404(FichaAnimal, pk=pk)
+    if not permisos.puede_ver(request.user, ficha):
+        raise Http404
+    return ficha
+
+
+@login_required
+def mis_fichas(request):
+    fichas = FichaAnimal.objects.filter(Q(responsable=request.user) | Q(cuidador=request.user))
+    return render(request, "fichas/mis_fichas.html", {"fichas": fichas})
+
+
+@login_required
+def ficha_nueva(request):
+    if request.method == "POST":
+        form = FichaForm(request.POST)
+        if form.is_valid():
+            servicios.crear_ficha(request.user, form.cleaned_data)
+            return redirect("fichas:mis_fichas")
+    else:
+        form = FichaForm()
+    return render(request, "fichas/ficha_form.html", {"form": form, "ficha": None})
+
+
+@login_required
+def ficha_detalle(request, pk):
+    ficha = _ficha_visible(request, pk)
+    contexto = {
+        "ficha": ficha,
+        "puede_editar": permisos.puede_editar(request.user, ficha),
+        "puede_baja": permisos.puede_dar_de_baja(request.user, ficha),
+    }
+    return render(request, "fichas/ficha_detalle.html", contexto)
+
+
+@login_required
+def ficha_editar(request, pk):
+    ficha = _ficha_visible(request, pk)
+    if not permisos.puede_editar(request.user, ficha):
+        raise PermissionDenied
+    if request.method == "POST":
+        form = FichaForm(request.POST, instance=ficha)
+        if form.is_valid():
+            servicios.editar_ficha(ficha, form.cleaned_data)
+            return redirect("fichas:detalle", pk=ficha.pk)
+    else:
+        form = FichaForm(instance=ficha)
+    return render(request, "fichas/ficha_form.html", {"form": form, "ficha": ficha})
+
+
+@login_required
+def ficha_baja(request, pk):
+    ficha = _ficha_visible(request, pk)
+    if not permisos.puede_dar_de_baja(request.user, ficha):
+        raise PermissionDenied
+    if request.method == "POST":
+        servicios.dar_de_baja(ficha)
+        return redirect("fichas:mis_fichas")
+    return render(request, "fichas/ficha_confirmar_baja.html", {"ficha": ficha})
