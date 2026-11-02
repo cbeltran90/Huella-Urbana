@@ -104,7 +104,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
-LOGIN_URL = "/admin/login/"
+
+LOGIN_URL = "/cuentas/ingresar/"  # ruta literal: los tests de fichas la comparan como texto
+LOGIN_REDIRECT_URL = "core:inicio"
+LOGOUT_REDIRECT_URL = "core:inicio"
 
 # django-axes tiene que ir primero en la lista de backends
 AUTHENTICATION_BACKENDS = [

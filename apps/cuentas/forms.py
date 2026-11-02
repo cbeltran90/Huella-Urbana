@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -16,6 +17,7 @@ MENSAJE_NOMBRE_OFENSIVO = "Nombre ofensivo"
 MENSAJE_NOMBRE_USADO = "Nombre ya usado"
 MENSAJE_CORREO_USADO = "El correo electrónico ingresado ya se encuentra registrado"
 MENSAJE_CORREO_SUSPENDIDO = "Correo con suspensión permanente"
+MENSAJE_LOGIN_INVALIDO = "Correo o contraseña incorrectos"
 
 
 class RegistroForm(forms.Form):
@@ -93,3 +95,15 @@ class ReenviarConfirmacionForm(forms.Form):
 
     def clean_email(self):
         return normalizar_email(self.cleaned_data["email"])
+
+
+class InicioSesionForm(AuthenticationForm):
+    """Inicio de sesión con el correo (CU-02).
+
+    El campo se sigue llamando "username" porque así lo espera Django, pero ahí va el correo.
+    """
+
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        "invalid_login": MENSAJE_LOGIN_INVALIDO,
+    }
