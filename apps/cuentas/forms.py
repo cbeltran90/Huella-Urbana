@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -6,9 +7,8 @@ from django.utils import timezone
 from apps.core.filtros import NoOfensivo
 
 from . import servicios
-from .models import Usuario, normalizar_email
+from .models import EstadoCuenta, Usuario, normalizar_email
 
-# Textos exactos de las extensiones de CU-01.
 MENSAJE_CONDICIONES = "Debe aceptar las condiciones de uso y la política de datos"
 MENSAJE_CLAVE_CORTA = "La contraseña debe tener al menos 10 caracteres"
 MENSAJE_CLAVES_DISTINTAS = "Las contraseñas no coinciden"
@@ -16,6 +16,10 @@ MENSAJE_NOMBRE_OFENSIVO = "Nombre ofensivo"
 MENSAJE_NOMBRE_USADO = "Nombre ya usado"
 MENSAJE_CORREO_USADO = "El correo electrónico ingresado ya se encuentra registrado"
 MENSAJE_CORREO_SUSPENDIDO = "Correo con suspensión permanente"
+MENSAJE_LOGIN_INVALIDO = "Correo o contraseña incorrectos"
+MENSAJE_CUENTA_PENDIENTE = (
+    "Tu cuenta todavía no está confirmada. Abrí el enlace que te enviamos por correo."
+)
 
 
 class RegistroForm(forms.Form):
@@ -93,3 +97,36 @@ class ReenviarConfirmacionForm(forms.Form):
 
     def clean_email(self):
         return normalizar_email(self.cleaned_data["email"])
+
+
+class InicioSesionForm(AuthenticationForm):
+    """Inicio de sesión con el correo.
+    El campo se sigue llamando "username" porque así lo espera Django, pero ahí va el correo.
+    """
+
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        "invalid_login": MENSAJE_LOGIN_INVALIDO,
+    }
+    # Pasa a True cuando la clave es correcta pero la cuenta sigue sin confirmar.
+    cuenta_pendiente = False
+
+    def clean(self):
+        try:
+            return super().clean()
+        except ValidationError:
+            if not self._es_cuenta_pendiente():
+                raise
+            self.cuenta_pendiente = True
+            raise ValidationError(MENSAJE_CUENTA_PENDIENTE, code="cuenta_pendiente") from None
+
+    def _es_cuenta_pendiente(self):
+        """True solo si la clave es la correcta: así no se revela qué correos existen."""
+        email = self.cleaned_data.get("username")
+        clave = self.cleaned_data.get("password")
+        if not email or not clave:
+            return False
+        usuario = Usuario.objects.filter(
+            email=normalizar_email(email), estado_cuenta=EstadoCuenta.PENDIENTE
+        ).first()
+        return usuario is not None and usuario.check_password(clave)

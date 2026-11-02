@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block titulo %}Ingresar · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6"
+           x-data="{ sinConexion: !navigator.onLine }"
+           @online.window="sinConexion = false"
+           @offline.window="sinConexion = true">
+    <h1 class="text-2xl font-bold">Ingresar</h1>
+    <p x-show="sinConexion"
+       x-cloak
+       role="alert"
+       class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+      Sin conexión a internet, conéctese a una red para iniciar sesión
+    </p>
+    <form method="post" novalidate class="mt-4 space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {% for error in form.non_field_errors %}
+        <p role="alert"
+           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+      {% endfor %}
+      {% if form.cuenta_pendiente %}
+        <p class="text-sm">
+          <a href="{% url 'cuentas:reenviar' %}" class="underline">Pedir un enlace nuevo</a>
+        </p>
+      {% endif %}
+      <div>
+        <label for="id_username" class="block text-sm font-medium">Correo electrónico</label>
+        <input type="email"
+               name="username"
+               id="id_username"
+               value="{{ form.username.value|default_if_none:'' }}"
+               autocomplete="email"
+               autofocus
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.username.errors %}
+      </div>
+      <div>
+        <label for="id_password" class="block text-sm font-medium">Contraseña</label>
+        <input type="password"
+               name="password"
+               id="id_password"
+               autocomplete="current-password"
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.password.errors %}
+      </div>
+      <button type="submit"
+              :disabled="sinConexion"
+              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+        Ingresar
+      </button>
+    </form>
+    <p class="mt-4 text-sm text-stone-600">
+      ¿No tenés cuenta? <a href="{% url 'cuentas:registro' %}" class="underline">Crear cuenta</a>
+    </p>
+  </section>
+{% endblock %}

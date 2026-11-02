@@ -1,0 +1,12 @@
+<div class="flex items-center gap-3 text-sm">
+  {% if user.is_authenticated %}
+    <span>{{ user.nombre_usuario }}</span>
+    <form method="post" action="{% url 'cuentas:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="min-h-11 px-2 underline">Cerrar sesión</button>
+    </form>
+  {% else %}
+    <a href="{% url 'cuentas:login' %}" class="underline">Ingresar</a>
+    <a href="{% url 'cuentas:registro' %}" class="underline">Crear cuenta</a>
+  {% endif %}
+</div>
