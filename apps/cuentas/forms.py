@@ -19,7 +19,7 @@ MENSAJE_CORREO_SUSPENDIDO = "Correo con suspensión permanente"
 
 
 class RegistroForm(forms.Form):
-    """Registro de un visitante (CU-01). Crea la cuenta como pendiente."""
+    """Registro de un visitante. Crea la cuenta como pendiente."""
 
     nombre_usuario = forms.CharField(
         label="Nombre de usuario",
@@ -86,3 +86,10 @@ class RegistroForm(forms.Form):
             datos["password1"],
             acepto_condiciones_at=timezone.now(),
         )
+
+
+class ReenviarConfirmacionForm(forms.Form):
+    email = forms.EmailField(label="Correo electrónico")
+
+    def clean_email(self):
+        return normalizar_email(self.cleaned_data["email"])

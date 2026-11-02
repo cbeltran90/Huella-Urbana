@@ -140,8 +140,15 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-responder@localhost")
 
-# --- Caché: ninguna (decisión del stack) ---
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+# --- Caché: ninguna (decisión del stack) / solo para reenvios, sino no se pueden controlar---
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    # Guarda el freno de reenvíos de correo (cuentas). "default" no sirve: no guarda nada.
+    "reenvios": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "reenvios",
+    },
+}
 
 # --- Seguridad: límite de intentos de ingreso (django-axes, RNF15) ---
 AXES_FAILURE_LIMIT = 5

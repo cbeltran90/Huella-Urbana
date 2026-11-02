@@ -1,0 +1,7 @@
+{% autoescape off %}Hola {{ usuario.nombre_usuario }}:
+
+Para activar tu cuenta en Huella Urbana abrí este enlace:
+{{ enlace }}
+
+El enlace vale {{ dias }} días. Si no creaste una cuenta, ignorá este mensaje.
+{% endautoescape %}
