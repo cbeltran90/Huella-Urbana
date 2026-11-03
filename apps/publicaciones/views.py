@@ -6,7 +6,7 @@ from apps.core.limites import limite_publicaciones
 from apps.imagenes.procesamiento import ImagenInvalida
 
 from . import servicios, ubicacion
-from .forms import ExtravioForm
+from .forms import ExtravioForm, HallazgoForm
 from .models import Publicacion
 
 
@@ -57,3 +57,31 @@ def detalle(request, pk):
     return render(
         request, "publicaciones/detalle.html", {"publicacion": publicacion, "fotos": fotos}
     )
+
+
+@login_required
+@limite_publicaciones
+def publicar_hallazgo(request):
+    if request.method == "POST":
+        form = HallazgoForm(request.POST, request.FILES)
+        if form.is_valid():
+            datos = form.cleaned_data
+            punto = Point(datos["longitud"], datos["latitud"], srid=4326)
+            try:
+                publicacion = servicios.publicar_hallazgo(
+                    request.user,
+                    animal=form.datos_animal(),
+                    archivo=datos["foto"],
+                    punto=punto,
+                    estado_aparente=datos["estado_aparente"],
+                    descripcion=datos["descripcion"],
+                    tiene_consigo=datos["tiene_consigo"],
+                )
+            except ImagenInvalida as error:
+                form.add_error("foto", str(error))
+            else:
+                return redirect("publicaciones:detalle", pk=publicacion.pk)
+    else:
+        form = HallazgoForm()
+    contexto = {"form": form, "paso_inicial": form.paso_con_error() if form.is_bound else 1}
+    return render(request, "publicaciones/publicar_hallazgo.html", contexto)

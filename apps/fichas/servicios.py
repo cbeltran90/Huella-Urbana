@@ -1,6 +1,7 @@
 import logging
 
 from django.db import transaction
+from django.utils import timezone
 
 from .models import FichaAnimal
 from .transiciones import TransicionInvalida, transicion_permitida
@@ -102,3 +103,20 @@ def editar_ficha(ficha, datos):
 def dar_de_baja(ficha):
     """Borra la ficha. Quien llama ya comprobó "permisos.puede_dar_de_baja"."""
     ficha.delete()
+
+
+def crear_ficha_sin_responsable(datos, *, cuidador=None):
+    """Hallazgo: ficha nueva en "sin responsable", privada.
+
+    Si alguien tiene al animal consigo, queda a su cargo y empieza a correr el plazo de
+    ausencia. Si no, nadie lo tiene a cargo y el plazo no corre.
+    """
+    datos = {campo: datos[campo] for campo in CAMPOS_EDITABLES if campo in datos}
+    return FichaAnimal.objects.create(
+        estado=FichaAnimal.Estado.SIN_RESPONSABLE,
+        responsable=None,
+        cuidador=cuidador,
+        sin_responsable_desde=timezone.localdate() if cuidador else None,
+        es_privada=True,
+        **datos,
+    )
