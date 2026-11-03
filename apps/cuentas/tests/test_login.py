@@ -135,3 +135,9 @@ def test_al_confirmar_la_cuenta_ya_se_puede_ingresar(client):
     usuario.save(update_fields=["estado_cuenta"])
     assert entrar(client, "nueva@example.com").status_code == 302
     assert hay_sesion(client)
+
+
+@pytest.mark.django_db
+def test_el_ingreso_ofrece_recuperar_la_contrasena(client):
+    respuesta = client.get(reverse("cuentas:login"))
+    assert reverse("cuentas:recuperar") in respuesta.content.decode()
