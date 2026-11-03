@@ -31,13 +31,8 @@ def test_se_guardan_el_punto_exacto_y_el_desplazado(ana):
 
 
 @pytest.mark.django_db
-def test_la_direccion_es_opcional(ana):
-    assert crear(ana).direccion == ""
-
-
-@pytest.mark.django_db
 def test_se_accede_desde_el_usuario(ana):
-    domicilio = crear(ana, direccion="Calle de prueba 123")
+    domicilio = crear(ana)
     assert ana.domicilio == domicilio
 
 

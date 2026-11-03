@@ -194,9 +194,7 @@ class Domicilio(models.Model):
     usuario = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="domicilio"
     )
-    # Dato personal de uso interno: no se publica nunca. Opcional porque otros módulos
-    # guardan el domicilio solo con el punto.
-    direccion = models.CharField("dirección", max_length=200, blank=True, default="")
+    # Guarda domicilio con punto
     ubicacion = PointField(srid=4326)
     ubicacion_desplazada = PointField(srid=4326)
     actualizado_en = models.DateTimeField(auto_now=True)

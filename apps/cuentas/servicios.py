@@ -214,21 +214,14 @@ def _punto_valido(punto):
     return punto
 
 
-def guardar_domicilio(usuario, punto, direccion=None):
-    """Guarda o cambia el domicilio del usuario y devuelve el registro (CU-03).
+def guardar_domicilio(usuario, punto):
+    """Guarda el domicilio a partir del punto que la persona marcó en el mapa.
 
-    "punto" es el lugar exacto. Se calcula un punto desplazado a menos de
-    RADIO_DOMICILIO_METROS, que es el único que se puede mostrar. Se calcula una sola vez:
-    si el punto no cambió, se conserva el desplazado que ya tenía (RNF3).
-    "direccion" en None deja la dirección escrita como estaba: otros módulos solo pasan
-    el punto.
+    El punto exacto queda privado. El desplazado (a menos de RADIO_DOMICILIO_METROS) es el
+    único que se muestra: se calcula una sola vez y se conserva si el punto no cambia.
+    Lanza DomicilioInvalido si el punto está fuera de la zona.
     """
     punto = _punto_valido(punto)
-    if direccion is not None:
-        direccion = direccion.strip()
-        maximo = Domicilio._meta.get_field("direccion").max_length
-        if len(direccion) > maximo:
-            raise DomicilioInvalido("La dirección es demasiado larga")
     with transaction.atomic():
         domicilio = Domicilio.objects.select_for_update().filter(usuario=usuario).first()
         if domicilio is None:
@@ -237,7 +230,5 @@ def guardar_domicilio(usuario, punto, direccion=None):
             lon, lat = geo.desplazar(punto.x, punto.y, config.RADIO_DOMICILIO_METROS)
             domicilio.ubicacion = punto
             domicilio.ubicacion_desplazada = Point(lon, lat, srid=4326)
-        if direccion is not None:
-            domicilio.direccion = direccion
         domicilio.save()
     return domicilio

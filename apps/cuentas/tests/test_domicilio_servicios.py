@@ -87,7 +87,7 @@ def test_guardar_el_mismo_punto_conserva_el_desplazado(ana):
     primero = servicios.guardar_domicilio(ana, EXACTO)
     desplazado = primero.ubicacion_desplazada
 
-    segundo = servicios.guardar_domicilio(ana, EXACTO, direccion="Calle de prueba 123")
+    segundo = servicios.guardar_domicilio(ana, EXACTO)
 
     assert segundo.ubicacion_desplazada.equals_exact(desplazado, 1e-9)
     assert Domicilio.objects.count() == 1
@@ -104,22 +104,6 @@ def test_un_punto_nuevo_cambia_el_exacto_y_el_desplazado(ana):
     assert not segundo.ubicacion_desplazada.equals_exact(desplazado, 1e-9)
     assert metros(segundo.ubicacion, segundo.ubicacion_desplazada) <= 150
     assert Domicilio.objects.count() == 1
-
-
-@pytest.mark.django_db
-def test_la_direccion_se_guarda_recortada_y_none_no_la_toca(ana):
-    servicios.guardar_domicilio(ana, EXACTO, direccion="  Calle de prueba 123  ")
-    assert Domicilio.objects.get(usuario=ana).direccion == "Calle de prueba 123"
-
-    servicios.guardar_domicilio(ana, EXACTO)
-    assert Domicilio.objects.get(usuario=ana).direccion == "Calle de prueba 123"
-
-
-@pytest.mark.django_db
-def test_una_direccion_demasiado_larga_se_rechaza(ana):
-    with pytest.raises(servicios.DomicilioInvalido):
-        servicios.guardar_domicilio(ana, EXACTO, direccion="x" * 201)
-    assert not Domicilio.objects.exists()
 
 
 @pytest.mark.django_db
