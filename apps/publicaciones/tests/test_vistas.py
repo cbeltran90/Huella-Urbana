@@ -1,0 +1,114 @@
+import pytest
+from constance.test import override_config
+from django.conf import settings
+from django.urls import reverse
+from model_bakery import baker
+
+from apps.fichas.models import FichaAnimal
+from apps.publicaciones.models import Publicacion
+
+from .conftest import crear_imagen, hacer_publicacion
+
+pytestmark = pytest.mark.django_db
+
+URL = "publicaciones:publicar_extravio"
+
+
+def datos(**cambios):
+    base = {"especie": "perro", "nombre": "Firulais", "color": "negro", "foto": crear_imagen()}
+    return {**base, **cambios}
+
+
+def test_hay_que_iniciar_sesion(client):
+    respuesta = client.get(reverse(URL))
+
+    assert respuesta.status_code == 302
+    assert respuesta.url.startswith(settings.LOGIN_URL)
+
+
+def test_se_muestra_el_asistente(entrar, ana, con_domicilio):
+    respuesta = entrar(ana).get(reverse(URL))
+
+    assert respuesta.status_code == 200
+    assert "Publicar extravío" in respuesta.content.decode()
+
+
+def test_publica_un_animal_nuevo_y_muestra_la_publicacion(entrar, ana, con_domicilio):
+    respuesta = entrar(ana).post(reverse(URL), datos())
+
+    publicacion = Publicacion.objects.get()
+    assert respuesta.status_code == 302
+    assert respuesta.url == reverse("publicaciones:detalle", args=[publicacion.pk])
+    assert publicacion.ficha.responsable == ana
+
+
+def test_publica_una_ficha_propia(entrar, ana, con_domicilio):
+    ficha = baker.make(FichaAnimal, responsable=ana, especie="gato")
+
+    respuesta = entrar(ana).post(reverse(URL), {"ficha": ficha.pk})
+
+    assert respuesta.status_code == 302
+    assert Publicacion.objects.get().ficha == ficha
+    assert FichaAnimal.objects.count() == 1
+
+
+def test_no_se_publica_con_la_ficha_de_otra_persona(entrar, ana, beto, con_domicilio):
+    ajena = baker.make(FichaAnimal, responsable=beto)
+
+    respuesta = entrar(ana).post(reverse(URL), {"ficha": ajena.pk})
+
+    assert respuesta.status_code == 200
+    assert not Publicacion.objects.exists()
+
+
+def test_texto_ofensivo_se_rechaza(entrar, ana, con_domicilio):
+    respuesta = entrar(ana).post(reverse(URL), datos(descripcion="mierda"))
+
+    assert respuesta.status_code == 200
+    assert "Texto ofensivo" in respuesta.content.decode()
+    assert not Publicacion.objects.exists()
+    assert not FichaAnimal.objects.exists()
+
+
+def test_un_animal_nuevo_necesita_especie_y_foto(entrar, ana, con_domicilio):
+    respuesta = entrar(ana).post(reverse(URL), {"nombre": "Sin datos"})
+
+    html = respuesta.content.decode()
+    assert respuesta.status_code == 200
+    assert "Elegí la especie" in html
+    assert "Subí una foto del animal" in html
+
+
+def test_sin_domicilio_hay_que_indicar_la_ubicacion(entrar, ana):
+    respuesta = entrar(ana).post(reverse(URL), datos())
+
+    assert respuesta.status_code == 200
+    assert "Indicá tu ubicación" in respuesta.content.decode()
+    assert not Publicacion.objects.exists()
+
+
+@override_config(MAX_PUBLICACIONES_HORA=1)
+def test_el_limite_por_hora_responde_403(entrar, ana, con_domicilio):
+    hacer_publicacion(ana)
+
+    respuesta = entrar(ana).post(reverse(URL), datos())
+
+    assert respuesta.status_code == 403
+    assert Publicacion.objects.count() == 1
+
+
+def test_cualquier_usuario_con_sesion_ve_una_publicacion(entrar, ana, beto):
+    publicacion = hacer_publicacion(ana, descripcion="Se perdió en el centro")
+
+    respuesta = entrar(beto).get(reverse("publicaciones:detalle", args=[publicacion.pk]))
+
+    assert respuesta.status_code == 200
+    assert "Se perdió en el centro" in respuesta.content.decode()
+
+
+def test_una_publicacion_eliminada_no_se_ve(entrar, ana):
+    publicacion = hacer_publicacion(ana, estado=Publicacion.Estado.ELIMINADA)
+
+    respuesta = entrar(ana).get(reverse("publicaciones:detalle", args=[publicacion.pk]))
+
+    assert respuesta.status_code == 404

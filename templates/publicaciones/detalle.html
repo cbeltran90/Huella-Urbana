@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}{{ publicacion.get_tipo_display }} · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">{{ publicacion.get_tipo_display }}</h1>
+    <p class="mt-1 text-sm text-stone-600">
+      {{ publicacion.fecha|date:"d/m/Y H:i" }} · {{ publicacion.get_estado_display }}
+    </p>
+    {% for foto in fotos %}
+      <img src="{% get_media_prefix %}{{ foto.archivo }}"
+           alt="Foto del animal"
+           class="mt-4 w-full rounded">
+    {% endfor %}
+    <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+      {% if publicacion.especie %}
+        <dt class="text-stone-600">Especie</dt>
+        <dd>
+          {{ publicacion.especie }}
+        </dd>
+      {% endif %}
+      {% if publicacion.raza %}
+        <dt class="text-stone-600">Raza</dt>
+        <dd>
+          {{ publicacion.raza }}
+        </dd>
+      {% endif %}
+      {% if publicacion.color %}
+        <dt class="text-stone-600">Color</dt>
+        <dd>
+          {{ publicacion.color }}
+        </dd>
+      {% endif %}
+      {% if publicacion.estado_aparente %}
+        <dt class="text-stone-600">Estado aparente</dt>
+        <dd>
+          {{ publicacion.estado_aparente }}
+        </dd>
+      {% endif %}
+    </dl>
+    {% if publicacion.descripcion %}<p class="mt-4 text-sm">{{ publicacion.descripcion }}</p>{% endif %}
+  </section>
+{% endblock %}
