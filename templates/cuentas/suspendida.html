@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Cuenta suspendida · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Tu cuenta está suspendida</h1>
+    {% if sancion.fin %}
+      <p class="mt-2">La suspensión termina el {{ sancion.fin|date:"d/m/Y H:i" }}.</p>
+    {% else %}
+      <p class="mt-2">La suspensión es permanente.</p>
+    {% endif %}
+    <p class="mt-2">
+      Mientras tanto podés seguir viendo el mapa y la información, como cualquier visitante,
+      pero no podés publicar ni registrar nada.
+    </p>
+    <a href="{% url 'core:inicio' %}"
+       class="mt-4 inline-block min-h-11 rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Volver al inicio</a>
+  </section>
+{% endblock %}

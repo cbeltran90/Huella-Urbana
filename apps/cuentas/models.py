@@ -1,9 +1,11 @@
 import hashlib
 
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
+from django.utils import timezone
 
 
 class Rol(models.TextChoices):
@@ -107,3 +109,73 @@ class Usuario(AbstractUser):
         if campos is not None and "estado_cuenta" in campos:
             kwargs["update_fields"] = {*campos, "is_active"}
         super().save(*args, **kwargs)
+
+
+class SancionQuerySet(models.QuerySet):
+    def vigentes(self):
+        """Las sanciones que hoy rigen: ya empezaron, no se levantaron y no vencieron."""
+        ahora = timezone.now()
+        return self.filter(revocada_en__isnull=True, inicio__lte=ahora).filter(
+            models.Q(fin__isnull=True) | models.Q(fin__gt=ahora)
+        )
+
+
+class Sancion(models.Model):
+    """Suspensión de una cuenta (CU-59).
+
+    La persona sigue pudiendo entrar, pero con los permisos de un visitante.
+    Guarda el hash del correo para que una suspensión permanente siga valiendo aunque la
+    cuenta se elimine y la persona vuelva a registrarse con el mismo correo (RF1.3).
+    """
+
+    class Tipo(models.TextChoices):
+        TEMPORAL = "temporal", "Suspensión temporal"
+        PERMANENTE = "permanente", "Suspensión permanente"
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="sanciones",
+    )
+    email_hash = models.CharField(max_length=64, db_index=True)
+    tipo = models.CharField(max_length=20, choices=Tipo.choices)
+    motivo = models.TextField()
+    inicio = models.DateTimeField(default=timezone.now)
+    # Vacío en la suspensión permanente.
+    fin = models.DateTimeField(null=True, blank=True)
+    aplicada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sanciones_aplicadas",
+    )
+    revocada_en = models.DateTimeField(null=True, blank=True)
+    revocada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sanciones_levantadas",
+    )
+
+    objects = SancionQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = "sanción"
+        verbose_name_plural = "sanciones"
+        ordering = ["-inicio"]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(tipo="temporal", fin__isnull=False)
+                    | models.Q(tipo="permanente", fin__isnull=True)
+                ),
+                name="sancion_fin_segun_tipo",
+                violation_error_message="La temporal necesita fecha de fin; la permanente no.",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} de {self.usuario or 'cuenta eliminada'}"
