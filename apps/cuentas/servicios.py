@@ -80,11 +80,8 @@ def tipo_sugerido(usuario):
     return Sancion.Tipo.PERMANENTE if anteriores else Sancion.Tipo.TEMPORAL
 
 
-def sancionar(usuario, tipo, motivo, aplicada_por):
-    """Suspende la cuenta. Solo moderadores y administradores (CU-59).
-
-    La temporal dura "DIAS_PRIMERA_SUSPENSION" días; la permanente no vence.
-    """
+def verificar_sancion(usuario, motivo, aplicada_por):
+    """Comprueba que se pueda sancionar a la cuenta; si no, lanza SancionNoPermitida."""
     if not _puede_moderar(aplicada_por):
         raise SancionNoPermitida("Solo un moderador o un administrador puede sancionar")
     if usuario.pk == aplicada_por.pk:
@@ -93,11 +90,19 @@ def sancionar(usuario, tipo, motivo, aplicada_por):
         raise SancionNoPermitida("Un moderador no puede sancionar a un administrador")
     if not (motivo or "").strip():
         raise SancionNoPermitida("El motivo es obligatorio")
+    if sancion_vigente(usuario) is not None:
+        raise SancionNoPermitida("La cuenta ya tiene una sanción vigente")
+
+
+def sancionar(usuario, tipo, motivo, aplicada_por):
+    """Suspende la cuenta. Solo moderadores y administradores (CU-59).
+
+    La temporal dura "DIAS_PRIMERA_SUSPENSION" días; la permanente no vence.
+    """
     with transaction.atomic():
         # Se bloquea la cuenta para que dos moderadores no sancionen a la vez.
         Usuario.objects.select_for_update().get(pk=usuario.pk)
-        if sancion_vigente(usuario) is not None:
-            raise SancionNoPermitida("La cuenta ya tiene una sanción vigente")
+        verificar_sancion(usuario, motivo, aplicada_por)
         inicio = timezone.now()
         fin = None
         if tipo == Sancion.Tipo.TEMPORAL:
