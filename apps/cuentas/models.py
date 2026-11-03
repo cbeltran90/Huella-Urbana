@@ -3,6 +3,7 @@ import hashlib
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
@@ -179,3 +180,30 @@ class Sancion(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} de {self.usuario or 'cuenta eliminada'}"
+
+
+class Domicilio(models.Model):
+    """Dónde vive una persona (CU-03).
+
+    El punto exacto es privado: no se muestra ni se entrega a otras pantallas. Todo lo
+    que se publica usa "ubicacion_desplazada", un punto al azar a menos de
+    RADIO_DOMICILIO_METROS del exacto. Se calcula una sola vez al guardar: si cambiara en
+    cada consulta, mirándolo muchas veces se podría deducir el exacto (RNF3).
+    """
+
+    usuario = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="domicilio"
+    )
+    # Dato personal de uso interno: no se publica nunca. Opcional porque otros módulos
+    # guardan el domicilio solo con el punto.
+    direccion = models.CharField("dirección", max_length=200, blank=True, default="")
+    ubicacion = PointField(srid=4326)
+    ubicacion_desplazada = PointField(srid=4326)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "domicilio"
+        verbose_name_plural = "domicilios"
+
+    def __str__(self):
+        return f"Domicilio de {self.usuario}"
