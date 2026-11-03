@@ -11,3 +11,9 @@ def respuesta_bloqueo(request, credentials=None, *args, **kwargs):
     respuesta = render(request, "cuentas/bloqueado.html", contexto, status=429)
     respuesta["Retry-After"] = str(segundos)
     return respuesta
+
+
+def nombre_para_bloqueo(request, credentials=None):
+    """Correo en minúsculas y sin espacios: escribirlo distinto no evita el bloqueo."""
+    crudo = (credentials or {}).get("username") or request.POST.get("username") or ""
+    return crudo.strip().lower()
