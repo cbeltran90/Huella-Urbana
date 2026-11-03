@@ -89,6 +89,8 @@ def sancionar(usuario, tipo, motivo, aplicada_por):
         raise SancionNoPermitida("Solo un moderador o un administrador puede sancionar")
     if usuario.pk == aplicada_por.pk:
         raise SancionNoPermitida("No podés sancionar tu propia cuenta")
+    if usuario.rol == Rol.ADMINISTRADOR and aplicada_por.rol != Rol.ADMINISTRADOR:
+        raise SancionNoPermitida("Un moderador no puede sancionar a un administrador")
     if not (motivo or "").strip():
         raise SancionNoPermitida("El motivo es obligatorio")
     with transaction.atomic():
@@ -117,6 +119,13 @@ def levantar_sancion(sancion, levantada_por):
         raise SancionNoPermitida("Solo un moderador o un administrador puede levantar sanciones")
     if not Sancion.objects.vigentes().filter(pk=sancion.pk).exists():
         raise SancionNoPermitida("La sanción ya no está vigente")
+    sancionado = sancion.usuario
+    if (
+        sancionado
+        and sancionado.rol == Rol.ADMINISTRADOR
+        and levantada_por.rol != Rol.ADMINISTRADOR
+    ):
+        raise SancionNoPermitida("Un moderador no puede levantar la sanción de un administrador")
     sancion.revocada_en = timezone.now()
     sancion.revocada_por = levantada_por
     sancion.save(update_fields=["revocada_en", "revocada_por"])

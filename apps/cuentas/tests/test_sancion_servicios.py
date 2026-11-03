@@ -211,3 +211,34 @@ def test_la_temporal_no_impide_registrarse(ana):
 def test_una_permanente_levantada_no_impide_registrarse(ana):
     _crear(ana, PERMANENTE, revocada_en=timezone.now())
     assert not servicios.correo_con_suspension_permanente("ana@example.com")
+
+
+# --- un moderador no toca a un administrador ---
+
+
+@pytest.fixture
+def otro_administrador():
+    return _usuario("admin2@example.com", "Admin dos", rol=Rol.ADMINISTRADOR)
+
+
+@pytest.mark.django_db
+def test_un_moderador_no_puede_sancionar_a_un_administrador(administrador, moderadora):
+    with pytest.raises(servicios.SancionNoPermitida):
+        servicios.sancionar(administrador, TEMPORAL, "Motivo", moderadora)
+    assert not Sancion.objects.exists()
+
+
+@pytest.mark.django_db
+def test_un_administrador_puede_sancionar_a_otro_administrador(administrador, otro_administrador):
+    sancion = servicios.sancionar(otro_administrador, TEMPORAL, "Motivo", administrador)
+    assert servicios.sancion_vigente(otro_administrador) == sancion
+
+
+@pytest.mark.django_db
+def test_un_moderador_no_puede_levantar_la_sancion_de_un_administrador(
+    administrador, otro_administrador, moderadora
+):
+    sancion = servicios.sancionar(otro_administrador, TEMPORAL, "Motivo", administrador)
+    with pytest.raises(servicios.SancionNoPermitida):
+        servicios.levantar_sancion(sancion, moderadora)
+    assert servicios.esta_suspendido(otro_administrador)
