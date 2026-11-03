@@ -3,6 +3,7 @@ import logging
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.gis.geos import Point
 from django.core.cache import caches
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -168,3 +169,25 @@ class RecuperarContrasenaForm(PasswordResetForm):
             super().send_mail(*args, **kwargs)
         except OSError:
             logger.exception("No se pudo enviar el correo de recuperación")
+
+
+MENSAJE_PUNTO_DOMICILIO = "Marcá dónde vivís en el mapa o con el GPS"
+
+
+class DomicilioForm(forms.Form):
+    """Pantalla "Mi domicilio" (CU-03): el punto que la persona marca en el mapa."""
+
+    latitud = forms.FloatField(required=False, min_value=-90, max_value=90)
+    longitud = forms.FloatField(required=False, min_value=-180, max_value=180)
+
+    def clean(self):
+        datos = super().clean()
+        hay_error = "latitud" in self.errors or "longitud" in self.errors
+        falta_alguna = datos.get("latitud") is None or datos.get("longitud") is None
+        if falta_alguna and not hay_error:
+            self.add_error("latitud", MENSAJE_PUNTO_DOMICILIO)
+        return datos
+
+    def punto(self):
+        """El punto marcado en el mapa."""
+        return Point(self.cleaned_data["longitud"], self.cleaned_data["latitud"], srid=4326)

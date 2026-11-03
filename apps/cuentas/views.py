@@ -1,9 +1,12 @@
+from constance import config
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 from . import servicios
-from .forms import ReenviarConfirmacionForm, RegistroForm
-from .models import EstadoCuenta
+from .decoradores import cuenta_habilitada
+from .forms import DomicilioForm, ReenviarConfirmacionForm, RegistroForm
+from .models import Domicilio, EstadoCuenta
 
 MENSAJE_ERROR_GENERAL = "Error al crear cuenta. Revisar nombre de usuario y correo."
 
@@ -55,3 +58,30 @@ def reenviar_confirmacion(request):
 
 def reenvio_listo(request):
     return render(request, "cuentas/reenvio_listo.html")
+
+
+@cuenta_habilitada
+def domicilio(request):
+    if request.method == "POST":
+        form = DomicilioForm(request.POST)
+        if form.is_valid():
+            try:
+                servicios.guardar_domicilio(request.user, form.punto())
+            except servicios.DomicilioInvalido as error:
+                form.add_error(None, str(error))
+            else:
+                return redirect(f"{reverse('cuentas:domicilio')}?guardado=1")
+    else:
+        form = DomicilioForm()
+    # Al navegador solo llega el punto desplazado: el exacto nunca sale del servidor.
+    registro = Domicilio.objects.filter(usuario=request.user).first()
+    centro = None
+    if registro:
+        centro = {"lat": registro.ubicacion_desplazada.y, "lng": registro.ubicacion_desplazada.x}
+    contexto = {
+        "form": form,
+        "centro": centro,
+        "radio": config.RADIO_DOMICILIO_METROS,
+        "guardado": request.GET.get("guardado") == "1",
+    }
+    return render(request, "cuentas/domicilio.html", contexto)
