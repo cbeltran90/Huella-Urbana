@@ -9,6 +9,7 @@ from apps.core.filtros import NoOfensivo
 from . import servicios
 from .models import EstadoCuenta, Usuario, normalizar_email
 
+# Textos exactos de las extensiones de CU-01.
 MENSAJE_CONDICIONES = "Debe aceptar las condiciones de uso y la política de datos"
 MENSAJE_CLAVE_CORTA = "La contraseña debe tener al menos 10 caracteres"
 MENSAJE_CLAVES_DISTINTAS = "Las contraseñas no coinciden"

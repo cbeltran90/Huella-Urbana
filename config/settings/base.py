@@ -157,8 +157,17 @@ CACHES = {
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_RESET_ON_SUCCESS = True
-# Caddy es el único proxy delante de Django: la IP real llega en X-Forwarded-For
-AXES_IPWARE_PROXY_COUNT = 1
+# Página de bloqueo propia (en español, con código 429).
+# Usa AXES_COOLOFF_TIME: tiene que ser un timedelta.
+AXES_LOCKOUT_CALLABLE = "apps.cuentas.bloqueo.respuesta_bloqueo"
+# Se bloquea la combinación correo + IP, no solo la IP: quien se equivoca no deja
+# afuera a los demás que comparten su conexión.
+AXES_LOCKOUT_PARAMETERS = [["ip_address", "username"]]
+# El correo se normaliza para que mayúsculas o espacios no esquiven el bloqueo.
+AXES_USERNAME_CALLABLE = "apps.cuentas.bloqueo.nombre_para_bloqueo"
+# Caddy es el único proxy y deja en X-Forwarded-For solo la IP del visitante.
+# Con 0, si el encabezado trae más de una IP se descarta (no se puede falsificar).
+AXES_IPWARE_PROXY_COUNT = 0
 AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 
 # --- Parámetros configurables (django-constance, backend de base de datos) ---
