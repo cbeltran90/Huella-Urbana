@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 
 from constance import config
+from django.contrib.gis.geos import Point
 from django.core import signing
 from django.core.cache import caches
 from django.core.mail import send_mail
@@ -12,7 +13,8 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import EstadoCuenta, Rol, Sancion, Usuario, hash_email, normalizar_email
+from . import geo
+from .models import Domicilio, EstadoCuenta, Rol, Sancion, Usuario, hash_email, normalizar_email
 
 logger = logging.getLogger(__name__)
 
@@ -190,3 +192,52 @@ def reenviar_confirmacion(email, request):
     ):
         return
     enviar_correo_confirmacion(usuario, request)
+
+
+MENSAJE_FUERA_DE_ZONA = "El domicilio tiene que estar en Ushuaia y alrededores"
+
+
+class DomicilioInvalido(ValueError):
+    """El domicilio no se puede guardar. El mensaje está pensado para mostrarse."""
+
+
+def _punto_valido(punto):
+    """El punto en coordenadas 4326 (longitud, latitud), o DomicilioInvalido."""
+    if not isinstance(punto, Point) or punto.empty:
+        raise DomicilioInvalido("Falta indicar el domicilio en el mapa")
+    if punto.srid is None:
+        punto = Point(punto.x, punto.y, srid=4326)
+    elif punto.srid != 4326:
+        punto = punto.transform(4326, clone=True)
+    if not geo.en_zona(punto.x, punto.y):
+        raise DomicilioInvalido(MENSAJE_FUERA_DE_ZONA)
+    return punto
+
+
+def guardar_domicilio(usuario, punto, direccion=None):
+    """Guarda o cambia el domicilio del usuario y devuelve el registro (CU-03).
+
+    "punto" es el lugar exacto. Se calcula un punto desplazado a menos de
+    RADIO_DOMICILIO_METROS, que es el único que se puede mostrar. Se calcula una sola vez:
+    si el punto no cambió, se conserva el desplazado que ya tenía (RNF3).
+    "direccion" en None deja la dirección escrita como estaba: otros módulos solo pasan
+    el punto.
+    """
+    punto = _punto_valido(punto)
+    if direccion is not None:
+        direccion = direccion.strip()
+        maximo = Domicilio._meta.get_field("direccion").max_length
+        if len(direccion) > maximo:
+            raise DomicilioInvalido("La dirección es demasiado larga")
+    with transaction.atomic():
+        domicilio = Domicilio.objects.select_for_update().filter(usuario=usuario).first()
+        if domicilio is None:
+            domicilio = Domicilio(usuario=usuario)
+        if domicilio.pk is None or not domicilio.ubicacion.equals_exact(punto, 1e-9):
+            lon, lat = geo.desplazar(punto.x, punto.y, config.RADIO_DOMICILIO_METROS)
+            domicilio.ubicacion = punto
+            domicilio.ubicacion_desplazada = Point(lon, lat, srid=4326)
+        if direccion is not None:
+            domicilio.direccion = direccion
+        domicilio.save()
+    return domicilio
