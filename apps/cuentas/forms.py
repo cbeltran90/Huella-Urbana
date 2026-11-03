@@ -1,6 +1,9 @@
+import logging
+
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm
 from django.contrib.auth.password_validation import validate_password
+from django.core.cache import caches
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
@@ -8,6 +11,8 @@ from apps.core.filtros import NoOfensivo
 
 from . import servicios
 from .models import EstadoCuenta, Usuario, normalizar_email
+
+logger = logging.getLogger(__name__)
 
 # Textos exactos de las extensiones de CU-01.
 MENSAJE_CONDICIONES = "Debe aceptar las condiciones de uso y la política de datos"
@@ -143,3 +148,23 @@ class NuevaContrasenaForm(SetPasswordForm):
         **SetPasswordForm.error_messages,
         "password_mismatch": MENSAJE_CLAVES_DISTINTAS,
     }
+
+
+class RecuperarContrasenaForm(PasswordResetForm):
+    """Pide el correo para enviar el enlace de recuperación (CU-02).
+
+    Solo las cuentas activas reciben el enlace, y una vez cada 5 minutos. La pantalla
+    responde siempre igual: no se revela qué correos están registrados.
+    """
+
+    def get_users(self, email):
+        for usuario in super().get_users(email):
+            clave = f"recuperar-contrasena:{usuario.pk}"
+            if caches["reenvios"].add(clave, True, servicios.ESPERA_RECUPERACION_SEGUNDOS):
+                yield usuario
+
+    def send_mail(self, *args, **kwargs):
+        try:
+            super().send_mail(*args, **kwargs)
+        except OSError:
+            logger.exception("No se pudo enviar el correo de recuperación")

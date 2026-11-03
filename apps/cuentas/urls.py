@@ -1,8 +1,9 @@
+from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
 from . import views
-from .forms import InicioSesionForm, NuevaContrasenaForm
+from .forms import InicioSesionForm, NuevaContrasenaForm, RecuperarContrasenaForm
 
 app_name = "cuentas"
 
@@ -20,6 +21,23 @@ urlpatterns = [
             redirect_authenticated_user=True,
         ),
         name="login",
+    ),
+    path(
+        "recuperar/",
+        auth_views.PasswordResetView.as_view(
+            template_name="cuentas/recuperar.html",
+            form_class=RecuperarContrasenaForm,
+            email_template_name="cuentas/correo_recuperar.txt",
+            subject_template_name="cuentas/correo_recuperar_asunto.txt",
+            extra_email_context={"dias": settings.PASSWORD_RESET_TIMEOUT // (24 * 60 * 60)},
+            success_url=reverse_lazy("cuentas:recuperar_listo"),
+        ),
+        name="recuperar",
+    ),
+    path(
+        "recuperar/listo/",
+        auth_views.PasswordResetDoneView.as_view(template_name="cuentas/recuperar_listo.html"),
+        name="recuperar_listo",
     ),
     path(
         "recuperar/completo/",

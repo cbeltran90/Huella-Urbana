@@ -1,0 +1,7 @@
+{% autoescape off %}Hola {{ user.nombre_usuario }}:
+
+Recibimos un pedido para cambiar la contraseña de tu cuenta en Huella Urbana. Para elegir una nueva abrí este enlace:
+{{ protocol }}://{{ domain }}{% url 'cuentas:recuperar_confirmar' uidb64=uid token=token %}
+
+El enlace vale {{ dias }} {{ dias|pluralize:"día,días" }} y sirve una sola vez. Si no lo pediste, ignorá este mensaje: tu contraseña no cambia.
+{% endautoescape %}
