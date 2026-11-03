@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titulo %}Demasiados intentos · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Demasiados intentos fallidos</h1>
+    <p class="mt-2" role="alert">Por seguridad bloqueamos el ingreso. Probá de nuevo en {{ minutos }} minutos.</p>
+  </section>
+{% endblock %}
