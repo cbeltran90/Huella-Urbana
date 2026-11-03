@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva contraseña · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    {% if validlink %}
+      <h1 class="text-2xl font-bold">Elegí tu nueva contraseña</h1>
+      <form method="post" novalidate class="mt-4 space-y-4">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+          <p role="alert"
+             class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+        {% endfor %}
+        <div>
+          <label for="id_new_password1" class="block text-sm font-medium">Contraseña nueva</label>
+          <p class="text-sm text-stone-600">Mínimo 10 caracteres.</p>
+          <input type="password"
+                 name="new_password1"
+                 id="id_new_password1"
+                 autocomplete="new-password"
+                 autofocus
+                 required
+                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+          {% include "cuentas/_errores.html" with errores=form.new_password1.errors %}
+        </div>
+        <div>
+          <label for="id_new_password2" class="block text-sm font-medium">Confirmar contraseña</label>
+          <input type="password"
+                 name="new_password2"
+                 id="id_new_password2"
+                 autocomplete="new-password"
+                 required
+                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+          {% include "cuentas/_errores.html" with errores=form.new_password2.errors %}
+        </div>
+        <button type="submit"
+                class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+          Guardar contraseña
+        </button>
+      </form>
+    {% else %}
+      <h1 class="text-2xl font-bold">Este enlace ya no sirve</h1>
+      <p class="mt-2">El enlace venció o ya se usó.</p>
+    {% endif %}
+  </section>
+{% endblock %}

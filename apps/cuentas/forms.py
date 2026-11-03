@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -131,3 +131,15 @@ class InicioSesionForm(AuthenticationForm):
             email=normalizar_email(email), estado_cuenta=EstadoCuenta.PENDIENTE
         ).first()
         return usuario is not None and usuario.check_password(clave)
+
+
+class NuevaContrasenaForm(SetPasswordForm):
+    """Nueva contraseña, después de abrir el enlace de recuperación (CU-02).
+
+    Las reglas de largo y similitud son las del registro (AUTH_PASSWORD_VALIDATORS).
+    """
+
+    error_messages = {
+        **SetPasswordForm.error_messages,
+        "password_mismatch": MENSAJE_CLAVES_DISTINTAS,
+    }

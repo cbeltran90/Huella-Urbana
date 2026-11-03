@@ -1,8 +1,8 @@
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import path, reverse_lazy
 
 from . import views
-from .forms import InicioSesionForm
+from .forms import InicioSesionForm, NuevaContrasenaForm
 
 app_name = "cuentas"
 
@@ -20,6 +20,22 @@ urlpatterns = [
             redirect_authenticated_user=True,
         ),
         name="login",
+    ),
+    path(
+        "recuperar/completo/",
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name="cuentas/recuperar_completo.html"
+        ),
+        name="recuperar_completo",
+    ),
+    path(
+        "recuperar/<uidb64>/<token>/",
+        auth_views.PasswordResetConfirmView.as_view(
+            template_name="cuentas/recuperar_confirmar.html",
+            form_class=NuevaContrasenaForm,
+            success_url=reverse_lazy("cuentas:recuperar_completo"),
+        ),
+        name="recuperar_confirmar",
     ),
     path("salir/", auth_views.LogoutView.as_view(), name="logout"),
 ]
