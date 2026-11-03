@@ -1,7 +1,7 @@
 from django import forms
 
 from apps.core.filtros import NoOfensivo
-from apps.fichas.forms import CLASE_CAMPO, MENSAJE_TEXTO_OFENSIVO
+from apps.fichas.forms import CLASE_CAMPO, CLASE_CASILLA, MENSAJE_TEXTO_OFENSIVO
 from apps.fichas.models import FichaAnimal
 
 MENSAJE_ESPECIE = "Elegí la especie"
@@ -87,3 +87,74 @@ class ExtravioForm(forms.Form):
         """El paso del asistente donde hay que volver para corregir; el último si no hay error."""
         pasos = [_PASO_DE_CAMPO.get(campo, 5) for campo in self.errors]
         return min(pasos, default=5)
+
+
+MENSAJE_UBICACION_HALLAZGO = "Indicá dónde lo encontraste en el mapa o con el GPS"
+
+_PASO_HALLAZGO = {
+    "foto": 1,
+    "latitud": 2,
+    "longitud": 2,
+    "especie": 3,
+    "tamano": 3,
+    "raza": 3,
+    "color": 3,
+    "estado_aparente": 3,
+    "descripcion": 3,
+}
+
+
+class HallazgoForm(forms.Form):
+    """Los datos del asistente de "Publicar hallazgo"."""
+
+    foto = forms.FileField(label="Foto", required=False)
+    latitud = forms.FloatField(required=False, min_value=-90, max_value=90)
+    longitud = forms.FloatField(required=False, min_value=-180, max_value=180)
+    especie = forms.ChoiceField(
+        label="Especie",
+        choices=[("", "---------"), *FichaAnimal.Especie.choices],
+        required=False,
+    )
+    tamano = forms.ChoiceField(
+        label="Tamaño",
+        choices=[("", "---------"), *FichaAnimal.Tamano.choices],
+        required=False,
+    )
+    raza = forms.CharField(label="Raza", max_length=100, required=False)
+    color = forms.CharField(label="Color", max_length=100, required=False)
+    estado_aparente = forms.CharField(label="Estado aparente", max_length=100, required=False)
+    descripcion = forms.CharField(
+        label="Descripción",
+        max_length=500,
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+    tiene_consigo = forms.BooleanField(label="Tengo al animal conmigo", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for nombre in ("raza", "color", "estado_aparente", "descripcion"):
+            self.fields[nombre].validators.append(NoOfensivo(MENSAJE_TEXTO_OFENSIVO))
+        for nombre, campo in self.fields.items():
+            campo.widget.attrs["class"] = (
+                CLASE_CASILLA if nombre == "tiene_consigo" else CLASE_CAMPO
+            )
+
+    def clean(self):
+        datos = super().clean()
+        if not datos.get("foto"):
+            self.add_error("foto", MENSAJE_FOTO)
+        if not datos.get("especie") and "especie" not in self.errors:
+            self.add_error("especie", MENSAJE_ESPECIE)
+        sin_punto = datos.get("latitud") is None or datos.get("longitud") is None
+        if sin_punto and "latitud" not in self.errors:
+            self.add_error("latitud", MENSAJE_UBICACION_HALLAZGO)
+        return datos
+
+    def datos_animal(self):
+        return {campo: self.cleaned_data[campo] for campo in ("especie", "tamano", "raza", "color")}
+
+    def paso_con_error(self):
+        """El paso del asistente donde hay que volver para corregir; el último si no hay error."""
+        pasos = [_PASO_HALLAZGO.get(campo, 4) for campo in self.errors]
+        return min(pasos, default=4)

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block titulo %}Publicar hallazgo · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6"
+           x-data="{ paso: {{ paso_inicial }}, sinConexion: !navigator.onLine }"
+           @online.window="sinConexion = false"
+           @offline.window="sinConexion = true"
+           x-init="$watch('paso', valor => { if (valor === 2 && window.mapaUbicacion) setTimeout(() => window.mapaUbicacion.invalidateSize(), 50) })">
+    <h1 class="text-2xl font-bold">Publicar hallazgo</h1>
+    <p class="mt-1 text-sm text-stone-600">Paso <span x-text="paso"></span> de 4</p>
+    <p x-show="sinConexion"
+       x-cloak
+       role="alert"
+       class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+      Sin conexión a internet, conéctese a una red para publicar
+    </p>
+    <form method="post"
+          enctype="multipart/form-data"
+          novalidate
+          class="mt-4 space-y-4">
+      {% csrf_token %}
+      {% for error in form.non_field_errors %}
+        <p role="alert"
+           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+      {% endfor %}
+      <div x-show="paso === 1">
+        <h2 class="font-semibold">Foto</h2>
+        <label for="{{ form.foto.id_for_label }}"
+               class="mt-2 block text-sm font-medium">{{ form.foto.label }}</label>
+        <input type="file"
+               name="{{ form.foto.html_name }}"
+               id="{{ form.foto.id_for_label }}"
+               accept="image/jpeg,image/png,image/webp"
+               capture="environment"
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.foto.errors %}
+      </div>
+      <div x-show="paso === 2">
+        <h2 class="font-semibold">¿Dónde lo encontraste?</h2>
+        <p class="mt-1 text-sm">Se publica el lugar exacto, para que su dueño pueda encontrarlo.</p>
+        <button type="button"
+                id="boton-gps"
+                class="mt-2 min-h-11 rounded border border-stone-300 px-4 py-2 text-sm">
+          Usar mi ubicación (GPS)
+        </button>
+        <div id="mapa-ubicacion" class="mt-2 h-64 w-full rounded"></div>
+        <input type="hidden"
+               name="latitud"
+               id="id_latitud"
+               value="{{ form.latitud.value|default_if_none:'' }}">
+        <input type="hidden"
+               name="longitud"
+               id="id_longitud"
+               value="{{ form.longitud.value|default_if_none:'' }}">
+        {% include "cuentas/_errores.html" with errores=form.latitud.errors %}
+        {% include "cuentas/_errores.html" with errores=form.longitud.errors %}
+      </div>
+      <div x-show="paso === 3" class="space-y-4">
+        <h2 class="font-semibold">Datos del animal</h2>
+        {% for campo in form.visible_fields %}
+          {% if campo.name == "especie" or campo.name == "tamano" or campo.name == "raza" or campo.name == "color" or campo.name == "estado_aparente" or campo.name == "descripcion" %}
+            <div>
+              <label for="{{ campo.id_for_label }}" class="block text-sm font-medium">{{ campo.label }}</label>
+              {{ campo }}
+              {% include "cuentas/_errores.html" with errores=campo.errors %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div x-show="paso === 4">
+        <h2 class="font-semibold">Confirmar</h2>
+        <label class="mt-2 flex min-h-11 items-center gap-3 text-sm">
+          {{ form.tiene_consigo }}
+          <span>{{ form.tiene_consigo.label }}</span>
+        </label>
+        <p class="mt-1 text-sm text-stone-600">Si lo tenés con vos, queda a tu cargo. Si no, la ficha queda sin responsable.</p>
+      </div>
+      <div class="flex gap-3">
+        <button type="button"
+                x-show="paso > 1"
+                x-on:click="paso--"
+                class="min-h-11 rounded border border-stone-300 px-4 py-2">Atrás</button>
+        <button type="button"
+                x-show="paso < 4"
+                x-on:click="paso++"
+                class="min-h-11 flex-1 rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Siguiente</button>
+        <button type="submit"
+                x-show="paso === 4"
+                :disabled="sinConexion"
+                class="min-h-11 flex-1 rounded bg-emerald-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Publicar</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}
+{% block extra_js %}
+  {{ mapa_config|json_script:"mapa-config" }}
+  <script>
+    const config = JSON.parse(document.getElementById("mapa-config").textContent);
+    const campoLat = document.getElementById("id_latitud");
+    const campoLng = document.getElementById("id_longitud");
+    const mapa = L.map("mapa-ubicacion").setView([-54.8019, -68.3030], 13);
+    L.tileLayer(config.tiles_url, { maxZoom: 19, attribution: config.atribucion }).addTo(mapa);
+    window.mapaUbicacion = mapa;
+    let marcador = null;
+    function marcar(lat, lng) {
+      campoLat.value = lat;
+      campoLng.value = lng;
+      if (marcador) { marcador.setLatLng([lat, lng]); } else { marcador = L.marker([lat, lng]).addTo(mapa); }
+    }
+    if (campoLat.value && campoLng.value) {
+      marcar(parseFloat(campoLat.value), parseFloat(campoLng.value));
+      mapa.setView([campoLat.value, campoLng.value], 15);
+    }
+    mapa.on("click", (e) => marcar(e.latlng.lat, e.latlng.lng));
+    document.getElementById("boton-gps").addEventListener("click", () => {
+      if (!navigator.geolocation) { return; }
+      navigator.geolocation.getCurrentPosition((pos) => {
+        marcar(pos.coords.latitude, pos.coords.longitude);
+        mapa.setView([pos.coords.latitude, pos.coords.longitude], 16);
+      });
+    });
+  </script>
+{% endblock %}
