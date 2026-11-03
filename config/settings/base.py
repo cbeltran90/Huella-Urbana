@@ -160,8 +160,9 @@ AXES_RESET_ON_SUCCESS = True
 # Página de bloqueo propia (en español, con código 429).
 # Usa AXES_COOLOFF_TIME: tiene que ser un timedelta.
 AXES_LOCKOUT_CALLABLE = "apps.cuentas.bloqueo.respuesta_bloqueo"
-# Caddy es el único proxy delante de Django: la IP real llega en X-Forwarded-For
-AXES_IPWARE_PROXY_COUNT = 1
+# Caddy es el único proxy y deja en X-Forwarded-For solo la IP del visitante.
+# Con 0, si el encabezado trae más de una IP se descarta (no se puede falsificar).
+AXES_IPWARE_PROXY_COUNT = 0
 AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 
 # --- Parámetros configurables (django-constance, backend de base de datos) ---
