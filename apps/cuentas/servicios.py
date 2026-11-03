@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 SAL_CONFIRMACION = "cuentas.confirmar-correo"
 DIAS_VIGENCIA_ENLACE = 1
 ESPERA_REENVIO_SEGUNDOS = 5 * 60
+ESPERA_RECUPERACION_SEGUNDOS = 5 * 60
 
 
 def correo_con_suspension_permanente(email):

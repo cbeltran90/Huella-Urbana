@@ -105,6 +105,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# El enlace de recuperación de contraseña vale 1 día, igual que el de confirmación
+PASSWORD_RESET_TIMEOUT = 24 * 60 * 60
+
 LOGIN_URL = "/cuentas/ingresar/"  # ruta literal: los tests de fichas la comparan como texto
 LOGIN_REDIRECT_URL = "core:inicio"
 LOGOUT_REDIRECT_URL = "core:inicio"

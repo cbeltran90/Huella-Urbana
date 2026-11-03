@@ -52,7 +52,10 @@
         Ingresar
       </button>
     </form>
-    <p class="mt-4 text-sm text-stone-600">
+    <p class="mt-4 text-sm">
+      <a href="{% url 'cuentas:recuperar' %}" class="underline">¿Olvidaste tu contraseña?</a>
+    </p>
+    <p class="mt-2 text-sm text-stone-600">
       ¿No tenés cuenta? <a href="{% url 'cuentas:registro' %}" class="underline">Crear cuenta</a>
     </p>
   </section>

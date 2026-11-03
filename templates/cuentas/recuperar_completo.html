@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Contraseña cambiada · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Contraseña cambiada</h1>
+    <p class="mt-2">Ya podés ingresar con tu contraseña nueva.</p>
+    <a href="{% url 'cuentas:login' %}"
+       class="mt-4 inline-block min-h-11 rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Ingresar</a>
+  </section>
+{% endblock %}
