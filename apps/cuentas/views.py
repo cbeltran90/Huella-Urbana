@@ -71,7 +71,7 @@ def domicilio(request):
             except servicios.DomicilioInvalido as error:
                 form.add_error(None, str(error))
             else:
-                return redirect(f"{reverse('cuentas:domicilio')}?guardado=1")
+                return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
     else:
         form = DomicilioForm()
     # Al navegador solo llega el punto desplazado: el exacto nunca sale del servidor.
@@ -83,7 +83,6 @@ def domicilio(request):
         "form": form,
         "centro": centro,
         "radio": config.RADIO_DOMICILIO_METROS,
-        "guardado": request.GET.get("guardado") == "1",
     }
     return render(request, "cuentas/domicilio.html", contexto)
 

@@ -59,18 +59,25 @@ def test_la_pantalla_carga_con_el_mapa_y_el_radio(client, ana):
 
 
 @pytest.mark.django_db
+def test_la_pantalla_tiene_un_enlace_para_volver_al_perfil(client, ana):
+    contenido = client.get(url()).content.decode()
+    assert reverse("cuentas:perfil") in contenido
+    assert "Volver a mi perfil" in contenido
+
+
+@pytest.mark.django_db
 def test_la_pantalla_no_pide_una_direccion_escrita(client, ana):
     assert "direccion" not in client.get(url()).content.decode()
 
 
 @pytest.mark.django_db
-def test_se_guarda_el_domicilio(client, ana):
+def test_se_guarda_el_domicilio_y_vuelve_al_perfil(client, ana):
     respuesta = guardar(client, latitud=EXACTO.y, longitud=EXACTO.x)
 
     assert respuesta.status_code == 302
-    assert respuesta.url == f"{url()}?guardado=1"
+    assert respuesta.url == f"{reverse('cuentas:perfil')}?guardado=1"
     assert Domicilio.objects.get(usuario=ana).ubicacion.equals_exact(EXACTO, 1e-9)
-    assert "Guardamos tu domicilio" in client.get(respuesta.url).content.decode()
+    assert "Guardamos tus cambios" in client.get(respuesta.url).content.decode()
 
 
 @pytest.mark.django_db
