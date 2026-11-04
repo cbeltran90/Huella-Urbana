@@ -6,7 +6,7 @@ from unfold.admin import ModelAdmin
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from . import servicios
-from .models import Sancion, Usuario
+from .models import Rol, Sancion, Usuario
 
 CAMPOS_ALTA = (
     "email",
@@ -30,6 +30,7 @@ CAMPOS_SISTEMA = (
     "fecha_registro",
     "email_hash",
 )
+MENSAJE_USUARIO_NO_ENCONTRADO = "No se encontró ningún usuario"
 
 
 @admin.register(Usuario)
@@ -42,8 +43,16 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
     list_filter = ("rol", "estado_cuenta", "es_organizacion", "is_staff")
     search_fields = ("email", "nombre_usuario")
     ordering = ("email",)
-    # is_active no se edita a mano: se deriva de estado_cuenta al guardar.
-    readonly_fields = ("is_active", "email_hash", "fecha_registro")
+    # is_active, is_staff e is_superuser no se editan a mano: se derivan del estado y del rol.
+    readonly_fields = (
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "last_login",
+        "date_joined",
+        "email_hash",
+        "fecha_registro",
+    )
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
@@ -53,6 +62,37 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
         ("Datos del sistema", {"fields": CAMPOS_SISTEMA}),
     )
     add_fieldsets = ((None, {"classes": ("wide",), "fields": CAMPOS_ALTA}),)
+
+    def _es_administrador(self, request):
+        return getattr(request.user, "rol", None) == Rol.ADMINISTRADOR
+
+    # Solo el administrador crea, modifica o borra usuarios (y con eso, sus roles).
+    def has_add_permission(self, request):
+        return self._es_administrador(request)
+
+    def has_change_permission(self, request, obj=None):
+        return self._es_administrador(request)
+
+    def has_delete_permission(self, request, obj=None):
+        # Nadie puede borrar su propia cuenta desde el panel.
+        if obj is not None and obj.pk == request.user.pk:
+            return False
+        return self._es_administrador(request)
+
+    def get_readonly_fields(self, request, obj=None):
+        campos = super().get_readonly_fields(request, obj)
+        # Un administrador no se quita a sí mismo el rol ni la cuenta activa:
+        # así siempre queda al menos un administrador.
+        if obj is not None and obj.pk == request.user.pk:
+            return (*campos, "rol", "estado_cuenta")
+        return campos
+
+    def changelist_view(self, request, extra_context=None):
+        respuesta = super().changelist_view(request, extra_context)
+        contexto = getattr(respuesta, "context_data", None)
+        if request.GET.get("q") and contexto and contexto["cl"].result_count == 0:
+            self.message_user(request, MENSAJE_USUARIO_NO_ENCONTRADO, messages.WARNING)
+        return respuesta
 
 
 class SancionAltaForm(forms.ModelForm):
