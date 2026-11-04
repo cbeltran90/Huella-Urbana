@@ -8,7 +8,7 @@ from django.contrib.gis.geos import Point
 from django.core import signing
 from django.core.cache import caches
 from django.core.mail import send_mail
-from django.db import models, transaction
+from django.db import IntegrityError, models, transaction
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -22,6 +22,16 @@ SAL_CONFIRMACION = "cuentas.confirmar-correo"
 DIAS_VIGENCIA_ENLACE = 1
 ESPERA_REENVIO_SEGUNDOS = 5 * 60
 ESPERA_RECUPERACION_SEGUNDOS = 5 * 60
+SAL_CAMBIO_CORREO = "cuentas.cambiar-correo"
+DIAS_VIGENCIA_CAMBIO_CORREO = 1
+ESPERA_CAMBIO_CORREO_SEGUNDOS = 5 * 60
+
+MENSAJE_CORREO_USADO = "El correo electrónico ingresado ya se encuentra registrado"
+MENSAJE_CORREO_SUSPENDIDO = "Correo con suspensión permanente"
+MENSAJE_CORREO_IGUAL = "Ese ya es el correo de tu cuenta"
+MENSAJE_CAMBIO_RECIENTE = "Ya te enviamos un enlace. Esperá unos minutos para pedir otro"
+MENSAJE_ENLACE_CORREO_INVALIDO = "El enlace está dañado, venció o ya se usó"
+MENSAJE_CUENTA_SIN_CAMBIO_DE_CORREO = "Tu cuenta no puede cambiar el correo en este momento"
 
 
 class SancionNoPermitida(Exception):
@@ -73,11 +83,12 @@ def correo_con_suspension_permanente(email):
 def tipo_sugerido(usuario):
     """Qué sanción corresponde por defecto: temporal la primera vez, permanente después.
 
-    Cuenta las anteriores de la misma persona (por correo) que no se levantaron. El
+    Cuenta las anteriores de la misma persona (por cuenta o por correo) que no se levantaron. El
     moderador puede elegir la permanente igual: extensión 3A de CU-59.
     """
     anteriores = Sancion.objects.filter(
-        email_hash=usuario.email_hash, revocada_en__isnull=True
+        models.Q(usuario=usuario) | models.Q(email_hash=usuario.email_hash),
+        revocada_en__isnull=True,
     ).exists()
     return Sancion.Tipo.PERMANENTE if anteriores else Sancion.Tipo.TEMPORAL
 
@@ -232,3 +243,93 @@ def guardar_domicilio(usuario, punto):
             domicilio.ubicacion_desplazada = Point(lon, lat, srid=4326)
         domicilio.save()
     return domicilio
+
+
+class CambioCorreoInvalido(Exception):
+    """No se puede pedir o aplicar el cambio de correo. El mensaje está pensado para mostrarse."""
+
+
+def validar_correo_nuevo(usuario, email):
+    """El correo nuevo normalizado, o CambioCorreoInvalido si no se puede usar.
+
+    Las reglas son las del registro: no puede estar en uso ni tener una suspensión
+    permanente. Además, no puede ser el mismo que ya tiene la cuenta.
+    """
+    email = normalizar_email(email)
+    if email == usuario.email:
+        raise CambioCorreoInvalido(MENSAJE_CORREO_IGUAL)
+    if Usuario.objects.filter(email__iexact=email).exclude(pk=usuario.pk).exists():
+        raise CambioCorreoInvalido(MENSAJE_CORREO_USADO)
+    if correo_con_suspension_permanente(email):
+        raise CambioCorreoInvalido(MENSAJE_CORREO_SUSPENDIDO)
+    return email
+
+
+def crear_token_cambio_correo(usuario, email_nuevo):
+    """Enlace firmado con la cuenta, su correo actual y el nuevo.
+
+    Al aplicarse el cambio el correo actual deja de coincidir, así que sirve una sola vez.
+    """
+    return signing.dumps([usuario.pk, usuario.email, email_nuevo], salt=SAL_CAMBIO_CORREO)
+
+
+def solicitar_cambio_correo(usuario, email_nuevo, request):
+    """Envía el enlace de confirmación al correo nuevo (CU-03, extensión 4D1).
+
+    El correo de la cuenta no cambia hasta que se abre el enlace. Devuelve False si no se
+    pudo enviar. Lanza CambioCorreoInvalido si el correo no sirve o se pidió hace poco.
+    """
+    email_nuevo = validar_correo_nuevo(usuario, email_nuevo)
+    clave = f"cambio-correo:{usuario.pk}"
+    if not caches["reenvios"].add(clave, True, ESPERA_CAMBIO_CORREO_SEGUNDOS):
+        raise CambioCorreoInvalido(MENSAJE_CAMBIO_RECIENTE)
+    token = crear_token_cambio_correo(usuario, email_nuevo)
+    ruta = reverse("cuentas:confirmar_correo", args=[token])
+    contexto = {
+        "usuario": usuario,
+        "enlace": request.build_absolute_uri(ruta),
+        "dias": DIAS_VIGENCIA_CAMBIO_CORREO,
+    }
+    try:
+        send_mail(
+            "Confirmá tu nuevo correo en Huella Urbana",
+            render_to_string("cuentas/correo_cambio_correo.txt", contexto),
+            None,
+            [email_nuevo],
+        )
+    except OSError:
+        logger.exception("No se pudo enviar el correo de cambio de correo (usuario %s)", usuario.pk)
+        # Si no salió el correo, la persona puede volver a intentar sin esperar.
+        caches["reenvios"].delete(clave)
+        return False
+    return True
+
+
+def confirmar_cambio_correo(token):
+    """Aplica el cambio de correo de un enlace (CU-03, extensión 4D2) y devuelve la cuenta.
+
+    Lanza CambioCorreoInvalido si el enlace está alterado, venció o ya se usó, si la cuenta
+    está suspendida o si el correo ya lo tomó otra persona.
+    """
+    try:
+        pk, actual, nuevo = signing.loads(
+            token,
+            salt=SAL_CAMBIO_CORREO,
+            max_age=DIAS_VIGENCIA_CAMBIO_CORREO * 24 * 60 * 60,
+        )
+    except (signing.BadSignature, ValueError):
+        raise CambioCorreoInvalido(MENSAJE_ENLACE_CORREO_INVALIDO) from None
+    with transaction.atomic():
+        # Se bloquea la cuenta para que dos aperturas del enlace no se pisen.
+        usuario = Usuario.objects.select_for_update().filter(pk=pk).first()
+        if usuario is None or usuario.email != actual:
+            raise CambioCorreoInvalido(MENSAJE_ENLACE_CORREO_INVALIDO)
+        if usuario.estado_cuenta != EstadoCuenta.ACTIVA or sancion_vigente(usuario) is not None:
+            raise CambioCorreoInvalido(MENSAJE_CUENTA_SIN_CAMBIO_DE_CORREO)
+        usuario.email = validar_correo_nuevo(usuario, nuevo)
+        try:
+            usuario.save(update_fields=["email", "email_hash"])
+        except IntegrityError as error:
+            raise CambioCorreoInvalido(MENSAJE_CORREO_USADO) from error
+    logger.info("Cambio de correo confirmado (usuario %s)", usuario.pk)
+    return usuario

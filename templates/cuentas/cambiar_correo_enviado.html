@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}Revisá tu correo · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Revisá tu correo nuevo</h1>
+    <p class="mt-2">Te enviamos un enlace para confirmar el cambio. Hasta que lo abras, tu correo actual sigue siendo el de siempre.</p>
+    <p class="mt-2 text-sm text-stone-600">
+      Si no te llega, revisá la carpeta de spam. Podés pedir otro enlace en unos minutos.
+    </p>
+    <p class="mt-4 text-sm">
+      <a href="{% url 'cuentas:perfil' %}" class="underline">Volver a mi perfil</a>
+    </p>
+  </section>
+{% endblock %}

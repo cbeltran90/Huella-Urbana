@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Correo actualizado · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">¡Correo actualizado!</h1>
+    <p class="mt-2">Actualizamos el correo de tu cuenta. Desde ahora ingresás con el correo nuevo.</p>
+    <p class="mt-4 text-sm">
+      {% if user.is_authenticated %}
+        <a href="{% url 'cuentas:perfil' %}" class="underline">Volver a mi perfil</a>
+      {% else %}
+        <a href="{% url 'cuentas:login' %}" class="underline">Ingresar</a>
+      {% endif %}
+    </p>
+  </section>
+{% endblock %}
