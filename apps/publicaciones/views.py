@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -60,9 +61,12 @@ def detalle(request, pk):
     )
     # La publicación muestra las fotos de su ficha (no tiene fotos propias).
     fotos = publicacion.ficha.fotografias.all() if publicacion.ficha else []
-    return render(
-        request, "publicaciones/detalle.html", {"publicacion": publicacion, "fotos": fotos}
-    )
+    contexto = {
+        "publicacion": publicacion,
+        "fotos": fotos,
+        "puede_desvincular": vinculacion.puede_desvincular(publicacion, request.user),
+    }
+    return render(request, "publicaciones/detalle.html", contexto)
 
 
 @cuenta_habilitada
@@ -158,7 +162,25 @@ def candidatas(request, pk):
 @cuenta_habilitada
 @require_POST
 def responder_coincidencia(request, pk):
-    coincidencia = get_object_or_404(Coincidencia, pk=pk, ficha__responsable=request.user)
+    coincidencia = get_object_or_404(Coincidencia, pk=pk)
     confirmar = request.POST.get("accion") == "confirmar"
-    vinculacion.responder(coincidencia, request.user, confirmar=confirmar)
+    try:
+        vinculacion.responder(coincidencia, request.user, confirmar=confirmar)
+    except PermissionError:
+        raise PermissionDenied from None
     return redirect("publicaciones:detalle", pk=coincidencia.publicacion_id)
+
+
+@login_required
+@cuenta_habilitada
+def desvincular(request, pk):
+    publicacion = get_object_or_404(
+        Publicacion.objects.exclude(estado=Publicacion.Estado.ELIMINADA).select_related("ficha"),
+        pk=pk,
+    )
+    if not vinculacion.puede_desvincular(publicacion, request.user):
+        raise PermissionDenied
+    if request.method == "POST":  # sin POST (o si cancela) no se cambia nada
+        vinculacion.desvincular(publicacion, request.user)
+        return redirect("publicaciones:detalle", pk=publicacion.pk)
+    return render(request, "publicaciones/desvincular_confirmar.html", {"publicacion": publicacion})
