@@ -11,34 +11,18 @@
       {% endfor %}
       <div>
         <label for="id_old_password" class="block text-sm font-medium">Contraseña actual</label>
-        <input type="password"
-               name="old_password"
-               id="id_old_password"
-               autocomplete="current-password"
-               autofocus
-               required
-               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_campo_contrasena.html" with nombre="old_password" id="id_old_password" autocomplete="current-password" autofocus=True %}
         {% include "cuentas/_errores.html" with errores=form.old_password.errors %}
       </div>
       <div>
         <label for="id_new_password1" class="block text-sm font-medium">Contraseña nueva</label>
         <p class="text-sm text-stone-600">Mínimo 10 caracteres.</p>
-        <input type="password"
-               name="new_password1"
-               id="id_new_password1"
-               autocomplete="new-password"
-               required
-               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_campo_contrasena.html" with nombre="new_password1" id="id_new_password1" autocomplete="new-password" %}
         {% include "cuentas/_errores.html" with errores=form.new_password1.errors %}
       </div>
       <div>
         <label for="id_new_password2" class="block text-sm font-medium">Confirmar contraseña nueva</label>
-        <input type="password"
-               name="new_password2"
-               id="id_new_password2"
-               autocomplete="new-password"
-               required
-               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_campo_contrasena.html" with nombre="new_password2" id="id_new_password2" autocomplete="new-password" %}
         {% include "cuentas/_errores.html" with errores=form.new_password2.errors %}
       </div>
       <button type="submit"

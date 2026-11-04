@@ -38,12 +38,7 @@
       </div>
       <div>
         <label for="id_password" class="block text-sm font-medium">Contraseña</label>
-        <input type="password"
-               name="password"
-               id="id_password"
-               autocomplete="current-password"
-               required
-               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_campo_contrasena.html" with nombre="password" id="id_password" autocomplete="current-password" %}
         {% include "cuentas/_errores.html" with errores=form.password.errors %}
       </div>
       <button type="submit"
