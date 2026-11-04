@@ -120,3 +120,19 @@ def crear_ficha_sin_responsable(datos, *, cuidador=None):
         es_privada=True,
         **datos,
     )
+
+
+def crear_ficha_en_adopcion(datos, *, cuidador):
+    """Alta directa en adopción: ficha nueva en "en adopción", a cargo de quien la da de alta.
+
+    No tiene responsable (titular) y es pública, porque está en el circuito y quienes se
+    postulan necesitan ver sus datos.
+    """
+    datos = {campo: datos[campo] for campo in CAMPOS_EDITABLES if campo in datos}
+    return FichaAnimal.objects.create(
+        estado=FichaAnimal.Estado.EN_ADOPCION,
+        responsable=None,
+        cuidador=cuidador,
+        es_privada=False,
+        **datos,
+    )

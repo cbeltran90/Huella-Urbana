@@ -98,3 +98,15 @@ def test_una_foto_invalida_no_deja_nada_a_medias(ana, con_domicilio):
 
     assert not FichaAnimal.objects.exists()
     assert not Publicacion.objects.exists()
+
+
+def test_un_punto_fuera_de_la_zona_no_deja_nada_a_medias(ana):
+    from apps.cuentas.servicios import DomicilioInvalido
+
+    fuera = Point(-58.38, -34.60, srid=4326)  # Buenos Aires
+
+    with pytest.raises(DomicilioInvalido):
+        servicios.publicar_extravio(ana, animal=ANIMAL, archivo=crear_imagen(), punto=fuera)
+
+    assert not FichaAnimal.objects.exists()
+    assert not Publicacion.objects.exists()

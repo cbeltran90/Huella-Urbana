@@ -3,7 +3,13 @@ import math
 import pytest
 from django.contrib.gis.geos import Point
 
+from apps.cuentas.models import Domicilio
+from apps.cuentas.servicios import DomicilioInvalido, guardar_domicilio
 from apps.publicaciones import ubicacion
+
+pytestmark = pytest.mark.django_db
+
+EXACTO = Point(-68.3030, -54.8019, srid=4326)
 
 
 def metros(a, b):
@@ -13,32 +19,30 @@ def metros(a, b):
     return math.hypot(dx, dy)
 
 
-def test_el_punto_desplazado_queda_dentro_del_radio():
-    original = (-68.3030, -54.8019)
-    for _ in range(200):
-        lon, lat = ubicacion.desplazar(*original, 150)
-        assert metros(Point(*original), Point(lon, lat)) <= 151
+def test_un_usuario_sin_domicilio_no_tiene_punto(ana):
+    assert ubicacion.punto_de_domicilio(ana) is None
 
 
-def test_el_desplazamiento_es_al_azar():
-    puntos = {ubicacion.desplazar(-68.3030, -54.8019, 150) for _ in range(20)}
+def test_el_punto_del_domicilio_es_el_desplazado_no_el_exacto(ana):
+    domicilio = guardar_domicilio(ana, EXACTO)
 
-    assert len(puntos) > 1
+    punto = ubicacion.punto_de_domicilio(ana)
 
-
-@pytest.mark.django_db
-def test_un_usuario_sin_domicilio_no_tiene_punto(django_user_model):
-    usuario = django_user_model.objects.create_user("x@ejemplo.com", "Equis", "clave-de-prueba-1")
-
-    assert ubicacion.punto_de_domicilio(usuario) is None
+    assert punto.equals_exact(domicilio.ubicacion_desplazada, 1e-9)
+    assert not punto.equals_exact(EXACTO, 1e-9)
 
 
-@pytest.mark.django_db
-def test_registrar_domicilio_devuelve_un_punto_cercano_pero_no_el_exacto(django_user_model):
-    usuario = django_user_model.objects.create_user("y@ejemplo.com", "Ye", "clave-de-prueba-1")
-    exacto = Point(-68.3030, -54.8019, srid=4326)
+def test_registrar_domicilio_lo_guarda_y_devuelve_el_punto_desplazado(ana):
+    mostrado = ubicacion.registrar_domicilio(ana, EXACTO)
 
-    mostrado = ubicacion.registrar_domicilio(usuario, exacto)
+    assert Domicilio.objects.get(usuario=ana).ubicacion.equals_exact(EXACTO, 1e-9)
+    assert 0 < metros(EXACTO, mostrado) <= 151
 
-    assert mostrado.srid == 4326
-    assert 0 < metros(exacto, mostrado) <= 151
+
+def test_un_punto_fuera_de_la_zona_no_se_guarda(ana):
+    fuera = Point(-58.38, -34.60, srid=4326)  # Buenos Aires
+
+    with pytest.raises(DomicilioInvalido):
+        ubicacion.registrar_domicilio(ana, fuera)
+
+    assert not Domicilio.objects.exists()

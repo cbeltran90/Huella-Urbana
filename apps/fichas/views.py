@@ -4,6 +4,9 @@ from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.cuentas.decoradores import cuenta_habilitada
+from apps.cuentas.servicios import esta_suspendido
+
 from . import permisos, servicios
 from .forms import FichaForm
 from .models import FichaAnimal
@@ -23,7 +26,7 @@ def mis_fichas(request):
     return render(request, "fichas/mis_fichas.html", {"fichas": fichas})
 
 
-@login_required
+@cuenta_habilitada
 def ficha_nueva(request):
     if request.method == "POST":
         form = FichaForm(request.POST)
@@ -38,15 +41,16 @@ def ficha_nueva(request):
 @login_required
 def ficha_detalle(request, pk):
     ficha = _ficha_visible(request, pk)
+    suspendido = esta_suspendido(request.user)
     contexto = {
         "ficha": ficha,
-        "puede_editar": permisos.puede_editar(request.user, ficha),
-        "puede_baja": permisos.puede_dar_de_baja(request.user, ficha),
+        "puede_editar": permisos.puede_editar(request.user, ficha) and not suspendido,
+        "puede_baja": permisos.puede_dar_de_baja(request.user, ficha) and not suspendido,
     }
     return render(request, "fichas/ficha_detalle.html", contexto)
 
 
-@login_required
+@cuenta_habilitada
 def ficha_editar(request, pk):
     ficha = _ficha_visible(request, pk)
     if not permisos.puede_editar(request.user, ficha):
@@ -61,7 +65,7 @@ def ficha_editar(request, pk):
     return render(request, "fichas/ficha_form.html", {"form": form, "ficha": ficha})
 
 
-@login_required
+@cuenta_habilitada
 def ficha_baja(request, pk):
     ficha = _ficha_visible(request, pk)
     if not permisos.puede_dar_de_baja(request.user, ficha):
