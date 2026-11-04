@@ -39,5 +39,9 @@
       {% endif %}
     </dl>
     {% if publicacion.descripcion %}<p class="mt-4 text-sm">{{ publicacion.descripcion }}</p>{% endif %}
+    {% if puede_desvincular %}
+      <a href="{% url 'publicaciones:desvincular' publicacion.pk %}"
+         class="mt-4 inline-block rounded border px-3 py-1 text-sm">Desvincular de la ficha</a>
+    {% endif %}
   </section>
 {% endblock %}

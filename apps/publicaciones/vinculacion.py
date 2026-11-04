@@ -100,3 +100,28 @@ def responder(coincidencia, usuario, *, confirmar):
         publicacion,
     )
     return coincidencia
+
+
+def puede_desvincular(publicacion, usuario):
+    """El autor, el responsable de la ficha o un moderador."""
+    if publicacion.ficha_id is None or not usuario.is_authenticated:
+        return False
+    return (
+        publicacion.autor_id == usuario.pk
+        or publicacion.ficha.responsable_id == usuario.pk
+        or es_moderador(usuario)
+    )
+
+
+@transaction.atomic
+def desvincular(publicacion, usuario):
+    """Separa la publicación de su ficha. Queda suelta y el rastro se actualiza."""
+    if not puede_desvincular(publicacion, usuario):
+        raise PermissionError("No podés desvincular esta publicación.")
+    ficha = publicacion.ficha
+    Coincidencia.objects.filter(publicacion=publicacion, ficha=ficha).update(
+        elegida_por_autor=False, decision_responsable=Coincidencia.Decision.DESCARTADA
+    )
+    publicacion.ficha = None
+    publicacion.save(update_fields=["ficha"])
+    return ficha
