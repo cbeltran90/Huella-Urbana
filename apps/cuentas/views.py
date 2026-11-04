@@ -1,11 +1,12 @@
 from constance import config
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from . import servicios
 from .decoradores import cuenta_habilitada
-from .forms import DomicilioForm, ReenviarConfirmacionForm, RegistroForm
+from .forms import DomicilioForm, NombreUsuarioForm, ReenviarConfirmacionForm, RegistroForm
 from .models import Domicilio, EstadoCuenta
 
 MENSAJE_ERROR_GENERAL = "Error al crear cuenta. Revisar nombre de usuario y correo."
@@ -85,3 +86,30 @@ def domicilio(request):
         "guardado": request.GET.get("guardado") == "1",
     }
     return render(request, "cuentas/domicilio.html", contexto)
+
+
+@cuenta_habilitada
+def perfil(request):
+    contexto = {
+        "tiene_domicilio": Domicilio.objects.filter(usuario=request.user).exists(),
+        "guardado": request.GET.get("guardado") == "1",
+    }
+    return render(request, "cuentas/perfil.html", contexto)
+
+
+@cuenta_habilitada
+def editar_perfil(request):
+    if request.method == "POST":
+        form = NombreUsuarioForm(request.POST, usuario=request.user)
+        if form.is_valid():
+            try:
+                form.save()
+            except ValidationError as error:
+                form.add_error("nombre_usuario", error)
+            else:
+                return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
+    else:
+        form = NombreUsuarioForm(
+            initial={"nombre_usuario": request.user.nombre_usuario}, usuario=request.user
+        )
+    return render(request, "cuentas/editar_perfil.html", {"form": form})
