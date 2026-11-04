@@ -6,7 +6,8 @@ from unfold.admin import ModelAdmin
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from . import servicios
-from .models import Rol, Sancion, Usuario
+from .models import Sancion, Usuario
+from .permisos_admin import es_administrador, es_moderador_o_administrador
 
 CAMPOS_ALTA = (
     "email",
@@ -31,6 +32,15 @@ CAMPOS_SISTEMA = (
     "email_hash",
 )
 MENSAJE_USUARIO_NO_ENCONTRADO = "No se encontró ningún usuario"
+# Lo que ve un moderador de cada usuario: datos básicos, sin contraseña ni permisos.
+CAMPOS_BASICOS = (
+    "email",
+    "nombre_usuario",
+    "rol",
+    "es_organizacion",
+    "es_zoonosis",
+    "estado_cuenta",
+)
 
 
 @admin.register(Usuario)
@@ -63,21 +73,30 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
     )
     add_fieldsets = ((None, {"classes": ("wide",), "fields": CAMPOS_ALTA}),)
 
-    def _es_administrador(self, request):
-        return getattr(request.user, "rol", None) == Rol.ADMINISTRADOR
+    # Ven usuarios el moderador y el administrador; solo el administrador los
+    # crea, modifica o borra (y con eso, sus roles).
+    def has_module_permission(self, request):
+        return es_moderador_o_administrador(request)
 
-    # Solo el administrador crea, modifica o borra usuarios (y con eso, sus roles).
+    def has_view_permission(self, request, obj=None):
+        return es_moderador_o_administrador(request)
+
     def has_add_permission(self, request):
-        return self._es_administrador(request)
+        return es_administrador(request)
 
     def has_change_permission(self, request, obj=None):
-        return self._es_administrador(request)
+        return es_administrador(request)
 
     def has_delete_permission(self, request, obj=None):
         # Nadie puede borrar su propia cuenta desde el panel.
         if obj is not None and obj.pk == request.user.pk:
             return False
-        return self._es_administrador(request)
+        return es_administrador(request)
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is not None and not es_administrador(request):
+            return ((None, {"fields": CAMPOS_BASICOS}),)
+        return super().get_fieldsets(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
         campos = super().get_readonly_fields(request, obj)
@@ -143,6 +162,16 @@ class SancionAdmin(ModelAdmin):
         formulario = super().get_form(request, obj, **kwargs)
         formulario.autor = request.user
         return formulario
+
+    # Ven y cargan sanciones el moderador y el administrador.
+    def has_module_permission(self, request):
+        return es_moderador_o_administrador(request)
+
+    def has_view_permission(self, request, obj=None):
+        return es_moderador_o_administrador(request)
+
+    def has_add_permission(self, request):
+        return es_moderador_o_administrador(request)
 
     # Las sanciones quedan como registro: no se editan ni se borran, solo se levantan.
     def has_change_permission(self, request, obj=None):
