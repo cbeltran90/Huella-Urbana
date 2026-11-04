@@ -106,9 +106,17 @@ class Usuario(AbstractUser):
         self.email_hash = hash_email(self.email)
         # is_active se deriva de estado_cuenta: solo una cuenta activa puede entrar.
         self.is_active = self.estado_cuenta == EstadoCuenta.ACTIVA
+        # El acceso al panel y los permisos totales se derivan del rol (CU-07).
+        self.is_staff = self.rol in (Rol.MODERADOR, Rol.ADMINISTRADOR)
+        self.is_superuser = self.rol == Rol.ADMINISTRADOR
         campos = kwargs.get("update_fields")
-        if campos is not None and "estado_cuenta" in campos:
-            kwargs["update_fields"] = {*campos, "is_active"}
+        if campos is not None:
+            derivados = set(campos)
+            if "estado_cuenta" in campos:
+                derivados.add("is_active")
+            if "rol" in campos:
+                derivados.update({"is_staff", "is_superuser"})
+            kwargs["update_fields"] = derivados
         super().save(*args, **kwargs)
 
 
