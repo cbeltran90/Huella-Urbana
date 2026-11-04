@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -158,7 +159,10 @@ def candidatas(request, pk):
 @cuenta_habilitada
 @require_POST
 def responder_coincidencia(request, pk):
-    coincidencia = get_object_or_404(Coincidencia, pk=pk, ficha__responsable=request.user)
+    coincidencia = get_object_or_404(Coincidencia, pk=pk)
     confirmar = request.POST.get("accion") == "confirmar"
-    vinculacion.responder(coincidencia, request.user, confirmar=confirmar)
+    try:
+        vinculacion.responder(coincidencia, request.user, confirmar=confirmar)
+    except PermissionError:
+        raise PermissionDenied from None
     return redirect("publicaciones:detalle", pk=coincidencia.publicacion_id)
