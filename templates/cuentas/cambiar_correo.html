@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Cambiar correo · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Cambiar correo</h1>
+    <p class="mt-2 text-sm text-stone-600">
+      Tu correo actual es <strong>{{ user.email }}</strong>. Te enviamos un enlace al correo nuevo: hasta que lo abras, seguís ingresando con el actual.
+    </p>
+    <form method="post" novalidate class="mt-4 space-y-4">
+      {% csrf_token %}
+      {% for error in form.non_field_errors %}
+        <p role="alert"
+           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+      {% endfor %}
+      <div>
+        <label for="id_email" class="block text-sm font-medium">Correo electrónico nuevo</label>
+        <input type="email"
+               name="email"
+               id="id_email"
+               value="{{ form.email.value|default_if_none:'' }}"
+               autocomplete="email"
+               autofocus
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.email.errors %}
+      </div>
+      <button type="submit"
+              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Enviar enlace</button>
+      <a href="{% url 'cuentas:perfil' %}"
+         class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+    </form>
+  </section>
+{% endblock %}

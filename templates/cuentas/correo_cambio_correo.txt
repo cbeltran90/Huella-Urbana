@@ -1,0 +1,7 @@
+{% autoescape off %}Hola {{ usuario.nombre_usuario }}:
+
+Pediste cambiar el correo de tu cuenta de Huella Urbana por este. Para confirmarlo abrí este enlace:
+{{ enlace }}
+
+El enlace vale {{ dias }} día{{ dias|pluralize }}. Hasta que lo abras, tu correo actual sigue siendo el de siempre. Si no lo pediste, ignorá este mensaje.
+{% endautoescape %}

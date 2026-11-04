@@ -23,8 +23,8 @@ MENSAJE_CLAVES_DISTINTAS = "Las contraseñas no coinciden"
 MENSAJE_CLAVE_ACTUAL_INCORRECTA = "La contraseña actual es incorrecta"
 MENSAJE_NOMBRE_OFENSIVO = "Nombre ofensivo"
 MENSAJE_NOMBRE_USADO = "Nombre ya usado"
-MENSAJE_CORREO_USADO = "El correo electrónico ingresado ya se encuentra registrado"
-MENSAJE_CORREO_SUSPENDIDO = "Correo con suspensión permanente"
+MENSAJE_CORREO_USADO = servicios.MENSAJE_CORREO_USADO
+MENSAJE_CORREO_SUSPENDIDO = servicios.MENSAJE_CORREO_SUSPENDIDO
 MENSAJE_LOGIN_INVALIDO = "Correo o contraseña incorrectos"
 MENSAJE_CUENTA_PENDIENTE = (
     "Tu cuenta todavía no está confirmada. Abrí el enlace que te enviamos por correo."
@@ -279,3 +279,12 @@ class CambioContrasenaForm(forms.Form):
         self.usuario.set_password(self.cleaned_data["new_password1"])
         self.usuario.save(update_fields=["password"])
         return self.usuario
+
+
+class CambioCorreoForm(forms.Form):
+    """Pide el correo nuevo desde el perfil.
+
+    Las reglas (en uso, suspendido, igual al actual) las aplica el servicio.
+    """
+
+    email = forms.EmailField(label="Correo electrónico nuevo")
