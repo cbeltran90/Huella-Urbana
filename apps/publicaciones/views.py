@@ -1,13 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from apps.core.limites import limite_publicaciones
 from apps.cuentas.decoradores import cuenta_habilitada
 from apps.cuentas.servicios import DomicilioInvalido
+from apps.fichas.models import Coincidencia
 from apps.imagenes.procesamiento import ImagenInvalida
 
-from . import servicios, ubicacion
+from . import servicios, ubicacion, vinculacion
 from .forms import AltaAdopcionForm, ExtravioForm, HallazgoForm
 from .models import Publicacion
 
@@ -39,7 +41,7 @@ def publicar_extravio(request):
             except DomicilioInvalido as error:
                 form.add_error("latitud", str(error))
             else:
-                return redirect("publicaciones:detalle", pk=publicacion.pk)
+                return _destino(publicacion)
     else:
         form = ExtravioForm(**parametros)
     contexto = {
@@ -84,7 +86,7 @@ def publicar_hallazgo(request):
             except ImagenInvalida as error:
                 form.add_error("foto", str(error))
             else:
-                return redirect("publicaciones:detalle", pk=publicacion.pk)
+                return _destino(publicacion)
     else:
         form = HallazgoForm()
     contexto = {"form": form, "paso_inicial": form.paso_con_error() if form.is_bound else 1}
@@ -116,7 +118,7 @@ def alta_adopcion(request):
             except DomicilioInvalido as error:
                 form.add_error("latitud", str(error))
             else:
-                return redirect("publicaciones:detalle", pk=publicacion.pk)
+                return _destino(publicacion)
     else:
         form = AltaAdopcionForm(tiene_domicilio=tiene_domicilio)
     contexto = {
@@ -125,3 +127,38 @@ def alta_adopcion(request):
         "paso_inicial": form.paso_con_error() if form.is_bound else 1,
     }
     return render(request, "publicaciones/alta_adopcion.html", contexto)
+
+
+def _destino(publicacion):
+    """Tras publicar: si hay candidatas, primero se muestran; si no, va al detalle."""
+    if vinculacion.proponer_coincidencias(publicacion):
+        return redirect("publicaciones:candidatas", pk=publicacion.pk)
+    return redirect("publicaciones:detalle", pk=publicacion.pk)
+
+
+@login_required
+@cuenta_habilitada
+def candidatas(request, pk):
+    publicacion = get_object_or_404(Publicacion, pk=pk, autor=request.user)
+    coincidencias = publicacion.coincidencias.select_related("ficha")
+    if request.method == "POST":
+        ficha_id = request.POST.get("ficha")
+        if ficha_id:  # Eligió una candidata
+            coincidencia = get_object_or_404(coincidencias, ficha_id=ficha_id)
+            vinculacion.vincular(publicacion, coincidencia.ficha, request.user)
+        return redirect("publicaciones:detalle", pk=publicacion.pk)  # "Ninguna corresponde"
+    return render(
+        request,
+        "publicaciones/candidatas.html",
+        {"publicacion": publicacion, "coincidencias": coincidencias},
+    )
+
+
+@login_required
+@cuenta_habilitada
+@require_POST
+def responder_coincidencia(request, pk):
+    coincidencia = get_object_or_404(Coincidencia, pk=pk, ficha__responsable=request.user)
+    confirmar = request.POST.get("accion") == "confirmar"
+    vinculacion.responder(coincidencia, request.user, confirmar=confirmar)
+    return redirect("publicaciones:detalle", pk=coincidencia.publicacion_id)

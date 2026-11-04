@@ -1,7 +1,7 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
 
-from .models import FichaAnimal
+from .models import Coincidencia, FichaAnimal
 
 
 @admin.register(FichaAnimal)
@@ -16,3 +16,17 @@ class FichaAnimalAdmin(ModelAdmin):
         if obj is not None:
             return ("estado",)
         return ()
+
+
+@admin.register(Coincidencia)
+class CoincidenciaAdmin(ModelAdmin):
+    list_display = (
+        "publicacion",
+        "ficha",
+        "atributos_coincidentes",
+        "similitud_visual",
+        "elegida_por_autor",
+        "decision_responsable",
+    )
+    list_filter = ("decision_responsable", "elegida_por_autor")
+    raw_id_fields = ("publicacion", "ficha")

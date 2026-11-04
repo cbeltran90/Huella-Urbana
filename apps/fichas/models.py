@@ -75,3 +75,32 @@ class FichaAnimal(models.Model):
 
     def __str__(self):
         return self.nombre or f"Ficha #{self.pk}"
+
+
+class Coincidencia(models.Model):
+    """Candidata propuesta para una publicación: una ficha que podría ser el mismo animal."""
+
+    class Decision(models.TextChoices):
+        PENDIENTE = "pendiente", "Pendiente"
+        CONFIRMADA = "confirmada", "Confirmada"
+        DESCARTADA = "descartada", "Descartada"
+
+    publicacion = models.ForeignKey(
+        "publicaciones.Publicacion", on_delete=models.CASCADE, related_name="coincidencias"
+    )
+    ficha = models.ForeignKey(FichaAnimal, on_delete=models.CASCADE, related_name="coincidencias")
+    atributos_coincidentes = models.PositiveSmallIntegerField(default=0)
+    similitud_visual = models.FloatField(null=True, blank=True)
+    elegida_por_autor = models.BooleanField(default=False)
+    decision_responsable = models.CharField(
+        max_length=12, choices=Decision.choices, default=Decision.PENDIENTE
+    )
+
+    class Meta:
+        ordering = ["-similitud_visual", "-atributos_coincidentes"]
+        constraints = [
+            models.UniqueConstraint(fields=["publicacion", "ficha"], name="coincidencia_unica")
+        ]
+
+    def __str__(self):
+        return f"{self.publicacion_id} ~ {self.ficha_id}"
