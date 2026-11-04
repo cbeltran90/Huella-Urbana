@@ -175,32 +175,86 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 
 # --- Parámetros configurables (django-constance, backend de base de datos) ---
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+
+# Tipos de campo con rango: un valor fuera de rango se rechaza en el panel.
+# Todo parámetro nuevo tiene que declarar uno como tercer valor de su línea.
+_ENTERO = "unfold.widgets.UnfoldAdminIntegerFieldWidget"
+_DECIMAL = "unfold.widgets.UnfoldAdminDecimalFieldWidget"
+
+
+def _entero(minimo, maximo):
+    return [
+        "django.forms.IntegerField",
+        {"min_value": minimo, "max_value": maximo, "widget": _ENTERO},
+    ]
+
+
+CONSTANCE_ADDITIONAL_FIELDS = {
+    "dias": _entero(1, 365),
+    "dias_retencion": _entero(1, 3650),
+    "metros_radio": _entero(50, 1000),
+    "cantidad_por_hora": _entero(1, 100),
+    "distancia_phash": _entero(0, 64),
+    "proporcion": [
+        "django.forms.FloatField",
+        {"min_value": 0, "max_value": 1, "widget": _DECIMAL},
+    ],
+}
+
 CONSTANCE_CONFIG = {
     # Valores del documento unificado v4:
     "DIAS_AUSENCIA_RESPONSABLE": (
         30,
         "Días sin responsable, con alguien a cargo, antes de pasar a adopción (CU-52)",
+        "dias",
     ),
     "DIAS_AVISO_VENCIMIENTO": (
         10,
         "Días antes del fin de un tránsito para avisar al hogar (CU-57)",
+        "dias",
     ),
     "DIAS_PUBLICAR_VENCIMIENTO": (
         5,
         "Días antes del fin de un tránsito para publicar el animal en adopción (CU-57)",
+        "dias",
     ),
-    "RADIO_DOMICILIO_METROS": (150, "Radio de desplazamiento del punto de un domicilio (RNF3)"),
+    "RADIO_DOMICILIO_METROS": (
+        150,
+        "Radio de desplazamiento del punto de un domicilio (RNF3)",
+        "metros_radio",
+    ),
     "DURACION_MINIMA_TRANSITO_DIAS": (
         7,
         "Duración máxima mínima que puede declarar un hogar de tránsito (CU-06)",
+        "dias",
     ),
-    "DIAS_PRIMERA_SUSPENSION": (7, "Días de la primera suspensión de una cuenta (CU-59)"),
-    # Por definir: el documento los nombra pero no da el valor (el de abajo es provisorio):
-    "MAX_PUBLICACIONES_HORA": (10, "Publicaciones por hora y por usuario (RNF15)"),
-    "UMBRAL_SIMILITUD": (0.80, "Similitud coseno mínima para proponer una coincidencia (RF3.5)"),
-    "UMBRAL_PHASH": (5, "Distancia de Hamming máxima para considerar una foto repetida (RF2.5)"),
+    "DIAS_PRIMERA_SUSPENSION": (
+        7,
+        "Días de la primera suspensión de una cuenta (CU-59)",
+        "dias",
+    ),
+    # Valores por definir: el de abajo es provisorio
+    "MAX_PUBLICACIONES_HORA": (
+        10,
+        "Publicaciones por hora y por usuario (RNF15)",
+        "cantidad_por_hora",
+    ),
+    "UMBRAL_SIMILITUD": (
+        0.80,
+        "Similitud coseno mínima para proponer una coincidencia (RF3.5)",
+        "proporcion",
+    ),
+    "UMBRAL_PHASH": (
+        5,
+        "Distancia de Hamming máxima para considerar una foto repetida (RF2.5)",
+        "distancia_phash",
+    ),
     # Sale de stack.md, no del documento unificado:
-    "DIAS_RETENCION_NOTIFICACIONES": (90, "Días que se conservan las notificaciones leídas"),
+    "DIAS_RETENCION_NOTIFICACIONES": (
+        90,
+        "Días que se conservan las notificaciones leídas",
+        "dias_retencion",
+    ),
     # Todavía sin parámetro (definirlos): vigencia de avistamientos, umbrales de nivel,
     # reparto de los puntos 5/10/20/30, mínimo de días de un tránsito para sumar puntos,
     # fórmula del cupo estimado, rangos predefinidos del mapa de calor y reintentos de push.
