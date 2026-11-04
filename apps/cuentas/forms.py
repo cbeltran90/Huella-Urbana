@@ -6,6 +6,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.gis.geos import Point
 from django.core.cache import caches
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.core.filtros import NoOfensivo
@@ -191,3 +192,36 @@ class DomicilioForm(forms.Form):
     def punto(self):
         """El punto marcado en el mapa."""
         return Point(self.cleaned_data["longitud"], self.cleaned_data["latitud"], srid=4326)
+
+
+class NombreUsuarioForm(forms.Form):
+    """Cambio del nombre de usuario desde el perfil (CU-03)."""
+
+    nombre_usuario = forms.CharField(
+        label="Nombre de usuario",
+        max_length=150,
+        validators=[NoOfensivo(MENSAJE_NOMBRE_OFENSIVO)],
+    )
+
+    def __init__(self, *args, usuario, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+
+    def clean_nombre_usuario(self):
+        nombre = self.cleaned_data["nombre_usuario"]
+        otros = Usuario.objects.exclude(pk=self.usuario.pk)
+        if otros.filter(nombre_usuario__iexact=nombre).exists():
+            raise ValidationError(MENSAJE_NOMBRE_USADO, code="nombre_usado")
+        return nombre
+
+    def save(self):
+        anterior = self.usuario.nombre_usuario
+        self.usuario.nombre_usuario = self.cleaned_data["nombre_usuario"]
+        try:
+            with transaction.atomic():
+                self.usuario.save(update_fields=["nombre_usuario"])
+        except IntegrityError as error:
+            # Otra persona tomó el nombre justo ahora: la base de datos lo impide.
+            self.usuario.nombre_usuario = anterior
+            raise ValidationError(MENSAJE_NOMBRE_USADO, code="nombre_usado") from error
+        return self.usuario
