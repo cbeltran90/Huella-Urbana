@@ -56,5 +56,8 @@ urlpatterns = [
         name="recuperar_confirmar",
     ),
     path("domicilio/", views.domicilio, name="domicilio"),
+    path("perfil/", views.perfil, name="perfil"),
+    path("perfil/editar/", views.editar_perfil, name="editar_perfil"),
+    path("perfil/contrasena/", views.cambiar_contrasena, name="cambiar_contrasena"),
     path("salir/", auth_views.LogoutView.as_view(), name="logout"),
 ]

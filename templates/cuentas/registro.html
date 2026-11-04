@@ -45,22 +45,12 @@
       <div>
         <label for="id_password1" class="block text-sm font-medium">Contraseña</label>
         <p class="text-sm text-stone-600">Mínimo 10 caracteres.</p>
-        <input type="password"
-               name="password1"
-               id="id_password1"
-               autocomplete="new-password"
-               required
-               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_campo_contrasena.html" with nombre="password1" id="id_password1" autocomplete="new-password" %}
         {% include "cuentas/_errores.html" with errores=form.password1.errors %}
       </div>
       <div>
         <label for="id_password2" class="block text-sm font-medium">Confirmar contraseña</label>
-        <input type="password"
-               name="password2"
-               id="id_password2"
-               autocomplete="new-password"
-               required
-               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_campo_contrasena.html" with nombre="password2" id="id_password2" autocomplete="new-password" %}
         {% include "cuentas/_errores.html" with errores=form.password2.errors %}
       </div>
       <div>

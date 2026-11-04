@@ -1,11 +1,19 @@
 from constance import config
+from django.contrib.auth import update_session_auth_hash
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from . import servicios
 from .decoradores import cuenta_habilitada
-from .forms import DomicilioForm, ReenviarConfirmacionForm, RegistroForm
+from .forms import (
+    CambioContrasenaForm,
+    DomicilioForm,
+    NombreUsuarioForm,
+    ReenviarConfirmacionForm,
+    RegistroForm,
+)
 from .models import Domicilio, EstadoCuenta
 
 MENSAJE_ERROR_GENERAL = "Error al crear cuenta. Revisar nombre de usuario y correo."
@@ -70,7 +78,7 @@ def domicilio(request):
             except servicios.DomicilioInvalido as error:
                 form.add_error(None, str(error))
             else:
-                return redirect(f"{reverse('cuentas:domicilio')}?guardado=1")
+                return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
     else:
         form = DomicilioForm()
     # Al navegador solo llega el punto desplazado: el exacto nunca sale del servidor.
@@ -82,6 +90,46 @@ def domicilio(request):
         "form": form,
         "centro": centro,
         "radio": config.RADIO_DOMICILIO_METROS,
-        "guardado": request.GET.get("guardado") == "1",
     }
     return render(request, "cuentas/domicilio.html", contexto)
+
+
+@cuenta_habilitada
+def perfil(request):
+    contexto = {
+        "tiene_domicilio": Domicilio.objects.filter(usuario=request.user).exists(),
+        "guardado": request.GET.get("guardado") == "1",
+    }
+    return render(request, "cuentas/perfil.html", contexto)
+
+
+@cuenta_habilitada
+def editar_perfil(request):
+    if request.method == "POST":
+        form = NombreUsuarioForm(request.POST, usuario=request.user)
+        if form.is_valid():
+            try:
+                form.save()
+            except ValidationError as error:
+                form.add_error("nombre_usuario", error)
+            else:
+                return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
+    else:
+        form = NombreUsuarioForm(
+            initial={"nombre_usuario": request.user.nombre_usuario}, usuario=request.user
+        )
+    return render(request, "cuentas/editar_perfil.html", {"form": form})
+
+
+@cuenta_habilitada
+def cambiar_contrasena(request):
+    if request.method == "POST":
+        form = CambioContrasenaForm(request.user, request.POST)
+        if form.is_valid():
+            usuario = form.save()
+            # Mantiene abierta la sesión actual; las demás quedan cerradas.
+            update_session_auth_hash(request, usuario)
+            return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
+    else:
+        form = CambioContrasenaForm(request.user)
+    return render(request, "cuentas/cambiar_contrasena.html", {"form": form})

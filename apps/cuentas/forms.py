@@ -6,6 +6,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.gis.geos import Point
 from django.core.cache import caches
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.core.filtros import NoOfensivo
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 MENSAJE_CONDICIONES = "Debe aceptar las condiciones de uso y la política de datos"
 MENSAJE_CLAVE_CORTA = "La contraseña debe tener al menos 10 caracteres"
 MENSAJE_CLAVES_DISTINTAS = "Las contraseñas no coinciden"
+MENSAJE_CLAVE_ACTUAL_INCORRECTA = "La contraseña actual es incorrecta"
 MENSAJE_NOMBRE_OFENSIVO = "Nombre ofensivo"
 MENSAJE_NOMBRE_USADO = "Nombre ya usado"
 MENSAJE_CORREO_USADO = "El correo electrónico ingresado ya se encuentra registrado"
@@ -191,3 +193,89 @@ class DomicilioForm(forms.Form):
     def punto(self):
         """El punto marcado en el mapa."""
         return Point(self.cleaned_data["longitud"], self.cleaned_data["latitud"], srid=4326)
+
+
+class NombreUsuarioForm(forms.Form):
+    """Cambio del nombre de usuario desde el perfil (CU-03)."""
+
+    nombre_usuario = forms.CharField(
+        label="Nombre de usuario",
+        max_length=150,
+        validators=[NoOfensivo(MENSAJE_NOMBRE_OFENSIVO)],
+    )
+
+    def __init__(self, *args, usuario, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+
+    def clean_nombre_usuario(self):
+        nombre = self.cleaned_data["nombre_usuario"]
+        otros = Usuario.objects.exclude(pk=self.usuario.pk)
+        if otros.filter(nombre_usuario__iexact=nombre).exists():
+            raise ValidationError(MENSAJE_NOMBRE_USADO, code="nombre_usado")
+        return nombre
+
+    def save(self):
+        anterior = self.usuario.nombre_usuario
+        self.usuario.nombre_usuario = self.cleaned_data["nombre_usuario"]
+        try:
+            with transaction.atomic():
+                self.usuario.save(update_fields=["nombre_usuario"])
+        except IntegrityError as error:
+            # Otra persona tomó el nombre justo ahora: la base de datos lo impide.
+            self.usuario.nombre_usuario = anterior
+            raise ValidationError(MENSAJE_NOMBRE_USADO, code="nombre_usado") from error
+        return self.usuario
+
+
+class CambioContrasenaForm(forms.Form):
+    """Cambio de contraseña desde el perfil (CU-03, extensiones 4B y 4C).
+
+    Pide la contraseña actual. Las reglas de la nueva son las del registro.
+    """
+
+    old_password = forms.CharField(
+        label="Contraseña actual", strip=False, widget=forms.PasswordInput
+    )
+    new_password1 = forms.CharField(
+        label="Contraseña nueva", strip=False, widget=forms.PasswordInput
+    )
+    new_password2 = forms.CharField(
+        label="Confirmar contraseña nueva", strip=False, widget=forms.PasswordInput
+    )
+
+    def __init__(self, usuario, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+
+    def clean_old_password(self):
+        clave = self.cleaned_data["old_password"]
+        if not self.usuario.check_password(clave):
+            raise ValidationError(MENSAJE_CLAVE_ACTUAL_INCORRECTA, code="password_incorrect")
+        return clave
+
+    def clean_new_password1(self):
+        clave = self.cleaned_data["new_password1"]
+        try:
+            validate_password(clave, self.usuario)
+        except ValidationError as error:
+            mensajes = []
+            for detalle in error.error_list:
+                if detalle.code == "password_too_short":
+                    mensajes.append(MENSAJE_CLAVE_CORTA)
+                else:
+                    mensajes.extend(detalle.messages)
+            raise ValidationError(mensajes) from error
+        return clave
+
+    def clean(self):
+        datos = super().clean()
+        clave1, clave2 = datos.get("new_password1"), datos.get("new_password2")
+        if clave1 and clave2 and clave1 != clave2:
+            self.add_error("new_password2", MENSAJE_CLAVES_DISTINTAS)
+        return datos
+
+    def save(self):
+        self.usuario.set_password(self.cleaned_data["new_password1"])
+        self.usuario.save(update_fields=["password"])
+        return self.usuario

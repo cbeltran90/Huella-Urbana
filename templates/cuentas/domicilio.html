@@ -9,10 +9,6 @@
     <p class="mt-1 text-sm text-stone-600">
       Marcá en el mapa dónde vivís. Para el resto de las personas siempre se muestra de forma aproximada, a menos de {{ radio }} metros del lugar real.
     </p>
-    {% if guardado %}
-      <p role="status"
-         class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">Guardamos tu domicilio.</p>
-    {% endif %}
     <p x-show="sinConexion"
        x-cloak
        role="alert"
@@ -51,6 +47,8 @@
               class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
         Guardar domicilio
       </button>
+      <a href="{% url 'cuentas:perfil' %}"
+         class="block min-h-11 px-4 py-2 text-center underline">Volver a mi perfil</a>
     </form>
   </section>
 {% endblock %}

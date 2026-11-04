@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Editar perfil · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Editar perfil</h1>
+    <form method="post" novalidate class="mt-4 space-y-4">
+      {% csrf_token %}
+      <div>
+        <label for="id_nombre_usuario" class="block text-sm font-medium">Nombre de usuario</label>
+        <input type="text"
+               name="nombre_usuario"
+               id="id_nombre_usuario"
+               value="{{ form.nombre_usuario.value|default_if_none:'' }}"
+               maxlength="150"
+               autocomplete="username"
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.nombre_usuario.errors %}
+      </div>
+      <button type="submit"
+              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+        Guardar cambios
+      </button>
+      <a href="{% url 'cuentas:perfil' %}"
+         class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+    </form>
+  </section>
+{% endblock %}

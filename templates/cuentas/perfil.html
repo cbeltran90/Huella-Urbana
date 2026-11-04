@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Mi perfil · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Mi perfil</h1>
+    {% if guardado %}
+      <p role="status"
+         class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">Guardamos tus cambios.</p>
+    {% endif %}
+    <dl class="mt-4 space-y-3">
+      <div>
+        <dt class="text-sm text-stone-600">Nombre de usuario</dt>
+        <dd class="font-medium">
+          {{ user.nombre_usuario }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm text-stone-600">Correo electrónico</dt>
+        <dd class="font-medium">
+          {{ user.email }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm text-stone-600">Domicilio</dt>
+        <dd class="font-medium">
+          {% if tiene_domicilio %}Registrado{% else %}Todavía no lo registraste{% endif %}
+        </dd>
+      </div>
+    </dl>
+    <div class="mt-6 space-y-3">
+      <a href="{% url 'cuentas:editar_perfil' %}"
+         class="block min-h-11 rounded bg-emerald-600 px-4 py-2 text-center font-semibold text-white">Editar nombre de usuario</a>
+      <a href="{% url 'cuentas:domicilio' %}"
+         class="block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">
+        {% if tiene_domicilio %}Cambiar mi domicilio{% else %}Registrar mi domicilio{% endif %}
+      </a>
+      <a href="{% url 'cuentas:cambiar_contrasena' %}"
+         class="block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Cambiar contraseña</a>
+    </div>
+  </section>
+{% endblock %}
