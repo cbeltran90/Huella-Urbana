@@ -9,4 +9,10 @@ urlpatterns = [
     path("hallazgo/", views.publicar_hallazgo, name="publicar_hallazgo"),
     path("adopcion/", views.alta_adopcion, name="alta_adopcion"),
     path("<int:pk>/", views.detalle, name="detalle"),
+    path("<int:pk>/candidatas/", views.candidatas, name="candidatas"),
+    path(
+        "coincidencia/<int:pk>/responder/",
+        views.responder_coincidencia,
+        name="responder_coincidencia",
+    ),
 ]

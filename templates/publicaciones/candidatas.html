@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Posibles coincidencias · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">¿Es alguno de estos animales?</h1>
+    <p class="mt-1 text-sm text-stone-600">
+      Encontramos fichas parecidas. Si alguna corresponde, avisamos a su responsable.
+    </p>
+    <form method="post" class="mt-4 space-y-4">
+      {% csrf_token %}
+      {% for c in coincidencias %}
+        <div class="rounded border p-3">
+          {% with foto=c.ficha.fotografias.first %}
+            {% if foto %}
+              <img src="{% get_media_prefix %}{{ foto.archivo }}"
+                   alt="Foto de la ficha"
+                   class="w-full rounded">
+            {% endif %}
+          {% endwith %}
+          <p class="mt-2 text-sm">
+            {{ c.ficha.especie }}{% if c.ficha.color %} · {{ c.ficha.color }}{% endif %}
+            · {{ c.atributos_coincidentes }} atributos en común
+            {% if c.similitud_visual is not None %}· parecido visual {{ c.similitud_visual|floatformat:2 }}{% endif %}
+          </p>
+          <button type="submit"
+                  name="ficha"
+                  value="{{ c.ficha_id }}"
+                  class="mt-2 rounded bg-stone-800 px-3 py-1 text-white">Es este</button>
+        </div>
+      {% endfor %}
+      <button type="submit" class="rounded border px-3 py-1">Ninguna corresponde</button>
+    </form>
+  </section>
+{% endblock %}
