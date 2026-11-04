@@ -133,3 +133,11 @@ def cambiar_contrasena(request):
     else:
         form = CambioContrasenaForm(request.user)
     return render(request, "cuentas/cambiar_contrasena.html", {"form": form})
+
+
+def confirmar_correo(request, token):
+    try:
+        servicios.confirmar_cambio_correo(token)
+    except servicios.CambioCorreoInvalido as error:
+        return render(request, "cuentas/correo_fallido.html", {"motivo": str(error)}, status=400)
+    return render(request, "cuentas/correo_confirmado.html")
