@@ -24,6 +24,7 @@ CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "unfold",  # tiene que ir antes de django.contrib.admin
+    "unfold.contrib.constance",  # estilo de Unfold para la pantalla de parámetros
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -175,6 +176,9 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 
 # --- Parámetros configurables (django-constance, backend de base de datos) ---
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+# Solo el administrador ve y cambia los parámetros. Como is_superuser sale del
+# rol, "solo superusuario" equivale a "solo administrador".
+CONSTANCE_SUPERUSER_ONLY = True
 
 # Tipos de campo con rango: un valor fuera de rango se rechaza en el panel.
 # Todo parámetro nuevo tiene que declarar uno como tercer valor de su línea.
