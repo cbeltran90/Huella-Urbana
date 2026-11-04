@@ -250,3 +250,12 @@ def test_el_limite_por_hora_responde_403(entrar, ana, con_domicilio):
 
     assert respuesta.status_code == 403
     assert Publicacion.objects.count() == 1
+
+
+def test_un_domicilio_fuera_de_la_zona_se_informa_y_no_publica_nada(entrar, ana):
+    respuesta = entrar(ana).post(reverse(URL), datos(latitud=-34.60, longitud=-58.38))
+
+    assert respuesta.status_code == 200
+    assert "Ushuaia" in respuesta.content.decode()
+    assert not Publicacion.objects.exists()
+    assert not FichaAnimal.objects.exists()

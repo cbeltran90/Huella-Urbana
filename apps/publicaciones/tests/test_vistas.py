@@ -112,3 +112,12 @@ def test_una_publicacion_eliminada_no_se_ve(entrar, ana):
     respuesta = entrar(ana).get(reverse("publicaciones:detalle", args=[publicacion.pk]))
 
     assert respuesta.status_code == 404
+
+
+def test_un_domicilio_fuera_de_la_zona_se_informa_y_no_publica_nada(entrar, ana):
+    respuesta = entrar(ana).post(reverse(URL), datos(latitud=-34.60, longitud=-58.38))
+
+    assert respuesta.status_code == 200
+    assert "Ushuaia" in respuesta.content.decode()
+    assert not Publicacion.objects.exists()
+    assert not FichaAnimal.objects.exists()

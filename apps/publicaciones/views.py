@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.core.limites import limite_publicaciones
 from apps.cuentas.decoradores import cuenta_habilitada
+from apps.cuentas.servicios import DomicilioInvalido
 from apps.imagenes.procesamiento import ImagenInvalida
 
 from . import servicios, ubicacion
@@ -35,6 +36,8 @@ def publicar_extravio(request):
                 )
             except ImagenInvalida as error:
                 form.add_error("foto", str(error))
+            except DomicilioInvalido as error:
+                form.add_error("latitud", str(error))
             else:
                 return redirect("publicaciones:detalle", pk=publicacion.pk)
     else:
@@ -110,6 +113,8 @@ def alta_adopcion(request):
                 )
             except ImagenInvalida as error:
                 form.add_error("fotos", str(error))
+            except DomicilioInvalido as error:
+                form.add_error("latitud", str(error))
             else:
                 return redirect("publicaciones:detalle", pk=publicacion.pk)
     else:
