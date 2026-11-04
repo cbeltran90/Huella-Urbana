@@ -1,9 +1,13 @@
 from django.db import transaction
 
-from apps.fichas.servicios import crear_ficha, crear_ficha_sin_responsable
+from apps.fichas.servicios import (
+    crear_ficha,
+    crear_ficha_en_adopcion,
+    crear_ficha_sin_responsable,
+)
 from apps.imagenes.servicios import registrar_fotografia
 
-from . import ubicacion
+from . import avisos, ubicacion
 from .models import Publicacion
 
 
@@ -85,3 +89,52 @@ def publicar_hallazgo(
         raza=ficha.raza,
         color=ficha.color,
     )
+
+
+@transaction.atomic
+def _crear_alta_en_adopcion(usuario, *, animal, archivos, descripcion, telefono_visible, punto):
+    lugar = ubicacion.punto_de_domicilio(usuario)
+    if lugar is None:
+        if punto is None:
+            raise ValueError("Falta la ubicación: el usuario no tiene domicilio.")
+        lugar = ubicacion.registrar_domicilio(usuario, punto)
+
+    ficha = crear_ficha_en_adopcion(animal, cuidador=usuario)
+    for archivo in archivos:
+        registrar_fotografia(archivo=archivo, autor=usuario, ficha=ficha)
+
+    return Publicacion.objects.create(
+        tipo=Publicacion.Tipo.ADOPCION,
+        autor=usuario,
+        ficha=ficha,
+        ubicacion=lugar,
+        descripcion=descripcion,
+        telefono_visible=telefono_visible,
+        especie=ficha.especie,
+        tamano=ficha.tamano,
+        raza=ficha.raza,
+        color=ficha.color,
+    )
+
+
+def alta_en_adopcion(usuario, *, animal, archivos, punto=None, descripcion="", telefono_visible=""):
+    """Alta directa en adopción: ficha nueva en "en adopción" a cargo del usuario y su publicación.
+
+    - 'archivos': las fotos (al menos una), todas de la ficha.
+    - 'punto': ubicación indicada por el usuario; solo se usa si no tiene domicilio.
+    La publicación sale con la ubicación desplazada del domicilio. Después de guardar todo, se
+    avisa a los hogares compatibles; si eso falla, el alta queda igual.
+    Lanza 'ImagenInvalida' si una foto no sirve; no queda nada a medias (transacción).
+    """
+    if not archivos:
+        raise ValueError("Hace falta al menos una foto.")
+    publicacion = _crear_alta_en_adopcion(
+        usuario,
+        animal=animal,
+        archivos=archivos,
+        descripcion=descripcion,
+        telefono_visible=telefono_visible,
+        punto=punto,
+    )
+    avisos.avisar_hogares_compatibles(publicacion)
+    return publicacion

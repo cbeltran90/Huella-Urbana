@@ -3,14 +3,15 @@ from django.contrib.gis.geos import Point
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.core.limites import limite_publicaciones
+from apps.cuentas.decoradores import cuenta_habilitada
 from apps.imagenes.procesamiento import ImagenInvalida
 
 from . import servicios, ubicacion
-from .forms import ExtravioForm, HallazgoForm
+from .forms import AltaAdopcionForm, ExtravioForm, HallazgoForm
 from .models import Publicacion
 
 
-@login_required
+@cuenta_habilitada
 @limite_publicaciones
 def publicar_extravio(request):
     tiene_domicilio = ubicacion.punto_de_domicilio(request.user) is not None
@@ -59,7 +60,7 @@ def detalle(request, pk):
     )
 
 
-@login_required
+@cuenta_habilitada
 @limite_publicaciones
 def publicar_hallazgo(request):
     if request.method == "POST":
@@ -85,3 +86,37 @@ def publicar_hallazgo(request):
         form = HallazgoForm()
     contexto = {"form": form, "paso_inicial": form.paso_con_error() if form.is_bound else 1}
     return render(request, "publicaciones/publicar_hallazgo.html", contexto)
+
+
+@cuenta_habilitada
+@limite_publicaciones
+def alta_adopcion(request):
+    tiene_domicilio = ubicacion.punto_de_domicilio(request.user) is not None
+    if request.method == "POST":
+        form = AltaAdopcionForm(request.POST, request.FILES, tiene_domicilio=tiene_domicilio)
+        if form.is_valid():
+            datos = form.cleaned_data
+            punto = None
+            if datos["latitud"] is not None and datos["longitud"] is not None:
+                punto = Point(datos["longitud"], datos["latitud"], srid=4326)
+            try:
+                publicacion = servicios.alta_en_adopcion(
+                    request.user,
+                    animal=form.datos_ficha(),
+                    archivos=datos["fotos"],
+                    punto=punto,
+                    descripcion=datos["descripcion"],
+                    telefono_visible=datos["telefono_visible"],
+                )
+            except ImagenInvalida as error:
+                form.add_error("fotos", str(error))
+            else:
+                return redirect("publicaciones:detalle", pk=publicacion.pk)
+    else:
+        form = AltaAdopcionForm(tiene_domicilio=tiene_domicilio)
+    contexto = {
+        "form": form,
+        "tiene_domicilio": tiene_domicilio,
+        "paso_inicial": form.paso_con_error() if form.is_bound else 1,
+    }
+    return render(request, "publicaciones/alta_adopcion.html", contexto)
