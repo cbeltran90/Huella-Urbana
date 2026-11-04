@@ -73,11 +73,12 @@ def correo_con_suspension_permanente(email):
 def tipo_sugerido(usuario):
     """Qué sanción corresponde por defecto: temporal la primera vez, permanente después.
 
-    Cuenta las anteriores de la misma persona (por correo) que no se levantaron. El
+    Cuenta las anteriores de la misma persona (por cuenta o por correo) que no se levantaron. El
     moderador puede elegir la permanente igual: extensión 3A de CU-59.
     """
     anteriores = Sancion.objects.filter(
-        email_hash=usuario.email_hash, revocada_en__isnull=True
+        models.Q(usuario=usuario) | models.Q(email_hash=usuario.email_hash),
+        revocada_en__isnull=True,
     ).exists()
     return Sancion.Tipo.PERMANENTE if anteriores else Sancion.Tipo.TEMPORAL
 
