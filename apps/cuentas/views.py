@@ -9,6 +9,7 @@ from . import servicios
 from .decoradores import cuenta_habilitada
 from .forms import (
     CambioContrasenaForm,
+    CambioCorreoForm,
     DomicilioForm,
     NombreUsuarioForm,
     ReenviarConfirmacionForm,
@@ -17,6 +18,7 @@ from .forms import (
 from .models import Domicilio, EstadoCuenta
 
 MENSAJE_ERROR_GENERAL = "Error al crear cuenta. Revisar nombre de usuario y correo."
+MENSAJE_ENVIO_FALLIDO = "No pudimos enviar el correo. Probá de nuevo en unos minutos"
 
 
 def registro(request):
@@ -141,3 +143,28 @@ def confirmar_correo(request, token):
     except servicios.CambioCorreoInvalido as error:
         return render(request, "cuentas/correo_fallido.html", {"motivo": str(error)}, status=400)
     return render(request, "cuentas/correo_confirmado.html")
+
+
+@cuenta_habilitada
+def cambiar_correo(request):
+    if request.method == "POST":
+        form = CambioCorreoForm(request.POST)
+        if form.is_valid():
+            try:
+                enviado = servicios.solicitar_cambio_correo(
+                    request.user, form.cleaned_data["email"], request
+                )
+            except servicios.CambioCorreoInvalido as error:
+                form.add_error("email", str(error))
+            else:
+                if enviado:
+                    return redirect("cuentas:cambiar_correo_enviado")
+                form.add_error(None, MENSAJE_ENVIO_FALLIDO)
+    else:
+        form = CambioCorreoForm()
+    return render(request, "cuentas/cambiar_correo.html", {"form": form})
+
+
+@cuenta_habilitada
+def cambiar_correo_enviado(request):
+    return render(request, "cuentas/cambiar_correo_enviado.html")

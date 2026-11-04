@@ -279,3 +279,12 @@ class CambioContrasenaForm(forms.Form):
         self.usuario.set_password(self.cleaned_data["new_password1"])
         self.usuario.save(update_fields=["password"])
         return self.usuario
+
+
+class CambioCorreoForm(forms.Form):
+    """Pide el correo nuevo desde el perfil.
+
+    Las reglas (en uso, suspendido, igual al actual) las aplica el servicio.
+    """
+
+    email = forms.EmailField(label="Correo electrónico nuevo")

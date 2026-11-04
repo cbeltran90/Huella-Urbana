@@ -59,6 +59,8 @@ urlpatterns = [
     path("perfil/", views.perfil, name="perfil"),
     path("perfil/editar/", views.editar_perfil, name="editar_perfil"),
     path("perfil/contrasena/", views.cambiar_contrasena, name="cambiar_contrasena"),
+    path("perfil/correo/", views.cambiar_correo, name="cambiar_correo"),
+    path("perfil/correo/enviado/", views.cambiar_correo_enviado, name="cambiar_correo_enviado"),
     path("correo/confirmar/<str:token>/", views.confirmar_correo, name="confirmar_correo"),
     path("salir/", auth_views.LogoutView.as_view(), name="logout"),
 ]
