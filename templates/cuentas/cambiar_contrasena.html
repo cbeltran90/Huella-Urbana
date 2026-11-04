@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block titulo %}Cambiar contraseña · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Cambiar contraseña</h1>
+    <form method="post" novalidate class="mt-4 space-y-4">
+      {% csrf_token %}
+      {% for error in form.non_field_errors %}
+        <p role="alert"
+           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+      {% endfor %}
+      <div>
+        <label for="id_old_password" class="block text-sm font-medium">Contraseña actual</label>
+        <input type="password"
+               name="old_password"
+               id="id_old_password"
+               autocomplete="current-password"
+               autofocus
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.old_password.errors %}
+      </div>
+      <div>
+        <label for="id_new_password1" class="block text-sm font-medium">Contraseña nueva</label>
+        <p class="text-sm text-stone-600">Mínimo 10 caracteres.</p>
+        <input type="password"
+               name="new_password1"
+               id="id_new_password1"
+               autocomplete="new-password"
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.new_password1.errors %}
+      </div>
+      <div>
+        <label for="id_new_password2" class="block text-sm font-medium">Confirmar contraseña nueva</label>
+        <input type="password"
+               name="new_password2"
+               id="id_new_password2"
+               autocomplete="new-password"
+               required
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.new_password2.errors %}
+      </div>
+      <button type="submit"
+              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+        Guardar contraseña
+      </button>
+      <a href="{% url 'cuentas:perfil' %}"
+         class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+    </form>
+  </section>
+{% endblock %}
