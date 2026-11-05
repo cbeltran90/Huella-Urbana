@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block titulo %}Perfil de hogar y familia · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Perfil de hogar y familia</h1>
+    <p class="mt-1 text-sm text-stone-600">
+      Para postularte a adoptar necesitamos conocer tu hogar y tu experiencia con animales.
+    </p>
+    {% if guardado %}
+      <p role="status"
+         class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">Guardamos tus cambios.</p>
+    {% endif %}
+    {% if puede_postularse %}
+      <p role="status"
+         class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+        Tu perfil está completo: ya podés postularte para adoptar.
+      </p>
+    {% else %}
+      <p class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        Todavía no podés postularte para adoptar. Completá este perfil.
+      </p>
+    {% endif %}
+    {% if faltantes %}
+      <div role="alert"
+           class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <p class="font-medium">No guardamos el perfil. Falta completar:</p>
+        <ul class="mt-1 list-disc pl-5">
+          {% for dato in faltantes %}<li>{{ dato }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    <div class="mt-6">
+      <h2 class="text-lg font-semibold">Tu hogar</h2>
+      {% if hogar_completo %}
+        <p class="mt-1 text-sm">{% include "cuentas/_resumen_hogar.html" %}</p>
+        <a href="{% url 'cuentas:datos_hogar' %}?volver=adopcion"
+           class="mt-2 block min-h-11 px-4 py-2 text-center underline">Cambiar los datos del hogar</a>
+      {% elif domicilio %}
+        <p class="mt-1 text-sm text-stone-700">Faltan datos de tu hogar.</p>
+        <a href="{% url 'cuentas:datos_hogar' %}?volver=adopcion"
+           class="mt-2 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Completar los datos del hogar</a>
+      {% else %}
+        <p class="mt-1 text-sm text-stone-700">Primero registrá tu domicilio en el mapa.</p>
+        <a href="{% url 'cuentas:domicilio' %}"
+           class="mt-2 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Registrar mi domicilio</a>
+      {% endif %}
+    </div>
+    <form method="post" novalidate class="mt-6 space-y-4">
+      {% csrf_token %}
+      <div>
+        <label for="id_experiencia_previa" class="block text-sm font-medium">Experiencia previa con animales</label>
+        <p class="text-sm text-stone-600">Contanos qué animales cuidaste y por cuánto tiempo.</p>
+        <textarea name="experiencia_previa"
+                  id="id_experiencia_previa"
+                  rows="5"
+                  maxlength="{{ max_caracteres }}"
+                  class="mt-1 w-full rounded border border-stone-300 px-3 py-2">{{ form.experiencia_previa.value|default_if_none:'' }}</textarea>
+        {% include "cuentas/_errores.html" with errores=form.experiencia_previa.errors %}
+      </div>
+      <button type="submit"
+              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Guardar perfil</button>
+      <a href="{% url 'cuentas:perfil' %}"
+         class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+    </form>
+  </section>
+{% endblock %}

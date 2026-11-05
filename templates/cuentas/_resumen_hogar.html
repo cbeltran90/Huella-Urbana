@@ -1,0 +1,3 @@
+{{ domicilio.get_tipo_vivienda_display }}, {% if domicilio.tiene_patio %}con patio{% else %}sin patio{% endif %}
+<br>
+Convivientes: {{ domicilio.convivientes }} · Niños: {% if domicilio.hay_ninos %}sí{% else %}no{% endif %} · Mascotas propias: {{ domicilio.mascotas_propias }}
