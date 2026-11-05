@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Desactivar perfil de tránsito · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Desactivar perfil de tránsito</h1>
+    {% if no_permitido %}
+      <p role="alert"
+         class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        No se puede desactivar el perfil porque tenés animales a cargo.
+      </p>
+      <p class="mt-4 text-sm text-stone-700">
+        Mientras tanto podés pausarlo: no vas a recibir animales nuevos hasta la fecha de reanudación que elijas.
+      </p>
+      <div class="mt-6 space-y-3">
+        <a href="{% url 'transito:perfil_transito' %}"
+           class="block min-h-11 rounded bg-emerald-600 px-4 py-2 text-center font-semibold text-white">Pausar mi perfil</a>
+        <a href="{% url 'cuentas:perfil' %}"
+           class="block min-h-11 px-4 py-2 text-center underline">Volver al perfil</a>
+      </div>
+    {% else %}
+      <p class="mt-4 text-sm text-stone-700">
+        Si lo desactivás, dejás de ser hogar de tránsito y no vas a recibir animales. Tus datos quedan guardados: podés volver a activarlo completando el perfil de nuevo.
+      </p>
+      <form method="post" class="mt-6 space-y-3">
+        {% csrf_token %}
+        <button type="submit"
+                class="min-h-11 w-full rounded bg-red-700 px-4 py-2 font-semibold text-white">Desactivar perfil</button>
+        <a href="{% url 'transito:perfil_transito' %}"
+           class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}

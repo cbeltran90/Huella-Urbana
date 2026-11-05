@@ -152,5 +152,9 @@
       <a href="{% url 'cuentas:perfil' %}"
          class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
     </form>
+    {% if es_hogar_de_transito %}
+      <a href="{% url 'transito:desactivar_perfil' %}"
+         class="mt-4 block min-h-11 px-4 py-2 text-center text-red-700 underline">Desactivar perfil de tránsito</a>
+    {% endif %}
   </section>
 {% endblock %}

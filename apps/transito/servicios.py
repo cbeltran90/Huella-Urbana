@@ -23,6 +23,9 @@ MENSAJE_TAMANO_INVALIDO = "Elegí un tamaño de la lista."
 MENSAJE_DURACION_LARGA = f"La duración máxima no puede superar los {MAX_DURACION_MAXIMA_DIAS} días."
 MENSAJE_PAUSA_PASADA = "La fecha de reanudación tiene que ser posterior a hoy."
 MENSAJE_CUPO = f"El cupo tiene que estar entre 1 y {MAX_CUPO_DECLARADO}."
+MENSAJE_ANIMALES_A_CARGO = (
+    "No se puede desactivar el perfil porque tenés animales a cargo. Podés pausarlo."
+)
 
 
 class PerfilTransitoInvalido(ValueError):
@@ -43,6 +46,14 @@ class PerfilTransitoIncompleto(ValueError):
 
 class HogarIncompleto(PerfilTransitoIncompleto):
     """Faltan datos del hogar (CU-06, 2A): hay que pedirlos y volver al perfil."""
+
+
+class SinPerfilActivo(ValueError):
+    """La persona no tiene un perfil de tránsito activo que desactivar."""
+
+
+class DesactivacionNoPermitida(ValueError):
+    """No se puede desactivar el perfil porque hay animales a cargo (CU-66)."""
 
 
 def mensaje_duracion_minima():
@@ -175,3 +186,29 @@ def esta_disponible(perfil, hoy=None):
         return True
     hoy = hoy or timezone.localdate()
     return perfil.pausa_hasta is not None and perfil.pausa_hasta <= hoy
+
+
+def tiene_animales_a_cargo(usuario):
+    """True si el hogar tiene animales alojados hoy (CU-66).
+
+    Provisorio: los alojamientos son del módulo C y todavía no existen, así que por ahora
+    nadie tiene animales a cargo. Cuando C los tenga, esta es la única función a conectar.
+    """
+    return False
+
+
+def desactivar_perfil_transito(usuario):
+    """Desactiva el perfil de tránsito (CU-66, 7B de CU-06).
+
+    No se puede con animales a cargo: lanza DesactivacionNoPermitida y el perfil sigue
+    activo (la persona puede pausarlo). Los datos del perfil se conservan y guardarlo de
+    nuevo lo reactiva.
+    """
+    perfil = PerfilTransito.objects.filter(usuario=usuario, activo=True).first()
+    if perfil is None:
+        raise SinPerfilActivo("No hay un perfil de tránsito activo.")
+    if tiene_animales_a_cargo(usuario):
+        raise DesactivacionNoPermitida(MENSAJE_ANIMALES_A_CARGO)
+    perfil.activo = False
+    perfil.save(update_fields=["activo"])
+    return perfil

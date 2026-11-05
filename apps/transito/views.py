@@ -53,3 +53,18 @@ def perfil_transito(request):
         "guardado": request.GET.get("guardado") == "1",
     }
     return render(request, "transito/perfil_transito.html", contexto)
+
+
+@cuenta_habilitada
+def desactivar_perfil_transito(request):
+    if not servicios.es_hogar_de_transito(request.user):
+        return redirect("transito:perfil_transito")
+    if request.method == "POST":
+        try:
+            servicios.desactivar_perfil_transito(request.user)
+        except servicios.DesactivacionNoPermitida:
+            pass
+        else:
+            return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
+    contexto = {"no_permitido": servicios.tiene_animales_a_cargo(request.user)}
+    return render(request, "transito/desactivar_perfil.html", contexto)
