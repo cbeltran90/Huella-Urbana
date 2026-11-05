@@ -1,4 +1,5 @@
 from constance import config
+from django.db.models import Q
 
 from apps.imagenes import vision
 from apps.imagenes.models import Fotografia
@@ -51,12 +52,15 @@ def buscar_candidatas(publicacion):
     opuesto = _OPUESTO.get(publicacion.tipo)
     if opuesto is None:
         return []
+    por_publicacion = Q(
+        publicaciones__tipo=opuesto, publicaciones__estado=Publicacion.Estado.VIGENTE
+    )
+    if publicacion.tipo == Publicacion.Tipo.HALLAZGO:
+        # Quien perdió al animal puede no haber publicado el extravío todavía: sus fichas
+        # registradas (incluso las privadas) también son candidatas de un hallazgo.
+        por_publicacion |= Q(estado=FichaAnimal.Estado.REGISTRADO)
     fichas = (
-        FichaAnimal.objects.filter(
-            publicaciones__tipo=opuesto,
-            publicaciones__estado=Publicacion.Estado.VIGENTE,
-            especie=publicacion.especie,
-        )
+        FichaAnimal.objects.filter(por_publicacion, especie=publicacion.especie)
         .exclude(pk=publicacion.ficha_id)
         .distinct()
     )

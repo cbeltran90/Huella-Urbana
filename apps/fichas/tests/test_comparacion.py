@@ -92,3 +92,18 @@ def test_orden_por_similitud():
     _pub(cerca, Publicacion.Tipo.HALLAZGO)
     _pub(lejos, Publicacion.Tipo.HALLAZGO)
     assert [c[0] for c in buscar_candidatas(pub)] == [cerca, lejos]
+
+
+def test_un_hallazgo_tambien_compara_con_fichas_registradas_sin_extravio():
+    """Pipo: ficha privada de alta preventiva, sin extravío publicado."""
+    pipo = _ficha(estado=FichaAnimal.Estado.REGISTRADO, color="atigrado", es_privada=True)
+    hallado = _ficha(color="atigrado")
+    pub = _pub(hallado, Publicacion.Tipo.HALLAZGO)
+    assert [c[0] for c in buscar_candidatas(pub)] == [pipo]
+
+
+def test_un_extravio_no_compara_con_fichas_sin_hallazgo_publicado():
+    perdido = _ficha(color="atigrado")
+    _ficha(estado=FichaAnimal.Estado.REGISTRADO, color="atigrado")
+    pub = _pub(perdido, Publicacion.Tipo.EXTRAVIO)
+    assert buscar_candidatas(pub) == []
