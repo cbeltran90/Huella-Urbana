@@ -5,6 +5,8 @@ from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from apps.transito import servicios as servicios_transito
+
 from . import servicios
 from .decoradores import cuenta_habilitada
 from .forms import (
@@ -106,6 +108,7 @@ def perfil(request):
         "tiene_domicilio": domicilio is not None,
         "hogar_completo": domicilio is not None and domicilio.hogar_completo,
         "tiene_perfil_adoptante": PerfilAdoptante.objects.filter(usuario=request.user).exists(),
+        "es_hogar_de_transito": servicios_transito.es_hogar_de_transito(request.user),
         "guardado": request.GET.get("guardado") == "1",
     }
     return render(request, "cuentas/perfil.html", contexto)
