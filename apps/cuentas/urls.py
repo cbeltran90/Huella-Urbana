@@ -58,6 +58,7 @@ urlpatterns = [
     path("domicilio/", views.domicilio, name="domicilio"),
     path("hogar/", views.datos_hogar, name="datos_hogar"),
     path("perfil/", views.perfil, name="perfil"),
+    path("perfil/adopcion/", views.perfil_adoptante, name="perfil_adoptante"),
     path("perfil/editar/", views.editar_perfil, name="editar_perfil"),
     path("perfil/contrasena/", views.cambiar_contrasena, name="cambiar_contrasena"),
     path("perfil/correo/", views.cambiar_correo, name="cambiar_correo"),

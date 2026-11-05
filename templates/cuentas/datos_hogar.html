@@ -10,7 +10,7 @@
       <div class="mt-6 space-y-3">
         <a href="{% url 'cuentas:domicilio' %}"
            class="block min-h-11 rounded bg-emerald-600 px-4 py-2 text-center font-semibold text-white">Registrar mi domicilio</a>
-        <a href="{% url 'cuentas:perfil' %}"
+        <a href="{{ volver_url }}"
            class="block min-h-11 px-4 py-2 text-center underline">Volver al perfil</a>
       </div>
     {% else %}
@@ -63,7 +63,7 @@
                 class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
           Guardar datos del hogar
         </button>
-        <a href="{% url 'cuentas:perfil' %}"
+        <a href="{{ volver_url }}"
            class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
       </form>
     {% endif %}

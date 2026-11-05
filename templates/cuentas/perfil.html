@@ -30,12 +30,16 @@
         <dt class="text-sm text-stone-600">Datos del hogar</dt>
         <dd class="font-medium">
           {% if hogar_completo %}
-            {{ domicilio.get_tipo_vivienda_display }}, {% if domicilio.tiene_patio %}con patio{% else %}sin patio{% endif %}
-            <br>
-            Convivientes: {{ domicilio.convivientes }} · Niños: {% if domicilio.hay_ninos %}sí{% else %}no{% endif %} · Mascotas propias: {{ domicilio.mascotas_propias }}
+            {% include "cuentas/_resumen_hogar.html" %}
           {% else %}
             Sin completar
           {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm text-stone-600">Perfil de adopción</dt>
+        <dd class="font-medium">
+          {% if tiene_perfil_adoptante %}Completo{% else %}Sin completar{% endif %}
         </dd>
       </div>
     </dl>
@@ -50,6 +54,8 @@
          class="block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">
         {% if hogar_completo %}Cambiar los datos del hogar{% else %}Completar los datos del hogar{% endif %}
       </a>
+      <a href="{% url 'cuentas:perfil_adoptante' %}"
+         class="block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Perfil de hogar y familia</a>
       <a href="{% url 'cuentas:cambiar_contrasena' %}"
          class="block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Cambiar contraseña</a>
       <a href="{% url 'cuentas:cambiar_correo' %}"

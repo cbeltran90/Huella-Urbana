@@ -215,4 +215,4 @@ def test_el_perfil_muestra_los_datos_del_hogar(client, ana, domicilio):
     contenido = client.get(reverse("cuentas:perfil")).content.decode()
 
     assert "Casa" in contenido
-    assert "Sin completar" not in contenido
+    assert "Convivientes: 2" in contenido

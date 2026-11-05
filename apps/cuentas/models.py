@@ -259,3 +259,32 @@ class Domicilio(models.Model):
     @property
     def hogar_completo(self):
         return not self.hogar_faltante()
+
+
+MAX_EXPERIENCIA_PREVIA = 1000
+
+
+class PerfilAdoptante(models.Model):
+    """Perfil de hogar y familia de quien quiere adoptar.
+
+    Solo existe si está completo: la fila se crea cuando la persona tiene el domicilio con
+    todos los datos del hogar y su experiencia previa con animales. Los datos del hogar
+    viven en el domicilio.
+    """
+
+    usuario = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        primary_key=True,
+        on_delete=models.CASCADE,
+        related_name="perfil_adoptante",
+    )
+    experiencia_previa = models.TextField(
+        "experiencia previa con animales", max_length=MAX_EXPERIENCIA_PREVIA
+    )
+
+    class Meta:
+        verbose_name = "perfil de adoptante"
+        verbose_name_plural = "perfiles de adoptante"
+
+    def __str__(self):
+        return f"Perfil de adoptante de {self.usuario}"
