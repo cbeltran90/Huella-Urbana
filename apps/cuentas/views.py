@@ -113,11 +113,9 @@ def perfil(request):
 
 @cuenta_habilitada
 def datos_hogar(request):
-    # Quien viene del perfil de adopción, vuelve allí al terminar.
-    if request.GET.get("volver") == "adopcion":
-        volver_url = reverse("cuentas:perfil_adoptante")
-    else:
-        volver_url = reverse("cuentas:perfil")
+    # Quien viene del perfil de adopción o del de tránsito vuelve allí.
+    destinos = {"adopcion": "cuentas:perfil_adoptante", "transito": "transito:perfil_transito"}
+    volver_url = reverse(destinos.get(request.GET.get("volver"), "cuentas:perfil"))
     domicilio = Domicilio.objects.filter(usuario=request.user).first()
     if domicilio is None:
         # Los datos del hogar cuelgan del domicilio: primero hay que registrarlo.
