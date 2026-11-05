@@ -12,7 +12,7 @@ from django.utils import timezone
 from apps.core.filtros import NoOfensivo
 
 from . import servicios
-from .models import EstadoCuenta, Usuario, normalizar_email
+from .models import CAMPOS_HOGAR, Domicilio, EstadoCuenta, TipoVivienda, Usuario, normalizar_email
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,11 @@ MENSAJE_CLAVES_DISTINTAS = "Las contraseñas no coinciden"
 MENSAJE_CLAVE_ACTUAL_INCORRECTA = "La contraseña actual es incorrecta"
 MENSAJE_NOMBRE_OFENSIVO = "Nombre ofensivo"
 MENSAJE_NOMBRE_USADO = "Nombre ya usado"
+MENSAJE_HOGAR_VIVIENDA = "Elegí el tipo de vivienda"
+MENSAJE_HOGAR_PATIO = "Indicá si tu vivienda tiene patio"
+MENSAJE_HOGAR_CONVIVIENTES = "Indicá cuántas personas viven con vos (puede ser 0)"
+MENSAJE_HOGAR_NINOS = "Indicá si hay niños en tu hogar"
+MENSAJE_HOGAR_MASCOTAS = "Indicá cuántas mascotas tenés (puede ser 0)"
 MENSAJE_CORREO_USADO = servicios.MENSAJE_CORREO_USADO
 MENSAJE_CORREO_SUSPENDIDO = servicios.MENSAJE_CORREO_SUSPENDIDO
 MENSAJE_LOGIN_INVALIDO = "Correo o contraseña incorrectos"
@@ -193,6 +198,52 @@ class DomicilioForm(forms.Form):
     def punto(self):
         """El punto marcado en el mapa."""
         return Point(self.cleaned_data["longitud"], self.cleaned_data["latitud"], srid=4326)
+
+
+def _si_no(etiqueta, mensaje):
+    return forms.TypedChoiceField(
+        label=etiqueta,
+        choices=[("True", "Sí"), ("False", "No")],
+        coerce=lambda valor: valor == "True",
+        widget=forms.RadioSelect,
+        error_messages={"required": mensaje, "invalid_choice": mensaje},
+    )
+
+
+def _numero(etiqueta, maximo, mensaje):
+    rango = f"Indicá un número entre 0 y {maximo}"
+    return forms.IntegerField(
+        label=etiqueta,
+        min_value=0,
+        max_value=maximo,
+        error_messages={
+            "required": mensaje,
+            "invalid": rango,
+            "min_value": rango,
+            "max_value": rango,
+        },
+    )
+
+
+class DatosHogarForm(forms.ModelForm):
+    """Datos del hogar (CU-03): se guardan en el domicilio de la persona."""
+
+    tipo_vivienda = forms.ChoiceField(
+        label="Tipo de vivienda",
+        choices=[("", "Elegí una opción"), *TipoVivienda.choices],
+        error_messages={
+            "required": MENSAJE_HOGAR_VIVIENDA,
+            "invalid_choice": MENSAJE_HOGAR_VIVIENDA,
+        },
+    )
+    tiene_patio = _si_no("¿Tiene patio?", MENSAJE_HOGAR_PATIO)
+    convivientes = _numero("Personas con las que vivís", 20, MENSAJE_HOGAR_CONVIVIENTES)
+    hay_ninos = _si_no("¿Hay niños en tu hogar?", MENSAJE_HOGAR_NINOS)
+    mascotas_propias = _numero("Mascotas propias", 30, MENSAJE_HOGAR_MASCOTAS)
+
+    class Meta:
+        model = Domicilio
+        fields = CAMPOS_HOGAR
 
 
 class NombreUsuarioForm(forms.Form):

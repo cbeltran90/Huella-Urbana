@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block titulo %}Datos del hogar · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Datos del hogar</h1>
+    {% if sin_domicilio %}
+      <p class="mt-4 text-sm text-stone-700">
+        Para completar los datos del hogar, primero registrá tu domicilio en el mapa.
+      </p>
+      <div class="mt-6 space-y-3">
+        <a href="{% url 'cuentas:domicilio' %}"
+           class="block min-h-11 rounded bg-emerald-600 px-4 py-2 text-center font-semibold text-white">Registrar mi domicilio</a>
+        <a href="{% url 'cuentas:perfil' %}"
+           class="block min-h-11 px-4 py-2 text-center underline">Volver al perfil</a>
+      </div>
+    {% else %}
+      <p class="mt-1 text-sm text-stone-600">
+        Estos datos nos ayudan a saber si tu hogar es adecuado para adoptar o dar tránsito.
+      </p>
+      <form method="post" novalidate class="mt-4 space-y-4">
+        {% csrf_token %}
+        <div>
+          <label for="id_tipo_vivienda" class="block text-sm font-medium">Tipo de vivienda</label>
+          <select name="tipo_vivienda"
+                  id="id_tipo_vivienda"
+                  class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+            {% for valor, etiqueta in form.tipo_vivienda.field.choices %}
+              <option value="{{ valor }}"
+                      {% if form.tipo_vivienda.value == valor %}selected{% endif %}>{{ etiqueta }}</option>
+            {% endfor %}
+          </select>
+          {% include "cuentas/_errores.html" with errores=form.tipo_vivienda.errors %}
+        </div>
+        {% include "cuentas/_si_no.html" with campo=form.tiene_patio %}
+        <div>
+          <label for="id_convivientes" class="block text-sm font-medium">Personas con las que vivís</label>
+          <p class="text-sm text-stone-600">Sin contarte a vos. Si vivís sola o solo, poné 0.</p>
+          <input type="number"
+                 name="convivientes"
+                 id="id_convivientes"
+                 min="0"
+                 max="20"
+                 inputmode="numeric"
+                 value="{{ form.convivientes.value|default_if_none:'' }}"
+                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+          {% include "cuentas/_errores.html" with errores=form.convivientes.errors %}
+        </div>
+        {% include "cuentas/_si_no.html" with campo=form.hay_ninos %}
+        <div>
+          <label for="id_mascotas_propias" class="block text-sm font-medium">Mascotas propias</label>
+          <p class="text-sm text-stone-600">Cuántas mascotas tenés hoy. Si no tenés, poné 0.</p>
+          <input type="number"
+                 name="mascotas_propias"
+                 id="id_mascotas_propias"
+                 min="0"
+                 max="30"
+                 inputmode="numeric"
+                 value="{{ form.mascotas_propias.value|default_if_none:'' }}"
+                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+          {% include "cuentas/_errores.html" with errores=form.mascotas_propias.errors %}
+        </div>
+        <button type="submit"
+                class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+          Guardar datos del hogar
+        </button>
+        <a href="{% url 'cuentas:perfil' %}"
+           class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}

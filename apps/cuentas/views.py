@@ -10,6 +10,7 @@ from .decoradores import cuenta_habilitada
 from .forms import (
     CambioContrasenaForm,
     CambioCorreoForm,
+    DatosHogarForm,
     DomicilioForm,
     NombreUsuarioForm,
     ReenviarConfirmacionForm,
@@ -98,11 +99,30 @@ def domicilio(request):
 
 @cuenta_habilitada
 def perfil(request):
+    domicilio = Domicilio.objects.filter(usuario=request.user).first()
     contexto = {
-        "tiene_domicilio": Domicilio.objects.filter(usuario=request.user).exists(),
+        "domicilio": domicilio,
+        "tiene_domicilio": domicilio is not None,
+        "hogar_completo": domicilio is not None and domicilio.hogar_completo,
         "guardado": request.GET.get("guardado") == "1",
     }
     return render(request, "cuentas/perfil.html", contexto)
+
+
+@cuenta_habilitada
+def datos_hogar(request):
+    domicilio = Domicilio.objects.filter(usuario=request.user).first()
+    if domicilio is None:
+        # Los datos del hogar cuelgan del domicilio: primero hay que registrarlo.
+        return render(request, "cuentas/datos_hogar.html", {"sin_domicilio": True})
+    if request.method == "POST":
+        form = DatosHogarForm(request.POST, instance=domicilio)
+        if form.is_valid():
+            form.save()
+            return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
+    else:
+        form = DatosHogarForm(instance=domicilio)
+    return render(request, "cuentas/datos_hogar.html", {"form": form})
 
 
 @cuenta_habilitada

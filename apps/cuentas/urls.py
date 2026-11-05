@@ -56,6 +56,7 @@ urlpatterns = [
         name="recuperar_confirmar",
     ),
     path("domicilio/", views.domicilio, name="domicilio"),
+    path("hogar/", views.datos_hogar, name="datos_hogar"),
     path("perfil/", views.perfil, name="perfil"),
     path("perfil/editar/", views.editar_perfil, name="editar_perfil"),
     path("perfil/contrasena/", views.cambiar_contrasena, name="cambiar_contrasena"),
