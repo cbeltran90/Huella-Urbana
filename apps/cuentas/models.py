@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.contrib.gis.db.models import PointField
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
@@ -190,6 +191,23 @@ class Sancion(models.Model):
         return f"{self.get_tipo_display()} de {self.usuario or 'cuenta eliminada'}"
 
 
+class TipoVivienda(models.TextChoices):
+    CASA = "casa", "Casa"
+    DEPARTAMENTO = "departamento", "Departamento"
+    OTRA = "otra", "Otra"
+
+
+# Datos del hogar que guarda el domicilio. Sin responder quedan vacíos
+# (cadena vacía o None): un 0 o un "no" son respuestas.
+CAMPOS_HOGAR = (
+    "tipo_vivienda",
+    "tiene_patio",
+    "convivientes",
+    "hay_ninos",
+    "mascotas_propias",
+)
+
+
 class Domicilio(models.Model):
     """Dónde vive una persona (CU-03).
 
@@ -207,9 +225,37 @@ class Domicilio(models.Model):
     ubicacion_desplazada = PointField(srid=4326)
     actualizado_en = models.DateTimeField(auto_now=True)
 
+    # Datos del hogar. Pueden quedar sin responder; el perfil de adoptante
+    # los exige. "convivientes" no cuenta a la persona.
+    tipo_vivienda = models.CharField(
+        "tipo de vivienda", max_length=20, choices=TipoVivienda.choices, blank=True
+    )
+    tiene_patio = models.BooleanField("patio", null=True, blank=True)
+    convivientes = models.PositiveSmallIntegerField(
+        "personas con las que convive",
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(20)],
+    )
+    hay_ninos = models.BooleanField("niños en el hogar", null=True, blank=True)
+    mascotas_propias = models.PositiveSmallIntegerField(
+        "mascotas propias",
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(30)],
+    )
+
     class Meta:
         verbose_name = "domicilio"
         verbose_name_plural = "domicilios"
 
     def __str__(self):
         return f"Domicilio de {self.usuario}"
+
+    def hogar_faltante(self):
+        """Nombres de los datos del hogar que todavía no se respondieron."""
+        return [campo for campo in CAMPOS_HOGAR if getattr(self, campo) in (None, "")]
+
+    @property
+    def hogar_completo(self):
+        return not self.hogar_faltante()
