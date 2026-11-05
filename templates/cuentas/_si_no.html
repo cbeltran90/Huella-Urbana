@@ -1,0 +1,20 @@
+<fieldset>
+  <legend class="block text-sm font-medium">{{ campo.label }}</legend>
+  <div class="mt-1 flex gap-6">
+    <label class="inline-flex min-h-11 items-center gap-2">
+      <input type="radio"
+             name="{{ campo.html_name }}"
+             value="True"
+             {% if campo.value|stringformat:"s" == "True" %}checked{% endif %}>
+      Sí
+    </label>
+    <label class="inline-flex min-h-11 items-center gap-2">
+      <input type="radio"
+             name="{{ campo.html_name }}"
+             value="False"
+             {% if campo.value|stringformat:"s" == "False" %}checked{% endif %}>
+      No
+    </label>
+  </div>
+  {% include "cuentas/_errores.html" with errores=campo.errors %}
+</fieldset>

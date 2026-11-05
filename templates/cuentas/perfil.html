@@ -26,6 +26,18 @@
           {% if tiene_domicilio %}Registrado{% else %}Todavía no lo registraste{% endif %}
         </dd>
       </div>
+      <div>
+        <dt class="text-sm text-stone-600">Datos del hogar</dt>
+        <dd class="font-medium">
+          {% if hogar_completo %}
+            {{ domicilio.get_tipo_vivienda_display }}, {% if domicilio.tiene_patio %}con patio{% else %}sin patio{% endif %}
+            <br>
+            Convivientes: {{ domicilio.convivientes }} · Niños: {% if domicilio.hay_ninos %}sí{% else %}no{% endif %} · Mascotas propias: {{ domicilio.mascotas_propias }}
+          {% else %}
+            Sin completar
+          {% endif %}
+        </dd>
+      </div>
     </dl>
     <div class="mt-6 space-y-3">
       <a href="{% url 'cuentas:editar_perfil' %}"
@@ -33,6 +45,10 @@
       <a href="{% url 'cuentas:domicilio' %}"
          class="block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">
         {% if tiene_domicilio %}Cambiar mi domicilio{% else %}Registrar mi domicilio{% endif %}
+      </a>
+      <a href="{% url 'cuentas:datos_hogar' %}"
+         class="block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">
+        {% if hogar_completo %}Cambiar los datos del hogar{% else %}Completar los datos del hogar{% endif %}
       </a>
       <a href="{% url 'cuentas:cambiar_contrasena' %}"
          class="block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Cambiar contraseña</a>
