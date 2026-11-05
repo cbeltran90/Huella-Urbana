@@ -168,7 +168,7 @@ def responder_coincidencia(request, pk):
         vinculacion.responder(coincidencia, request.user, confirmar=confirmar)
     except PermissionError:
         raise PermissionDenied from None
-    return redirect("publicaciones:detalle", pk=coincidencia.publicacion_id)
+    return redirect("publicaciones:coincidencias")
 
 
 @login_required
@@ -184,3 +184,11 @@ def desvincular(request, pk):
         vinculacion.desvincular(publicacion, request.user)
         return redirect("publicaciones:detalle", pk=publicacion.pk)
     return render(request, "publicaciones/desvincular_confirmar.html", {"publicacion": publicacion})
+
+
+@login_required
+@cuenta_habilitada
+def coincidencias(request):
+    """Coincidencias que esperan la decisión de esta persona (confirmar o descartar)."""
+    contexto = {"coincidencias": vinculacion.pendientes_para(request.user)}
+    return render(request, "publicaciones/coincidencias.html", contexto)
