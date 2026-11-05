@@ -35,6 +35,7 @@ def test_sin_perfil_el_perfil_ofrece_completar_el_de_transito(client, ana):
     contenido = respuesta.content.decode()
     assert respuesta.context["es_hogar_de_transito"] is False
     assert "Hogar de tránsito" in contenido
+    assert "Inactivo" in contenido
     assert 'aria-label="Completar el perfil de hogar de tránsito"' in contenido
     assert reverse("transito:perfil_transito") in contenido
 
@@ -47,6 +48,7 @@ def test_con_perfil_activo_el_perfil_ofrece_editarlo(client, ana):
 
     contenido = respuesta.content.decode()
     assert respuesta.context["es_hogar_de_transito"] is True
+    assert "Activo" in contenido
     assert 'aria-label="Editar el perfil de hogar de tránsito"' in contenido
     assert 'aria-label="Completar el perfil de hogar de tránsito"' not in contenido
 
