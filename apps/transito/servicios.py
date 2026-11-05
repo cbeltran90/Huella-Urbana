@@ -1,6 +1,156 @@
 """Reglas del hogar de tránsito que usan otras partes del sistema."""
 
-from .models import PerfilTransito
+from constance import config
+from django.utils import timezone
+
+from apps.cuentas.models import CAMPOS_HOGAR, Domicilio
+from apps.fichas.models import FichaAnimal
+
+from .models import MAX_CUPO_DECLARADO, PerfilTransito
+
+# Tope provisorio de la duración máxima que puede declarar un hogar (CU-06 no fija uno).
+MAX_DURACION_MAXIMA_DIAS = 365
+
+ETIQUETA_ESPECIES = "Especies que acepta"
+ETIQUETA_TAMANO = "Tamaño máximo"
+ETIQUETA_DURACION = "Duración máxima"
+ETIQUETA_DISPONIBILIDAD = "Disponibilidad"
+ETIQUETA_REANUDACION = "Fecha de reanudación"
+ETIQUETA_CUPO = "Cupo"
+
+MENSAJE_ESPECIE_INVALIDA = "Elegí una especie de la lista."
+MENSAJE_TAMANO_INVALIDO = "Elegí un tamaño de la lista."
+MENSAJE_DURACION_LARGA = f"La duración máxima no puede superar los {MAX_DURACION_MAXIMA_DIAS} días."
+MENSAJE_PAUSA_PASADA = "La fecha de reanudación tiene que ser posterior a hoy."
+MENSAJE_CUPO = f"El cupo tiene que estar entre 1 y {MAX_CUPO_DECLARADO}."
+
+
+class PerfilTransitoInvalido(ValueError):
+    """Algún dato del perfil no es válido. "errores" va de campo a mensaje."""
+
+    def __init__(self, errores):
+        super().__init__("; ".join(errores.values()))
+        self.errores = errores
+
+
+class PerfilTransitoIncompleto(ValueError):
+    """Faltan campos obligatorios (CU-06, 7A). "faltantes" los nombra en palabras."""
+
+    def __init__(self, faltantes):
+        super().__init__("Faltan datos: " + ", ".join(faltantes))
+        self.faltantes = faltantes
+
+
+class HogarIncompleto(PerfilTransitoIncompleto):
+    """Faltan datos del hogar (CU-06, 2A): hay que pedirlos y volver al perfil."""
+
+
+def mensaje_duracion_minima():
+    return f"La duración mínima es de {config.DURACION_MINIMA_TRANSITO_DIAS} días"
+
+
+def _etiqueta_hogar(campo):
+    texto = str(Domicilio._meta.get_field(campo).verbose_name)
+    return texto[:1].upper() + texto[1:]
+
+
+def datos_faltantes_hogar(usuario):
+    """Lo que falta del domicilio y del hogar, en palabras."""
+    domicilio = Domicilio.objects.filter(usuario=usuario).first()
+    if domicilio is None:
+        return ["Domicilio", *(_etiqueta_hogar(campo) for campo in CAMPOS_HOGAR)]
+    return [_etiqueta_hogar(campo) for campo in domicilio.hogar_faltante()]
+
+
+def _campos_faltantes(especies, tamano_maximo, duracion, disponibilidad, pausa_hasta, cupo):
+    faltantes = []
+    if not especies:
+        faltantes.append(ETIQUETA_ESPECIES)
+    if not tamano_maximo:
+        faltantes.append(ETIQUETA_TAMANO)
+    if duracion is None:
+        faltantes.append(ETIQUETA_DURACION)
+    if disponibilidad is None:
+        faltantes.append(ETIQUETA_DISPONIBILIDAD)
+    elif not disponibilidad and pausa_hasta is None:
+        faltantes.append(ETIQUETA_REANUDACION)
+    if cupo is None:
+        faltantes.append(ETIQUETA_CUPO)
+    return faltantes
+
+
+def _errores(especies, tamano_maximo, duracion, disponibilidad, pausa_hasta, cupo):
+    errores = {}
+    if not set(especies) <= {valor for valor, _ in FichaAnimal.Especie.choices}:
+        errores["especies"] = MENSAJE_ESPECIE_INVALIDA
+    if tamano_maximo not in dict(FichaAnimal.Tamano.choices):
+        errores["tamano_maximo"] = MENSAJE_TAMANO_INVALIDO
+    if duracion < config.DURACION_MINIMA_TRANSITO_DIAS:
+        errores["duracion_maxima_dias"] = mensaje_duracion_minima()
+    elif duracion > MAX_DURACION_MAXIMA_DIAS:
+        errores["duracion_maxima_dias"] = MENSAJE_DURACION_LARGA
+    if not disponibilidad and pausa_hasta <= timezone.localdate():
+        errores["pausa_hasta"] = MENSAJE_PAUSA_PASADA
+    if not 1 <= cupo <= MAX_CUPO_DECLARADO:
+        errores["cupo_declarado"] = MENSAJE_CUPO
+    return errores
+
+
+def guardar_perfil_transito(
+    usuario,
+    *,
+    especies,
+    tamano_maximo,
+    duracion_maxima_dias,
+    disponibilidad,
+    pausa_hasta=None,
+    cupo_declarado,
+    acepta_medicacion=False,
+    acepta_conducta=False,
+):
+    """Guarda y activa el perfil de hogar de tránsito.
+
+    No guarda nada si faltan datos del hogar (HogarIncompleto), si faltan campos
+    obligatorios (PerfilTransitoIncompleto) o si algún valor no es válido
+    (PerfilTransitoInvalido). Si ya había un perfil, lo actualiza y lo
+    deja activo. El rol de hogar de tránsito sale de tener el perfil activo.
+    """
+    especies = list(especies or [])
+
+    faltantes_hogar = datos_faltantes_hogar(usuario)
+    if faltantes_hogar:
+        raise HogarIncompleto(faltantes_hogar)
+
+    faltantes = _campos_faltantes(
+        especies, tamano_maximo, duracion_maxima_dias, disponibilidad, pausa_hasta, cupo_declarado
+    )
+    if faltantes:
+        raise PerfilTransitoIncompleto(faltantes)
+
+    errores = _errores(
+        especies, tamano_maximo, duracion_maxima_dias, disponibilidad, pausa_hasta, cupo_declarado
+    )
+    if errores:
+        raise PerfilTransitoInvalido(errores)
+
+    perfil, _ = PerfilTransito.objects.update_or_create(
+        usuario=usuario,
+        defaults={
+            # Se guardan en el orden de la ficha de animal y sin repetidos.
+            "especies_aceptadas": ",".join(
+                valor for valor, _ in FichaAnimal.Especie.choices if valor in especies
+            ),
+            "tamano_maximo": tamano_maximo,
+            "duracion_maxima_dias": duracion_maxima_dias,
+            "acepta_medicacion": acepta_medicacion,
+            "acepta_conducta": acepta_conducta,
+            "disponibilidad": disponibilidad,
+            "pausa_hasta": None if disponibilidad else pausa_hasta,
+            "cupo_declarado": cupo_declarado,
+            "activo": True,
+        },
+    )
+    return perfil
 
 
 def es_hogar_de_transito(usuario):
@@ -11,3 +161,17 @@ def es_hogar_de_transito(usuario):
     if not usuario.is_authenticated:
         return False
     return PerfilTransito.objects.filter(usuario=usuario, activo=True).exists()
+
+
+def esta_disponible(perfil, hoy=None):
+    """True si el hogar puede recibir animales hoy.
+
+    En pausa deja de estarlo hasta la fecha de reanudación; al llegar esa fecha vuelve a
+    estar disponible solo, sin tareas programadas.
+    """
+    if not perfil.activo:
+        return False
+    if perfil.disponibilidad:
+        return True
+    hoy = hoy or timezone.localdate()
+    return perfil.pausa_hasta is not None and perfil.pausa_hasta <= hoy
