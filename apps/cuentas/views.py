@@ -5,6 +5,8 @@ from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from apps.transito import servicios as servicios_transito
+
 from . import servicios
 from .decoradores import cuenta_habilitada
 from .forms import (
@@ -106,6 +108,7 @@ def perfil(request):
         "tiene_domicilio": domicilio is not None,
         "hogar_completo": domicilio is not None and domicilio.hogar_completo,
         "tiene_perfil_adoptante": PerfilAdoptante.objects.filter(usuario=request.user).exists(),
+        "es_hogar_de_transito": servicios_transito.es_hogar_de_transito(request.user),
         "guardado": request.GET.get("guardado") == "1",
     }
     return render(request, "cuentas/perfil.html", contexto)
@@ -113,11 +116,9 @@ def perfil(request):
 
 @cuenta_habilitada
 def datos_hogar(request):
-    # Quien viene del perfil de adopción, vuelve allí al terminar.
-    if request.GET.get("volver") == "adopcion":
-        volver_url = reverse("cuentas:perfil_adoptante")
-    else:
-        volver_url = reverse("cuentas:perfil")
+    # Quien viene del perfil de adopción o del de tránsito vuelve allí.
+    destinos = {"adopcion": "cuentas:perfil_adoptante", "transito": "transito:perfil_transito"}
+    volver_url = reverse(destinos.get(request.GET.get("volver"), "cuentas:perfil"))
     domicilio = Domicilio.objects.filter(usuario=request.user).first()
     if domicilio is None:
         # Los datos del hogar cuelgan del domicilio: primero hay que registrarlo.

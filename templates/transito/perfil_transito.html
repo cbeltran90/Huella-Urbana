@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block titulo %}Mi hogar de tránsito · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Mi hogar de tránsito</h1>
+    <p class="mt-1 text-sm text-stone-600">Contanos qué animales podés alojar y cuándo.</p>
+    {% if guardado %}
+      <p role="status"
+         class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">Guardamos tus cambios.</p>
+    {% endif %}
+    {% if es_hogar_de_transito %}
+      <p role="status"
+         class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+        Tu perfil de tránsito está activo.
+      </p>
+    {% else %}
+      <p class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        Todavía no sos hogar de tránsito. Completá este perfil para activarlo.
+      </p>
+    {% endif %}
+    {% if faltantes %}
+      <div role="alert"
+           class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <p class="font-medium">No guardamos el perfil. Falta completar:</p>
+        <ul class="mt-1 list-disc pl-5">
+          {% for dato in faltantes %}<li>{{ dato }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    <div class="mt-6">
+      <h2 class="text-lg font-semibold">Tu vivienda</h2>
+      {% if hogar_completo %}
+        <p class="mt-1 text-sm">{% include "cuentas/_resumen_hogar.html" %}</p>
+        <a href="{% url 'cuentas:datos_hogar' %}?volver=transito"
+           class="mt-2 block min-h-11 px-4 py-2 text-center underline">Cambiar los datos del hogar</a>
+      {% elif domicilio %}
+        <p class="mt-1 text-sm text-stone-700">Faltan datos de tu hogar.</p>
+        <a href="{% url 'cuentas:datos_hogar' %}?volver=transito"
+           class="mt-2 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Completar los datos del hogar</a>
+      {% else %}
+        <p class="mt-1 text-sm text-stone-700">Primero registrá tu domicilio en el mapa.</p>
+        <a href="{% url 'cuentas:domicilio' %}"
+           class="mt-2 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Registrar mi domicilio</a>
+      {% endif %}
+    </div>
+    <form method="post" novalidate class="mt-6 space-y-4">
+      {% csrf_token %}
+      <h2 class="text-lg font-semibold">Qué podés recibir</h2>
+      <fieldset>
+        <legend class="block text-sm font-medium">Especies que aceptás</legend>
+        <div class="mt-1 flex gap-6">
+          {% for valor, etiqueta in form.especies.field.choices %}
+            <label class="inline-flex min-h-11 items-center gap-2">
+              <input type="checkbox"
+                     name="especies"
+                     value="{{ valor }}"
+                     {% if valor in form.especies.value %}checked{% endif %}>
+              {{ etiqueta }}
+            </label>
+          {% endfor %}
+        </div>
+        {% include "cuentas/_errores.html" with errores=form.especies.errors %}
+      </fieldset>
+      <div>
+        <label for="id_tamano_maximo" class="block text-sm font-medium">Tamaño máximo</label>
+        <select name="tamano_maximo"
+                id="id_tamano_maximo"
+                class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+          {% for valor, etiqueta in form.tamano_maximo.field.choices %}
+            <option value="{{ valor }}"
+                    {% if form.tamano_maximo.value == valor %}selected{% endif %}>{{ etiqueta }}</option>
+          {% endfor %}
+        </select>
+        {% include "cuentas/_errores.html" with errores=form.tamano_maximo.errors %}
+      </div>
+      <div>
+        <label for="id_duracion_maxima_dias" class="block text-sm font-medium">Duración máxima (días)</label>
+        <p class="text-sm text-stone-600">Cuánto tiempo podés alojar a un animal.</p>
+        <input type="number"
+               name="duracion_maxima_dias"
+               id="id_duracion_maxima_dias"
+               inputmode="numeric"
+               value="{{ form.duracion_maxima_dias.value|default_if_none:'' }}"
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.duracion_maxima_dias.errors %}
+      </div>
+      <fieldset>
+        <legend class="block text-sm font-medium">Casos especiales (opcional)</legend>
+        <label class="flex min-h-11 items-center gap-2">
+          <input type="checkbox"
+                 name="acepta_medicacion"
+                 {% if form.acepta_medicacion.value %}checked{% endif %}>
+          Acepto animales con medicación
+        </label>
+        <label class="flex min-h-11 items-center gap-2">
+          <input type="checkbox"
+                 name="acepta_conducta"
+                 {% if form.acepta_conducta.value %}checked{% endif %}>
+          Acepto animales con problemas de conducta
+        </label>
+      </fieldset>
+      <h2 class="text-lg font-semibold">Disponibilidad</h2>
+      <div x-data="{ disponible: '{{ form.disponibilidad.value|stringformat:'s' }}' }"
+           class="space-y-4">
+        <fieldset>
+          <legend class="sr-only">Disponibilidad</legend>
+          <div class="flex gap-6">
+            <label class="inline-flex min-h-11 items-center gap-2">
+              <input type="radio"
+                     name="disponibilidad"
+                     value="True"
+                     x-model="disponible"
+                     {% if form.disponibilidad.value|stringformat:"s" == "True" %}checked{% endif %}>
+              Disponible
+            </label>
+            <label class="inline-flex min-h-11 items-center gap-2">
+              <input type="radio"
+                     name="disponibilidad"
+                     value="False"
+                     x-model="disponible"
+                     {% if form.disponibilidad.value|stringformat:"s" == "False" %}checked{% endif %}>
+              En pausa
+            </label>
+          </div>
+          {% include "cuentas/_errores.html" with errores=form.disponibilidad.errors %}
+        </fieldset>
+        <div x-show="disponible === 'False'">
+          <label for="id_pausa_hasta" class="block text-sm font-medium">Fecha de reanudación</label>
+          <p class="text-sm text-stone-600">Ese día volvés a figurar como disponible.</p>
+          <input type="date"
+                 name="pausa_hasta"
+                 id="id_pausa_hasta"
+                 value="{{ form.pausa_hasta.value|default_if_none:'' }}"
+                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+          {% include "cuentas/_errores.html" with errores=form.pausa_hasta.errors %}
+        </div>
+      </div>
+      <h2 class="text-lg font-semibold">Cupo</h2>
+      <div>
+        <label for="id_cupo_declarado" class="block text-sm font-medium">Animales que podés alojar a la vez</label>
+        <p class="text-sm text-stone-600">Tu cupo vale desde que lo guardás.</p>
+        <input type="number"
+               name="cupo_declarado"
+               id="id_cupo_declarado"
+               inputmode="numeric"
+               value="{{ form.cupo_declarado.value|default_if_none:'' }}"
+               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+        {% include "cuentas/_errores.html" with errores=form.cupo_declarado.errors %}
+      </div>
+      <button type="submit"
+              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Guardar perfil</button>
+      <a href="{% url 'cuentas:perfil' %}"
+         class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+    </form>
+    {% if es_hogar_de_transito %}
+      <a href="{% url 'transito:desactivar_perfil' %}"
+         class="mt-4 block min-h-11 px-4 py-2 text-center text-red-700 underline">Desactivar perfil de tránsito</a>
+    {% endif %}
+  </section>
+{% endblock %}

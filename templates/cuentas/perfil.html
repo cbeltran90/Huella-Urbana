@@ -49,6 +49,13 @@
           {% include "cuentas/_enlace_editar.html" with destino="cuentas:perfil_adoptante" texto=tiene_perfil_adoptante|yesno:"Editar,Completar" etiqueta=tiene_perfil_adoptante|yesno:"Editar el perfil de hogar y familia,Completar el perfil de hogar y familia" %}
         </dd>
       </div>
+      <div class="py-3">
+        <dt class="text-sm text-stone-600">Hogar de tránsito</dt>
+        <dd class="flex items-center justify-between gap-3 font-medium">
+          <span>{% if es_hogar_de_transito %}Activo{% else %}Inactivo{% endif %}</span>
+          {% include "cuentas/_enlace_editar.html" with destino="transito:perfil_transito" texto=es_hogar_de_transito|yesno:"Editar,Completar" etiqueta=es_hogar_de_transito|yesno:"Editar el perfil de hogar de tránsito,Completar el perfil de hogar de tránsito" %}
+        </dd>
+      </div>
     </dl>
     <a href="{% url 'cuentas:cambiar_contrasena' %}"
        class="mt-6 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Cambiar contraseña</a>
