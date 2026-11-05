@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from apps.cuentas import servicios
 from apps.cuentas.forms import MENSAJE_NOMBRE_OFENSIVO, MENSAJE_NOMBRE_USADO
-from apps.cuentas.models import Domicilio, EstadoCuenta, Rol, Sancion, Usuario
+from apps.cuentas.models import Domicilio, EstadoCuenta, PerfilAdoptante, Rol, Sancion, Usuario
 
 CLAVE = "clave-de-prueba-1"
 BACKEND_MODELO = "django.contrib.auth.backends.ModelBackend"
@@ -71,7 +71,7 @@ def test_el_perfil_muestra_nombre_y_correo(client, ana):
 def test_el_perfil_avisa_si_no_hay_domicilio(client, ana):
     contenido = client.get(url_perfil()).content.decode()
     assert "Todavía no lo registraste" in contenido
-    assert "Registrar mi domicilio" in contenido
+    assert 'aria-label="Registrar mi domicilio"' in contenido
 
 
 @pytest.mark.django_db
@@ -81,7 +81,7 @@ def test_el_perfil_muestra_que_hay_domicilio_sin_revelar_puntos(client, ana):
     contenido = client.get(url_perfil()).content.decode()
 
     assert "Registrado" in contenido
-    assert "Cambiar mi domicilio" in contenido
+    assert 'aria-label="Editar mi domicilio"' in contenido
     for fragmento in ("54.8100", "68.3100", "54.8025", "68.3040"):
         assert fragmento not in contenido
 
@@ -133,3 +133,54 @@ def test_un_nombre_vacio_se_rechaza(client, ana):
     assert respuesta.status_code == 200
     ana.refresh_from_db()
     assert ana.nombre_usuario == "Ana"
+
+
+@pytest.mark.django_db
+def test_cada_dato_tiene_su_enlace_para_editarlo(client, ana):
+    contenido = client.get(url_perfil()).content.decode()
+
+    rutas = (
+        "editar_perfil",
+        "cambiar_correo",
+        "domicilio",
+        "datos_hogar",
+        "perfil_adoptante",
+        "cambiar_contrasena",
+    )
+    for ruta in rutas:
+        assert reverse(f"cuentas:{ruta}") in contenido
+
+
+@pytest.mark.django_db
+def test_los_enlaces_piden_registrar_o_completar_lo_que_falta(client, ana):
+    contenido = client.get(url_perfil()).content.decode()
+
+    assert 'aria-label="Editar nombre de usuario"' in contenido
+    assert 'aria-label="Editar correo electrónico"' in contenido
+    assert 'aria-label="Registrar mi domicilio"' in contenido
+    assert 'aria-label="Completar los datos del hogar"' in contenido
+    assert 'aria-label="Completar el perfil de hogar y familia"' in contenido
+
+
+@pytest.mark.django_db
+def test_los_enlaces_ofrecen_editar_lo_que_ya_esta_cargado(client, ana):
+    Domicilio.objects.create(
+        usuario=ana,
+        ubicacion=EXACTO,
+        ubicacion_desplazada=DESPLAZADO,
+        tipo_vivienda="casa",
+        tiene_patio=True,
+        convivientes=2,
+        hay_ninos=False,
+        mascotas_propias=0,
+    )
+    PerfilAdoptante.objects.create(usuario=ana, experiencia_previa="Tuve perros")
+
+    contenido = client.get(url_perfil()).content.decode()
+
+    assert 'aria-label="Editar mi domicilio"' in contenido
+    assert 'aria-label="Editar los datos del hogar"' in contenido
+    assert 'aria-label="Editar el perfil de hogar y familia"' in contenido
+    assert "Registrar mi domicilio" not in contenido
+    assert "Completar los datos del hogar" not in contenido
+    assert "Completar el perfil de hogar y familia" not in contenido
