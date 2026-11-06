@@ -3,13 +3,23 @@
 from constance import config
 from django.utils import timezone
 
-from apps.cuentas.models import CAMPOS_HOGAR, Domicilio
+from apps.cuentas.models import CAMPOS_HOGAR, Domicilio, TipoVivienda
 from apps.fichas.models import FichaAnimal
 
 from .models import MAX_CUPO_DECLARADO, PerfilTransito
 
-# Tope provisorio de la duración máxima que puede declarar un hogar (CU-06 no fija uno).
+# Tope provisorio de la duración máxima que puede declarar un hogar.
 MAX_DURACION_MAXIMA_DIAS = 365
+
+# Cupo que el sistema sugiere según la vivienda. Es solo una sugerencia: la
+# persona declara el número final. Valores provisorios; para cambiarlos se tocan acá.
+CUPO_POR_VIVIENDA = {
+    TipoVivienda.CASA: 3,
+    TipoVivienda.DEPARTAMENTO: 1,
+    TipoVivienda.OTRA: 1,
+}
+CUPO_EXTRA_POR_PATIO = 2
+MAX_CUPO_ESTIMADO = 5
 
 ETIQUETA_ESPECIES = "Especies que acepta"
 ETIQUETA_TAMANO = "Tamaño máximo"
@@ -58,6 +68,22 @@ class DesactivacionNoPermitida(ValueError):
 
 def mensaje_duracion_minima():
     return f"La duración mínima es de {config.DURACION_MINIMA_TRANSITO_DIAS} días"
+
+
+def cupo_estimado(domicilio):
+    """Cupo que el sistema sugiere para una vivienda.
+
+    Una casa suma 3, un departamento u otra vivienda suma 1, y un patio suma 2, con un
+    máximo de 5. Los convivientes, los niños y las mascotas propias no cambian el
+    resultado. Devuelve None si todavía faltan datos de la vivienda.
+    """
+    if domicilio is None or not domicilio.tipo_vivienda or domicilio.tiene_patio is None:
+        return None
+    base = CUPO_POR_VIVIENDA.get(domicilio.tipo_vivienda)
+    if base is None:
+        return None
+    extra = CUPO_EXTRA_POR_PATIO if domicilio.tiene_patio else 0
+    return min(base + extra, MAX_CUPO_ESTIMADO)
 
 
 def _etiqueta_hogar(campo):
