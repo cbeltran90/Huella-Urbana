@@ -1,0 +1,35 @@
+{% load navegacion %}
+<div class="flex flex-1 flex-wrap items-center justify-between gap-3">
+  <ul class="flex flex-wrap items-center gap-1 text-sm">
+    {% if user.is_authenticated %}
+      {% coincidencias_pendientes as pendientes %}
+      <li>
+        <a href="{% url 'fichas:mis_fichas' %}"
+           class="inline-block min-h-11 px-2 py-2 underline">Mis fichas</a>
+      </li>
+      <li>
+        <a href="{% url 'publicaciones:publicar_extravio' %}"
+           class="inline-block min-h-11 px-2 py-2 underline">Publicar extravío</a>
+      </li>
+      <li>
+        <a href="{% url 'publicaciones:publicar_hallazgo' %}"
+           class="inline-block min-h-11 px-2 py-2 underline">Publicar hallazgo</a>
+      </li>
+      <li>
+        <a href="{% url 'publicaciones:alta_adopcion' %}"
+           class="inline-block min-h-11 px-2 py-2 underline">Dar en adopción</a>
+      </li>
+      <li>
+        <a href="{% url 'publicaciones:coincidencias' %}"
+           class="inline-block min-h-11 px-2 py-2 underline">
+          Coincidencias
+          {% if pendientes %}
+            <span id="coincidencias-pendientes"
+                  class="ml-1 rounded-full bg-stone-800 px-2 text-xs text-white">{{ pendientes }}</span>
+          {% endif %}
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+  {% include "cuentas/_menu_sesion.html" %}
+</div>

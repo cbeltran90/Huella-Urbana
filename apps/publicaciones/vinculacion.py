@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Q
 
 from apps.cuentas.models import Rol
 from apps.fichas.comparacion import buscar_candidatas
@@ -125,3 +126,28 @@ def desvincular(publicacion, usuario):
     publicacion.ficha = None
     publicacion.save(update_fields=["ficha"])
     return ficha
+
+
+def pendientes_para(usuario):
+    """Coincidencias elegidas por su autor que a esta persona le toca confirmar o descartar.
+
+    Responsable de la ficha; si no tiene, quien la tiene a cargo; los moderadores ven las
+    de fichas sin responsable (mismas reglas que "decisores").
+    """
+    if not usuario.is_authenticated:
+        return Coincidencia.objects.none()
+    filtro = Q(ficha__responsable=usuario) | Q(
+        ficha__responsable__isnull=True, ficha__cuidador=usuario
+    )
+    if es_moderador(usuario):
+        filtro |= Q(ficha__responsable__isnull=True)
+    return (
+        Coincidencia.objects.filter(
+            filtro,
+            elegida_por_autor=True,
+            decision_responsable=Coincidencia.Decision.PENDIENTE,
+        )
+        .exclude(publicacion__estado=Publicacion.Estado.ELIMINADA)
+        .select_related("ficha", "publicacion__autor", "publicacion__ficha")
+        .order_by("-id")
+    )

@@ -23,7 +23,9 @@
     <header class="border-b bg-white">
       <nav class="mx-auto flex max-w-5xl items-center justify-between p-4">
         <a href="{% url 'core:inicio' %}" class="text-lg font-semibold">Huella Urbana</a>
-        {% block nav %}{% endblock %}
+        {% block nav %}
+          {% include "componentes/_nav.html" %}
+        {% endblock %}
       </nav>
     </header>
     <main class="mx-auto max-w-5xl p-4">

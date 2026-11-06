@@ -31,3 +31,4 @@ models/*.onnx
 .vscode/
 .idea/
 .DS_Store
+demo_fotos/
