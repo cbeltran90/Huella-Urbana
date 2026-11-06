@@ -5,8 +5,12 @@ su responsable, y a Camila, que durante la demo publica el hallazgo de un gato g
 Se puede correr las veces que haga falta: no duplica nada.
 """
 
+import mimetypes
+from pathlib import Path
+
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -14,6 +18,8 @@ from apps.cuentas.models import EstadoCuenta
 from apps.cuentas.servicios import guardar_domicilio
 from apps.fichas.models import FichaAnimal
 from apps.fichas.servicios import crear_ficha
+from apps.imagenes.models import Fotografia
+from apps.imagenes.servicios import registrar_fotografia
 from apps.publicaciones import ubicacion
 from apps.publicaciones.models import Publicacion
 
@@ -48,12 +54,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--password", default="demo-huella-2026")
+        parser.add_argument("--foto-nina", help="Ruta de una foto de un gato gris para Nina")
+        parser.add_argument("--foto-pipo", help="Ruta de una foto de un gato atigrado para Pipo")
 
     @transaction.atomic
-    def handle(self, *args, password, **opciones):
+    def handle(self, *args, password, foto_nina=None, foto_pipo=None, **opciones):
         usuarios = {clave: self._usuario(*datos, password) for clave, datos in PERSONAS.items()}
         nina = self._ficha(usuarios["sofia"], NINA)
-        self._ficha(usuarios["joaquin"], PIPO)
+        pipo = self._ficha(usuarios["joaquin"], PIPO)
+        self._foto(foto_nina, usuarios["sofia"], nina)
+        self._foto(foto_pipo, usuarios["joaquin"], pipo)
         self._extravio(usuarios["sofia"], nina)
         self.stdout.write(
             self.style.SUCCESS(
@@ -92,3 +102,11 @@ class Command(BaseCommand):
                 raza=ficha.raza,
                 color=ficha.color,
             )
+
+    def _foto(self, ruta, autor, ficha):
+        """Agrega la foto indicada si la ficha todavía no tiene ninguna."""
+        if not ruta or Fotografia.objects.filter(ficha=ficha).exists():
+            return
+        tipo = mimetypes.guess_type(ruta)[0] or "image/jpeg"
+        archivo = SimpleUploadedFile(Path(ruta).name, Path(ruta).read_bytes(), content_type=tipo)
+        registrar_fotografia(archivo=archivo, autor=autor, ficha=ficha)
