@@ -3,7 +3,8 @@
 from constance import config
 from django.utils import timezone
 
-from apps.cuentas.models import CAMPOS_HOGAR, Domicilio, TipoVivienda
+from apps.cuentas.models import CAMPOS_HOGAR, Domicilio, EstadoCuenta, TipoVivienda
+from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
 
 from .models import MAX_CUPO_DECLARADO, PerfilTransito
@@ -235,17 +236,28 @@ def esta_disponible(perfil, hoy=None):
     return perfil.pausa_hasta is not None and perfil.pausa_hasta <= hoy
 
 
-def tiene_animales_a_cargo(usuario):
-    """True si el hogar tiene animales alojados hoy (CU-66).
+def animales_alojados(usuario):
+    """Cuántos animales tiene alojados el hogar hoy.
 
-    Provisorio: los alojamientos son del módulo C y todavía no existen, así que por ahora
-    nadie tiene animales a cargo. Cuando C los tenga, esta es la única función a conectar.
+    Provisorio: los alojamientos todavía no existen, así que por ahora
+    es siempre 0. Cuando los tengamos, esta es la única función a conectar: de ella salen
+    tiene_animales_a_cargo y cupo_libre.
     """
-    return False
+    return 0
+
+
+def tiene_animales_a_cargo(usuario):
+    """True si el hogar tiene animales alojados hoy."""
+    return animales_alojados(usuario) > 0
+
+
+def cupo_libre(perfil):
+    """Plazas que le quedan al hogar: el cupo declarado menos los animales alojados."""
+    return max(perfil.cupo_declarado - animales_alojados(perfil.usuario), 0)
 
 
 def desactivar_perfil_transito(usuario):
-    """Desactiva el perfil de tránsito (CU-66, 7B de CU-06).
+    """Desactiva el perfil de tránsito.
 
     No se puede con animales a cargo: lanza DesactivacionNoPermitida y el perfil sigue
     activo (la persona puede pausarlo). Los datos del perfil se conservan y guardarlo de
@@ -259,3 +271,18 @@ def desactivar_perfil_transito(usuario):
     perfil.activo = False
     perfil.save(update_fields=["activo"])
     return perfil
+
+
+def hogar_habilitado(perfil, hoy=None):
+    """True si el hogar puede recibir un animal hoy.
+
+    Pide el perfil activo y disponible (no en pausa), la cuenta activa y sin sanción
+    vigente, y al menos una plaza libre.
+    """
+    usuario = perfil.usuario
+    return (
+        esta_disponible(perfil, hoy)
+        and usuario.estado_cuenta == EstadoCuenta.ACTIVA
+        and not esta_suspendido(usuario)
+        and cupo_libre(perfil) > 0
+    )
