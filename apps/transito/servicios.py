@@ -284,15 +284,14 @@ def desactivar_perfil_transito(usuario):
 
 
 def hogar_habilitado(perfil, hoy=None):
-    """True si el hogar puede recibir un animal hoy.
+    """True si el hogar está habilitado para postularse o ser elegido hoy.
 
-    Pide el perfil activo y disponible (no en pausa), la cuenta activa y sin sanción
-    vigente, y al menos una plaza libre.
+    Pide el perfil activo y disponible (no en pausa) y la cuenta activa y sin sanción vigente.
+    El cupo no es condición: un hogar con el cupo completo sigue habilitado.
     """
     usuario = perfil.usuario
     return (
         esta_disponible(perfil, hoy)
         and usuario.estado_cuenta == EstadoCuenta.ACTIVA
         and not esta_suspendido(usuario)
-        and cupo_libre(perfil) > 0
     )

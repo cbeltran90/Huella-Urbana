@@ -75,7 +75,7 @@ def test_el_cupo_libre_nunca_es_negativo(ana, monkeypatch):
     assert servicios.cupo_libre(crear_perfil(ana, cupo_declarado=3)) == 0
 
 
-# Hogar habilitado
+# Hogar habilitado (CU-24 y CU-25: disponible y sin suspensión)
 
 
 @pytest.mark.django_db
@@ -98,18 +98,11 @@ def test_en_pausa_no_esta_habilitado_hasta_la_fecha_de_reanudacion(ana):
 
 
 @pytest.mark.django_db
-def test_sin_cupo_libre_no_esta_habilitado(ana, monkeypatch):
+def test_el_cupo_completo_no_le_quita_la_habilitacion(ana, monkeypatch):
     perfil = crear_perfil(ana, cupo_declarado=2)
     con_alojados(monkeypatch, 2)
 
-    assert servicios.hogar_habilitado(perfil) is False
-
-
-@pytest.mark.django_db
-def test_con_una_plaza_libre_esta_habilitado(ana, monkeypatch):
-    perfil = crear_perfil(ana, cupo_declarado=2)
-    con_alojados(monkeypatch, 1)
-
+    assert servicios.cupo_libre(perfil) == 0
     assert servicios.hogar_habilitado(perfil) is True
 
 
