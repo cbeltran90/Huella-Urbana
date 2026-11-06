@@ -52,3 +52,4 @@ class PerfilTransitoForm(forms.Form):
         required=False,
         error_messages={"invalid": "Indicá el cupo con un número"},
     )
+    confirmar_exceso = forms.BooleanField(required=False)

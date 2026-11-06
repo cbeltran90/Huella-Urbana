@@ -33,6 +33,7 @@ MENSAJE_TAMANO_INVALIDO = "Elegí un tamaño de la lista."
 MENSAJE_DURACION_LARGA = f"La duración máxima no puede superar los {MAX_DURACION_MAXIMA_DIAS} días."
 MENSAJE_PAUSA_PASADA = "La fecha de reanudación tiene que ser posterior a hoy."
 MENSAJE_CUPO = f"El cupo tiene que estar entre 1 y {MAX_CUPO_DECLARADO}."
+MENSAJE_CUPO_EXCEDE = "Podría exceder la capacidad de su vivienda"
 MENSAJE_ANIMALES_A_CARGO = (
     "No se puede desactivar el perfil porque tenés animales a cargo. Podés pausarlo."
 )
@@ -63,7 +64,19 @@ class SinPerfilActivo(ValueError):
 
 
 class DesactivacionNoPermitida(ValueError):
-    """No se puede desactivar el perfil porque hay animales a cargo (CU-66)."""
+    """No se puede desactivar el perfil porque hay animales a cargo."""
+
+
+class CupoSuperaEstimado(ValueError):
+    """El cupo declarado supera el estimado.
+
+    Es solo una sugerencia: la persona puede confirmar el cupo igual. "estimado" trae el
+    número sugerido.
+    """
+
+    def __init__(self, estimado):
+        super().__init__(MENSAJE_CUPO_EXCEDE)
+        self.estimado = estimado
 
 
 def mensaje_duracion_minima():
@@ -144,6 +157,7 @@ def guardar_perfil_transito(
     cupo_declarado,
     acepta_medicacion=False,
     acepta_conducta=False,
+    confirmar_exceso=False,
 ):
     """Guarda y activa el perfil de hogar de tránsito.
 
@@ -151,6 +165,8 @@ def guardar_perfil_transito(
     obligatorios (PerfilTransitoIncompleto) o si algún valor no es válido
     (PerfilTransitoInvalido). Si ya había un perfil, lo actualiza y lo
     deja activo. El rol de hogar de tránsito sale de tener el perfil activo.
+    Si el cupo supera el estimado de la vivienda lanza CupoSuperaEstimado, salvo que
+    se pase confirmar_exceso=True.
     """
     especies = list(especies or [])
 
@@ -169,6 +185,11 @@ def guardar_perfil_transito(
     )
     if errores:
         raise PerfilTransitoInvalido(errores)
+
+    # El estimado es solo una sugerencia: se avisa y la persona puede confirmar.
+    estimado = cupo_estimado(Domicilio.objects.filter(usuario=usuario).first())
+    if not confirmar_exceso and estimado is not None and cupo_declarado > estimado:
+        raise CupoSuperaEstimado(estimado)
 
     perfil, _ = PerfilTransito.objects.update_or_create(
         usuario=usuario,

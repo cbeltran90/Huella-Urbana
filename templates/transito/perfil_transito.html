@@ -139,6 +139,11 @@
       <div>
         <label for="id_cupo_declarado" class="block text-sm font-medium">Animales que podés alojar a la vez</label>
         <p class="text-sm text-stone-600">Tu cupo vale desde que lo guardás.</p>
+        {% if cupo_estimado %}
+          <p class="mt-1 text-sm text-stone-700">
+            Capacidad estimada de tu vivienda: <strong>{{ cupo_estimado }}</strong>. Es solo una sugerencia: el número final lo elegís vos.
+          </p>
+        {% endif %}
         <input type="number"
                name="cupo_declarado"
                id="id_cupo_declarado"
@@ -146,9 +151,23 @@
                value="{{ form.cupo_declarado.value|default_if_none:'' }}"
                class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
         {% include "cuentas/_errores.html" with errores=form.cupo_declarado.errors %}
+        {% if excede_estimado %}
+          <p role="alert"
+             class="mt-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+            <strong>Podría exceder la capacidad de su vivienda.</strong> Estimamos {{ cupo_estimado }} y pusiste más. Si estás seguro, tocá «Confirmar igualmente».
+          </p>
+        {% endif %}
       </div>
       <button type="submit"
               class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Guardar perfil</button>
+      {% if excede_estimado %}
+        <button type="submit"
+                name="confirmar_exceso"
+                value="1"
+                class="min-h-11 w-full rounded border border-amber-400 bg-amber-50 px-4 py-2 font-semibold text-amber-900">
+          Confirmar igualmente
+        </button>
+      {% endif %}
       <a href="{% url 'cuentas:perfil' %}"
          class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
     </form>
