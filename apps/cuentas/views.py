@@ -5,6 +5,8 @@ from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from apps.transito import servicios as servicios_transito
+
 from . import servicios
 from .decoradores import cuenta_habilitada
 from .forms import (
@@ -13,10 +15,11 @@ from .forms import (
     DatosHogarForm,
     DomicilioForm,
     NombreUsuarioForm,
+    PerfilAdoptanteForm,
     ReenviarConfirmacionForm,
     RegistroForm,
 )
-from .models import Domicilio, EstadoCuenta
+from .models import Domicilio, EstadoCuenta, PerfilAdoptante
 
 MENSAJE_ERROR_GENERAL = "Error al crear cuenta. Revisar nombre de usuario y correo."
 MENSAJE_ENVIO_FALLIDO = "No pudimos enviar el correo. Probá de nuevo en unos minutos"
@@ -104,6 +107,8 @@ def perfil(request):
         "domicilio": domicilio,
         "tiene_domicilio": domicilio is not None,
         "hogar_completo": domicilio is not None and domicilio.hogar_completo,
+        "tiene_perfil_adoptante": PerfilAdoptante.objects.filter(usuario=request.user).exists(),
+        "es_hogar_de_transito": servicios_transito.es_hogar_de_transito(request.user),
         "guardado": request.GET.get("guardado") == "1",
     }
     return render(request, "cuentas/perfil.html", contexto)
@@ -111,18 +116,55 @@ def perfil(request):
 
 @cuenta_habilitada
 def datos_hogar(request):
+    # Quien viene del perfil de adopción o del de tránsito vuelve allí.
+    destinos = {"adopcion": "cuentas:perfil_adoptante", "transito": "transito:perfil_transito"}
+    volver_url = reverse(destinos.get(request.GET.get("volver"), "cuentas:perfil"))
     domicilio = Domicilio.objects.filter(usuario=request.user).first()
     if domicilio is None:
         # Los datos del hogar cuelgan del domicilio: primero hay que registrarlo.
-        return render(request, "cuentas/datos_hogar.html", {"sin_domicilio": True})
+        contexto = {"sin_domicilio": True, "volver_url": volver_url}
+        return render(request, "cuentas/datos_hogar.html", contexto)
     if request.method == "POST":
         form = DatosHogarForm(request.POST, instance=domicilio)
         if form.is_valid():
             form.save()
-            return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
+            return redirect(f"{volver_url}?guardado=1")
     else:
         form = DatosHogarForm(instance=domicilio)
-    return render(request, "cuentas/datos_hogar.html", {"form": form})
+    return render(request, "cuentas/datos_hogar.html", {"form": form, "volver_url": volver_url})
+
+
+@cuenta_habilitada
+def perfil_adoptante(request):
+    faltantes = []
+    if request.method == "POST":
+        form = PerfilAdoptanteForm(request.POST)
+        if form.is_valid():
+            try:
+                servicios.guardar_perfil_adoptante(
+                    request.user, form.cleaned_data["experiencia_previa"]
+                )
+            except servicios.PerfilAdoptanteIncompleto as error:
+                faltantes = error.faltantes
+            except servicios.PerfilAdoptanteInvalido as error:
+                form.add_error("experiencia_previa", str(error))
+            else:
+                return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
+    else:
+        perfil = PerfilAdoptante.objects.filter(usuario=request.user).first()
+        inicial = perfil.experiencia_previa if perfil else ""
+        form = PerfilAdoptanteForm(initial={"experiencia_previa": inicial})
+    domicilio = Domicilio.objects.filter(usuario=request.user).first()
+    contexto = {
+        "form": form,
+        "faltantes": faltantes,
+        "domicilio": domicilio,
+        "hogar_completo": domicilio is not None and domicilio.hogar_completo,
+        "puede_postularse": servicios.puede_postularse_a_adoptar(request.user),
+        "max_caracteres": servicios.MAX_EXPERIENCIA_PREVIA,
+        "guardado": request.GET.get("guardado") == "1",
+    }
+    return render(request, "cuentas/perfil_adoptante.html", contexto)
 
 
 @cuenta_habilitada

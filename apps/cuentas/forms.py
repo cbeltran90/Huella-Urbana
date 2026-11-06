@@ -246,6 +246,21 @@ class DatosHogarForm(forms.ModelForm):
         fields = CAMPOS_HOGAR
 
 
+class PerfilAdoptanteForm(forms.Form):
+    """Experiencia previa con animales.
+
+    La obligatoriedad la decide el servicio, así el aviso lista a la vez todo lo que falta.
+    """
+
+    experiencia_previa = forms.CharField(
+        label="Experiencia previa con animales",
+        required=False,
+        max_length=servicios.MAX_EXPERIENCIA_PREVIA,
+        widget=forms.Textarea,
+        error_messages={"max_length": servicios.MENSAJE_EXPERIENCIA_LARGA},
+    )
+
+
 class NombreUsuarioForm(forms.Form):
     """Cambio del nombre de usuario desde el perfil (CU-03)."""
 

@@ -14,7 +14,18 @@ from django.urls import reverse
 from django.utils import timezone
 
 from . import geo
-from .models import Domicilio, EstadoCuenta, Rol, Sancion, Usuario, hash_email, normalizar_email
+from .models import (
+    CAMPOS_HOGAR,
+    MAX_EXPERIENCIA_PREVIA,
+    Domicilio,
+    EstadoCuenta,
+    PerfilAdoptante,
+    Rol,
+    Sancion,
+    Usuario,
+    hash_email,
+    normalizar_email,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -333,3 +344,76 @@ def confirmar_cambio_correo(token):
             raise CambioCorreoInvalido(MENSAJE_CORREO_USADO) from error
     logger.info("Cambio de correo confirmado (usuario %s)", usuario.pk)
     return usuario
+
+
+ETIQUETA_EXPERIENCIA = "Experiencia previa con animales"
+MENSAJE_EXPERIENCIA_LARGA = (
+    f"La experiencia previa admite hasta {MAX_EXPERIENCIA_PREVIA} caracteres"
+)
+
+
+class PerfilAdoptanteInvalido(ValueError):
+    """El perfil de adoptante no se puede guardar. El mensaje está pensado para mostrarse."""
+
+
+class PerfilAdoptanteIncompleto(PerfilAdoptanteInvalido):
+    """Faltan datos obligatorios: "faltantes" dice, en palabras, qué hay que completar."""
+
+    def __init__(self, faltantes):
+        self.faltantes = faltantes
+        super().__init__("Faltan datos: " + ", ".join(faltantes))
+
+
+def _etiqueta_hogar(campo):
+    texto = str(Domicilio._meta.get_field(campo).verbose_name)
+    return texto[:1].upper() + texto[1:]
+
+
+def datos_faltantes_adoptante(usuario, experiencia_previa):
+    """Lo que falta para tener completo el perfil de hogar y familia, en palabras."""
+    faltantes = []
+    domicilio = Domicilio.objects.filter(usuario=usuario).first()
+    if domicilio is None:
+        faltantes.append("Domicilio")
+        faltantes.extend(_etiqueta_hogar(campo) for campo in CAMPOS_HOGAR)
+    else:
+        faltantes.extend(_etiqueta_hogar(campo) for campo in domicilio.hogar_faltante())
+    if not (experiencia_previa or "").strip():
+        faltantes.append(ETIQUETA_EXPERIENCIA)
+    return faltantes
+
+
+def guardar_perfil_adoptante(usuario, experiencia_previa):
+    """Guarda el perfil de hogar y familia solo si está completo (CU-05, 5A).
+
+    Si falta algo no guarda nada y lanza PerfilAdoptanteIncompleto con lo que falta.
+    Si ya había un perfil, lo actualiza.
+    """
+    experiencia = (experiencia_previa or "").strip()
+    faltantes = datos_faltantes_adoptante(usuario, experiencia)
+    if faltantes:
+        raise PerfilAdoptanteIncompleto(faltantes)
+    if len(experiencia) > MAX_EXPERIENCIA_PREVIA:
+        raise PerfilAdoptanteInvalido(MENSAJE_EXPERIENCIA_LARGA)
+    perfil, _ = PerfilAdoptante.objects.update_or_create(
+        usuario=usuario, defaults={"experiencia_previa": experiencia}
+    )
+    return perfil
+
+
+def puede_postularse_a_adoptar(usuario):
+    """True si la persona puede postularse para adoptar (CU-28).
+
+    Hace falta tener el perfil de hogar y familia guardado, los datos del hogar completos y
+    una cuenta activa sin sanción vigente: con una sanción queda con permisos de visitante.
+    """
+    if not usuario.is_authenticated or usuario.estado_cuenta != EstadoCuenta.ACTIVA:
+        return False
+    if esta_suspendido(usuario):
+        return False
+    domicilio = Domicilio.objects.filter(usuario=usuario).first()
+    return (
+        domicilio is not None
+        and domicilio.hogar_completo
+        and PerfilAdoptante.objects.filter(usuario=usuario).exists()
+    )
