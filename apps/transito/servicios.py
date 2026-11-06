@@ -41,6 +41,12 @@ def mensaje_cupo_menor_a_alojados(alojados):
     return f"El cupo no puede ser menor a los animales que ya alojás ({alojados})."
 
 
+MOTIVO_ESPECIE = "El hogar no acepta esa especie."
+MOTIVO_TAMANO = "El animal es más grande que el tamaño máximo que acepta el hogar."
+MOTIVO_MEDICACION = "El animal requiere medicación y el hogar no la acepta."
+MOTIVO_CONDUCTA = "El animal tiene problemas de conducta y el hogar no los acepta."
+
+
 MENSAJE_ANIMALES_A_CARGO = (
     "No se puede desactivar el perfil porque tenés animales a cargo. Podés pausarlo."
 )
@@ -295,3 +301,44 @@ def hogar_habilitado(perfil, hoy=None):
         and usuario.estado_cuenta == EstadoCuenta.ACTIVA
         and not esta_suspendido(usuario)
     )
+
+
+def incompatibilidades(perfil, ficha):
+    """Por qué el hogar no es compatible con la ficha (lista vacía si lo es).
+
+    Es el aviso de incompatibilidad: avisa, pero no impide
+    postularse. Cruza los límites que el hogar declaró en su perfil: especie, tamaño
+    máximo y si acepta medicación o problemas de conducta.
+    """
+    motivos = []
+    if ficha.especie not in perfil.especies:
+        motivos.append(MOTIVO_ESPECIE)
+    tamanos = FichaAnimal.Tamano.values  # ordenados de menor a mayor
+    if ficha.tamano in tamanos and perfil.tamano_maximo in tamanos:
+        if tamanos.index(ficha.tamano) > tamanos.index(perfil.tamano_maximo):
+            motivos.append(MOTIVO_TAMANO)
+    if ficha.requiere_medicacion and not perfil.acepta_medicacion:
+        motivos.append(MOTIVO_MEDICACION)
+    if ficha.problemas_conducta and not perfil.acepta_conducta:
+        motivos.append(MOTIVO_CONDUCTA)
+    return motivos
+
+
+def hogares_compatibles(ficha, hoy=None):
+    """Los perfiles de hogar de tránsito a quienes avisar de este animal.
+
+    Cada uno tiene que estar habilitado y no tener incompatibilidades. Devuelve una lista de
+    perfiles, cada uno con su "usuario": es lo que espera publicaciones para notificar.
+    Para postularse o elegir hogar no se usa esta lista: alcanza con
+    hogar_habilitado, y la incompatibilidad se muestra como aviso.
+    """
+    candidatos = (
+        PerfilTransito.objects.filter(activo=True, usuario__estado_cuenta=EstadoCuenta.ACTIVA)
+        .select_related("usuario")
+        .order_by("usuario_id")
+    )
+    return [
+        perfil
+        for perfil in candidatos
+        if hogar_habilitado(perfil, hoy) and not incompatibilidades(perfil, ficha)
+    ]
