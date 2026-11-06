@@ -35,6 +35,12 @@ MENSAJE_DURACION_LARGA = f"La duración máxima no puede superar los {MAX_DURACI
 MENSAJE_PAUSA_PASADA = "La fecha de reanudación tiene que ser posterior a hoy."
 MENSAJE_CUPO = f"El cupo tiene que estar entre 1 y {MAX_CUPO_DECLARADO}."
 MENSAJE_CUPO_EXCEDE = "Podría exceder la capacidad de su vivienda"
+
+
+def mensaje_cupo_menor_a_alojados(alojados):
+    return f"El cupo no puede ser menor a los animales que ya alojás ({alojados})."
+
+
 MENSAJE_ANIMALES_A_CARGO = (
     "No se puede desactivar el perfil porque tenés animales a cargo. Podés pausarlo."
 )
@@ -184,6 +190,10 @@ def guardar_perfil_transito(
     errores = _errores(
         especies, tamano_maximo, duracion_maxima_dias, disponibilidad, pausa_hasta, cupo_declarado
     )
+    # El cupo no puede quedar por debajo de los animales que el hogar ya aloja.
+    alojados = animales_alojados(usuario)
+    if cupo_declarado < alojados:
+        errores.setdefault("cupo_declarado", mensaje_cupo_menor_a_alojados(alojados))
     if errores:
         raise PerfilTransitoInvalido(errores)
 
