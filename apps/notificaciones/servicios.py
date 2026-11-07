@@ -12,14 +12,8 @@ def notificar(usuario, tipo, titulo, mensaje="", *, ficha=None, publicacion=None
     'ficha' es opcional y puede ser None o una instancia de FichaAnimal.
     'publicacion' es opcional y puede ser None o una instancia de Publicacion.
     """
-
     if tipo not in Notificacion.Tipo.values:
         raise ValueError(f"Tipo de notificación inválido: {tipo!r}")
-
-    # TODO: cuando B4 cree Publicacion, agregar la FK al modelo
-    # borrar esta guarda y pasar publicacion al crear.
-    if publicacion is not None:
-        raise NotImplementedError("Notificaciones de publicaciones aún no implementadas")
 
     return Notificacion.objects.create(
         usuario=usuario,
@@ -27,4 +21,5 @@ def notificar(usuario, tipo, titulo, mensaje="", *, ficha=None, publicacion=None
         titulo=titulo,
         mensaje=mensaje,
         ficha=ficha,
+        publicacion=publicacion,
     )

@@ -31,6 +31,13 @@ class Notificacion(models.Model):
         on_delete=models.SET_NULL,
         related_name="notificaciones",
     )
+    publicacion = models.ForeignKey(
+        "publicaciones.Publicacion",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="notificaciones",
+    )
     leida = models.BooleanField(default=False)
     creada_at = models.DateTimeField(auto_now_add=True)
     push_enviado_at = models.DateTimeField(null=True, blank=True, db_index=True)
