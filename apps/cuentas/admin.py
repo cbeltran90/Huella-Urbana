@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from unfold.admin import ModelAdmin
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
+from apps.transito import servicios as servicios_transito
+
 from . import servicios
 from .models import Sancion, Usuario
 from .permisos_admin import es_administrador, es_moderador_o_administrador
@@ -19,6 +21,7 @@ CAMPOS_ALTA = (
 )
 CAMPOS_CUENTA = (
     "rol",
+    "hogar_de_transito",
     "es_organizacion",
     "es_zoonosis",
     "estado_cuenta",
@@ -37,6 +40,7 @@ CAMPOS_BASICOS = (
     "email",
     "nombre_usuario",
     "rol",
+    "hogar_de_transito",
     "es_organizacion",
     "es_zoonosis",
     "estado_cuenta",
@@ -49,7 +53,14 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
 
-    list_display = ("email", "nombre_usuario", "rol", "estado_cuenta", "is_staff")
+    list_display = (
+        "email",
+        "nombre_usuario",
+        "rol",
+        "hogar_de_transito",
+        "estado_cuenta",
+        "is_staff",
+    )
     list_filter = ("rol", "estado_cuenta", "es_organizacion", "is_staff")
     search_fields = ("email", "nombre_usuario")
     ordering = ("email",)
@@ -58,6 +69,7 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
         "is_active",
         "is_staff",
         "is_superuser",
+        "hogar_de_transito",
         "last_login",
         "date_joined",
         "email_hash",
@@ -92,6 +104,11 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
         if obj is not None and obj.pk == request.user.pk:
             return False
         return es_administrador(request)
+
+    @admin.display(boolean=True, description="Hogar de tránsito")
+    def hogar_de_transito(self, obj):
+        # El rol de hogar de tránsito sale del perfil activo: no se asigna ni se edita acá.
+        return servicios_transito.es_hogar_de_transito(obj)
 
     def get_fieldsets(self, request, obj=None):
         if obj is not None and not es_administrador(request):
