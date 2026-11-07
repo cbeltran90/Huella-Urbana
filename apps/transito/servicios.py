@@ -3,13 +3,24 @@
 from constance import config
 from django.utils import timezone
 
-from apps.cuentas.models import CAMPOS_HOGAR, Domicilio
+from apps.cuentas.models import CAMPOS_HOGAR, Domicilio, EstadoCuenta, TipoVivienda
+from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
 
 from .models import MAX_CUPO_DECLARADO, PerfilTransito
 
-# Tope provisorio de la duración máxima que puede declarar un hogar (CU-06 no fija uno).
+# Tope provisorio de la duración máxima que puede declarar un hogar.
 MAX_DURACION_MAXIMA_DIAS = 365
+
+# Cupo que el sistema sugiere según la vivienda. Es solo una sugerencia: la
+# persona declara el número final. Valores provisorios; para cambiarlos se tocan acá.
+CUPO_POR_VIVIENDA = {
+    TipoVivienda.CASA: 3,
+    TipoVivienda.DEPARTAMENTO: 1,
+    TipoVivienda.OTRA: 1,
+}
+CUPO_EXTRA_POR_PATIO = 2
+MAX_CUPO_ESTIMADO = 5
 
 ETIQUETA_ESPECIES = "Especies que acepta"
 ETIQUETA_TAMANO = "Tamaño máximo"
@@ -23,6 +34,19 @@ MENSAJE_TAMANO_INVALIDO = "Elegí un tamaño de la lista."
 MENSAJE_DURACION_LARGA = f"La duración máxima no puede superar los {MAX_DURACION_MAXIMA_DIAS} días."
 MENSAJE_PAUSA_PASADA = "La fecha de reanudación tiene que ser posterior a hoy."
 MENSAJE_CUPO = f"El cupo tiene que estar entre 1 y {MAX_CUPO_DECLARADO}."
+MENSAJE_CUPO_EXCEDE = "Podría exceder la capacidad de su vivienda"
+
+
+def mensaje_cupo_menor_a_alojados(alojados):
+    return f"El cupo no puede ser menor a los animales que ya alojás ({alojados})."
+
+
+MOTIVO_ESPECIE = "El hogar no acepta esa especie."
+MOTIVO_TAMANO = "El animal es más grande que el tamaño máximo que acepta el hogar."
+MOTIVO_MEDICACION = "El animal requiere medicación y el hogar no la acepta."
+MOTIVO_CONDUCTA = "El animal tiene problemas de conducta y el hogar no los acepta."
+
+
 MENSAJE_ANIMALES_A_CARGO = (
     "No se puede desactivar el perfil porque tenés animales a cargo. Podés pausarlo."
 )
@@ -53,11 +77,39 @@ class SinPerfilActivo(ValueError):
 
 
 class DesactivacionNoPermitida(ValueError):
-    """No se puede desactivar el perfil porque hay animales a cargo (CU-66)."""
+    """No se puede desactivar el perfil porque hay animales a cargo."""
+
+
+class CupoSuperaEstimado(ValueError):
+    """El cupo declarado supera el estimado.
+
+    Es solo una sugerencia: la persona puede confirmar el cupo igual. "estimado" trae el
+    número sugerido.
+    """
+
+    def __init__(self, estimado):
+        super().__init__(MENSAJE_CUPO_EXCEDE)
+        self.estimado = estimado
 
 
 def mensaje_duracion_minima():
     return f"La duración mínima es de {config.DURACION_MINIMA_TRANSITO_DIAS} días"
+
+
+def cupo_estimado(domicilio):
+    """Cupo que el sistema sugiere para una vivienda.
+
+    Una casa suma 3, un departamento u otra vivienda suma 1, y un patio suma 2, con un
+    máximo de 5. Los convivientes, los niños y las mascotas propias no cambian el
+    resultado. Devuelve None si todavía faltan datos de la vivienda.
+    """
+    if domicilio is None or not domicilio.tipo_vivienda or domicilio.tiene_patio is None:
+        return None
+    base = CUPO_POR_VIVIENDA.get(domicilio.tipo_vivienda)
+    if base is None:
+        return None
+    extra = CUPO_EXTRA_POR_PATIO if domicilio.tiene_patio else 0
+    return min(base + extra, MAX_CUPO_ESTIMADO)
 
 
 def _etiqueta_hogar(campo):
@@ -118,6 +170,7 @@ def guardar_perfil_transito(
     cupo_declarado,
     acepta_medicacion=False,
     acepta_conducta=False,
+    confirmar_exceso=False,
 ):
     """Guarda y activa el perfil de hogar de tránsito.
 
@@ -125,6 +178,8 @@ def guardar_perfil_transito(
     obligatorios (PerfilTransitoIncompleto) o si algún valor no es válido
     (PerfilTransitoInvalido). Si ya había un perfil, lo actualiza y lo
     deja activo. El rol de hogar de tránsito sale de tener el perfil activo.
+    Si el cupo supera el estimado de la vivienda lanza CupoSuperaEstimado, salvo que
+    se pase confirmar_exceso=True.
     """
     especies = list(especies or [])
 
@@ -141,8 +196,17 @@ def guardar_perfil_transito(
     errores = _errores(
         especies, tamano_maximo, duracion_maxima_dias, disponibilidad, pausa_hasta, cupo_declarado
     )
+    # El cupo no puede quedar por debajo de los animales que el hogar ya aloja.
+    alojados = animales_alojados(usuario)
+    if cupo_declarado < alojados:
+        errores.setdefault("cupo_declarado", mensaje_cupo_menor_a_alojados(alojados))
     if errores:
         raise PerfilTransitoInvalido(errores)
+
+    # El estimado es solo una sugerencia: se avisa y la persona puede confirmar.
+    estimado = cupo_estimado(Domicilio.objects.filter(usuario=usuario).first())
+    if not confirmar_exceso and estimado is not None and cupo_declarado > estimado:
+        raise CupoSuperaEstimado(estimado)
 
     perfil, _ = PerfilTransito.objects.update_or_create(
         usuario=usuario,
@@ -188,17 +252,28 @@ def esta_disponible(perfil, hoy=None):
     return perfil.pausa_hasta is not None and perfil.pausa_hasta <= hoy
 
 
-def tiene_animales_a_cargo(usuario):
-    """True si el hogar tiene animales alojados hoy (CU-66).
+def animales_alojados(usuario):
+    """Cuántos animales tiene alojados el hogar hoy.
 
-    Provisorio: los alojamientos son del módulo C y todavía no existen, así que por ahora
-    nadie tiene animales a cargo. Cuando C los tenga, esta es la única función a conectar.
+    Provisorio: los alojamientos todavía no existen, así que por ahora
+    es siempre 0. Cuando los tengamos, esta es la única función a conectar: de ella salen
+    tiene_animales_a_cargo y cupo_libre.
     """
-    return False
+    return 0
+
+
+def tiene_animales_a_cargo(usuario):
+    """True si el hogar tiene animales alojados hoy."""
+    return animales_alojados(usuario) > 0
+
+
+def cupo_libre(perfil):
+    """Plazas que le quedan al hogar: el cupo declarado menos los animales alojados."""
+    return max(perfil.cupo_declarado - animales_alojados(perfil.usuario), 0)
 
 
 def desactivar_perfil_transito(usuario):
-    """Desactiva el perfil de tránsito (CU-66, 7B de CU-06).
+    """Desactiva el perfil de tránsito.
 
     No se puede con animales a cargo: lanza DesactivacionNoPermitida y el perfil sigue
     activo (la persona puede pausarlo). Los datos del perfil se conservan y guardarlo de
@@ -212,3 +287,58 @@ def desactivar_perfil_transito(usuario):
     perfil.activo = False
     perfil.save(update_fields=["activo"])
     return perfil
+
+
+def hogar_habilitado(perfil, hoy=None):
+    """True si el hogar está habilitado para postularse o ser elegido hoy.
+
+    Pide el perfil activo y disponible (no en pausa) y la cuenta activa y sin sanción vigente.
+    El cupo no es condición: un hogar con el cupo completo sigue habilitado.
+    """
+    usuario = perfil.usuario
+    return (
+        esta_disponible(perfil, hoy)
+        and usuario.estado_cuenta == EstadoCuenta.ACTIVA
+        and not esta_suspendido(usuario)
+    )
+
+
+def incompatibilidades(perfil, ficha):
+    """Por qué el hogar no es compatible con la ficha (lista vacía si lo es).
+
+    Es el aviso de incompatibilidad: avisa, pero no impide
+    postularse. Cruza los límites que el hogar declaró en su perfil: especie, tamaño
+    máximo y si acepta medicación o problemas de conducta.
+    """
+    motivos = []
+    if ficha.especie not in perfil.especies:
+        motivos.append(MOTIVO_ESPECIE)
+    tamanos = FichaAnimal.Tamano.values  # ordenados de menor a mayor
+    if ficha.tamano in tamanos and perfil.tamano_maximo in tamanos:
+        if tamanos.index(ficha.tamano) > tamanos.index(perfil.tamano_maximo):
+            motivos.append(MOTIVO_TAMANO)
+    if ficha.requiere_medicacion and not perfil.acepta_medicacion:
+        motivos.append(MOTIVO_MEDICACION)
+    if ficha.problemas_conducta and not perfil.acepta_conducta:
+        motivos.append(MOTIVO_CONDUCTA)
+    return motivos
+
+
+def hogares_compatibles(ficha, hoy=None):
+    """Los perfiles de hogar de tránsito a quienes avisar de este animal.
+
+    Cada uno tiene que estar habilitado y no tener incompatibilidades. Devuelve una lista de
+    perfiles, cada uno con su "usuario": es lo que espera publicaciones para notificar.
+    Para postularse o elegir hogar no se usa esta lista: alcanza con
+    hogar_habilitado, y la incompatibilidad se muestra como aviso.
+    """
+    candidatos = (
+        PerfilTransito.objects.filter(activo=True, usuario__estado_cuenta=EstadoCuenta.ACTIVA)
+        .select_related("usuario")
+        .order_by("usuario_id")
+    )
+    return [
+        perfil
+        for perfil in candidatos
+        if hogar_habilitado(perfil, hoy) and not incompatibilidades(perfil, ficha)
+    ]

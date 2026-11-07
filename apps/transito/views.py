@@ -9,10 +9,13 @@ from .forms import PerfilTransitoForm
 from .models import PerfilTransito
 
 
-def _inicial(perfil):
+def _inicial(perfil, estimado):
     """Valores con los que arranca el formulario."""
     if perfil is None:
-        return {"disponibilidad": "True"}
+        inicial = {"disponibilidad": "True"}
+        if estimado is not None:
+            inicial["cupo_declarado"] = estimado
+        return inicial
     return {
         "especies": perfil.especies,
         "tamano_maximo": perfil.tamano_maximo,
@@ -28,6 +31,9 @@ def _inicial(perfil):
 @cuenta_habilitada
 def perfil_transito(request):
     faltantes = []
+    excede_estimado = False
+    domicilio = Domicilio.objects.filter(usuario=request.user).first()
+    estimado = servicios.cupo_estimado(domicilio)
     if request.method == "POST":
         form = PerfilTransitoForm(request.POST)
         if form.is_valid():
@@ -38,17 +44,20 @@ def perfil_transito(request):
             except servicios.PerfilTransitoInvalido as error:
                 for campo, mensaje in error.errores.items():
                     form.add_error(campo, mensaje)
+            except servicios.CupoSuperaEstimado:
+                excede_estimado = True
             else:
                 return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
     else:
         perfil = PerfilTransito.objects.filter(usuario=request.user).first()
-        form = PerfilTransitoForm(initial=_inicial(perfil))
-    domicilio = Domicilio.objects.filter(usuario=request.user).first()
+        form = PerfilTransitoForm(initial=_inicial(perfil, estimado))
     contexto = {
         "form": form,
         "faltantes": faltantes,
         "domicilio": domicilio,
         "hogar_completo": domicilio is not None and domicilio.hogar_completo,
+        "cupo_estimado": estimado,
+        "excede_estimado": excede_estimado,
         "es_hogar_de_transito": servicios.es_hogar_de_transito(request.user),
         "guardado": request.GET.get("guardado") == "1",
     }
