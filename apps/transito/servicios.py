@@ -3,9 +3,10 @@
 from constance import config
 from django.utils import timezone
 
-from apps.cuentas.models import CAMPOS_HOGAR, Domicilio, EstadoCuenta, TipoVivienda
+from apps.cuentas.models import CAMPOS_HOGAR, Domicilio, EstadoCuenta, Rol, TipoVivienda
 from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
+from apps.moderacion.auditoria import registrar_accion
 
 from .models import MAX_CUPO_DECLARADO, PerfilTransito
 
@@ -50,6 +51,13 @@ MOTIVO_CONDUCTA = "El animal tiene problemas de conducta y el hogar no los acept
 MENSAJE_ANIMALES_A_CARGO = (
     "No se puede desactivar el perfil porque tenés animales a cargo. Podés pausarlo."
 )
+MENSAJE_RETIRO_SIN_PERMISO = (
+    "Solo un moderador o un administrador puede retirar el rol de hogar de tránsito."
+)
+MENSAJE_RETIRO_CON_ANIMALES = (
+    "No se puede retirar el rol de hogar de tránsito: el usuario tiene animales a su cargo."
+)
+REGISTRO_RETIRO = "Rol de hogar de tránsito retirado: perfil de tránsito desactivado."
 
 
 class PerfilTransitoInvalido(ValueError):
@@ -78,6 +86,10 @@ class SinPerfilActivo(ValueError):
 
 class DesactivacionNoPermitida(ValueError):
     """No se puede desactivar el perfil porque hay animales a cargo."""
+
+
+class RetiroNoPermitido(ValueError):
+    """No se puede retirar el rol de hogar de tránsito"""
 
 
 class CupoSuperaEstimado(ValueError):
@@ -342,3 +354,24 @@ def hogares_compatibles(ficha, hoy=None):
         for perfil in candidatos
         if hogar_habilitado(perfil, hoy) and not incompatibilidades(perfil, ficha)
     ]
+
+
+def retirar_rol_transito(usuario, retirado_por):
+    """Retira el rol de hogar de tránsito a un usuario.
+
+    Lo hace un moderador o un administrador, y solo si el usuario no tiene animales a su
+    cargo: si los tiene lanza RetiroNoPermitido y no cambia nada. El rol se deriva del perfil
+    activo, así que retirarlo es desactivar el perfil: sus datos se conservan. Deja
+    registrado en el historial del usuario quién lo hizo, qué y cuándo.
+    """
+    if getattr(retirado_por, "rol", None) not in (Rol.MODERADOR, Rol.ADMINISTRADOR):
+        raise RetiroNoPermitido(MENSAJE_RETIRO_SIN_PERMISO)
+    perfil = PerfilTransito.objects.filter(usuario=usuario, activo=True).first()
+    if perfil is None:
+        raise SinPerfilActivo("No hay un perfil de tránsito activo.")
+    if tiene_animales_a_cargo(usuario):
+        raise RetiroNoPermitido(MENSAJE_RETIRO_CON_ANIMALES)
+    perfil.activo = False
+    perfil.save(update_fields=["activo"])
+    registrar_accion(retirado_por, usuario, REGISTRO_RETIRO)
+    return perfil
