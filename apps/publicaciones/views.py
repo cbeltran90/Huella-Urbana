@@ -212,3 +212,20 @@ def perdidos(request):
         "tamanos": FichaAnimal.Tamano.choices,
     }
     return render(request, "publicaciones/perdidos.html", contexto)
+
+
+def disponibles(request):
+    """Listado público de disponibles (CU-20): adopción y tránsito, sin orden por cercanía."""
+    filtros = request.GET
+    contexto = {
+        "publicaciones": listados.disponibles(
+            tipo=filtros.get("tipo", ""),
+            especie=filtros.get("especie", ""),
+            tamano=filtros.get("tamano", ""),
+        ),
+        "filtros": filtros,
+        "tipos": [(t.value, t.label) for t in listados.TIPOS_DISPONIBLES],
+        "especies": FichaAnimal.Especie.choices,
+        "tamanos": FichaAnimal.Tamano.choices,
+    }
+    return render(request, "publicaciones/disponibles.html", contexto)

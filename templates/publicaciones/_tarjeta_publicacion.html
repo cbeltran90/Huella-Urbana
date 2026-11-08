@@ -1,0 +1,15 @@
+<li class="rounded-lg border bg-white p-4">
+  <a href="{% url 'publicaciones:detalle' p.pk %}" class="block min-h-11">
+    <span class="font-semibold">
+      {{ p.get_tipo_display }}
+      {% if p.ficha and not p.ficha.es_privada and p.ficha.nombre %}· {{ p.ficha.nombre }}{% endif %}
+    </span>
+    <span class="block text-sm text-stone-600">
+      {{ p.especie|default:"Especie sin dato" }}
+      {% if p.tamano %}· {{ p.tamano }}{% endif %}
+      {% if p.color %}· {{ p.color }}{% endif %}
+      · {{ p.fecha|date:"j/n/Y" }}
+      {% if con_punto %}· a {{ p.distancia.m|floatformat:0 }} m{% endif %}
+    </span>
+  </a>
+</li>

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Animales disponibles · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-2xl">
+    <h1 class="text-2xl font-bold">Animales disponibles</h1>
+    <p class="mt-1 text-sm text-stone-600">Animales que buscan adopción o un hogar de tránsito.</p>
+    <form method="get" class="mt-4 flex flex-wrap items-end gap-3 text-sm">
+      {% include "publicaciones/_filtros_listado.html" %}
+      <button type="submit" class="min-h-11 rounded bg-stone-800 px-3 text-white">Filtrar</button>
+    </form>
+    <ul class="mt-4 space-y-3">
+      {% for p in publicaciones %}
+        {% include "publicaciones/_tarjeta_publicacion.html" %}
+      {% empty %}
+        <li class="rounded border bg-white p-4 text-sm">No hay resultados para esos filtros.</li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endblock %}
