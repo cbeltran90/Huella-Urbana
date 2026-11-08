@@ -3,6 +3,9 @@
 {% block contenido %}
   <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
     <h1 class="text-2xl font-bold">Tu cuenta está suspendida</h1>
+    <p class="mt-2">
+      <strong>Motivo:</strong> {{ sancion.motivo }}
+    </p>
     {% if sancion.fin %}
       <p class="mt-2">La suspensión termina el {{ sancion.fin|date:"d/m/Y H:i" }}.</p>
     {% else %}

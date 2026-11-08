@@ -102,3 +102,12 @@ def test_una_suspension_vencida_ya_no_bloquea(ana):
 def test_una_suspension_levantada_ya_no_bloquea(ana):
     sancion(ana, Sancion.Tipo.PERMANENTE, revocada_en=timezone.now())
     assert abrir(ana).status_code == 200
+
+
+@pytest.mark.django_db
+def test_la_pantalla_de_suspension_muestra_el_motivo(ana):
+    sancion(ana, Sancion.Tipo.PERMANENTE)
+
+    contenido = abrir(ana).content.decode()
+
+    assert "Motivo de prueba" in contenido
