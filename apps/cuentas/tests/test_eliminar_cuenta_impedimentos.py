@@ -140,10 +140,6 @@ def test_una_eleccion_pendiente_lo_impide(ana, monkeypatch):
     assert impedimento.mensaje == eliminacion.MENSAJE_ELECCION_PENDIENTE
 
 
-def test_hoy_no_hay_eleccion_pendiente_porque_no_existen_las_postulaciones(ana):
-    assert servicios_transito.tiene_eleccion_pendiente(ana) is False
-
-
 def test_se_informan_todos_los_impedimentos_a_la_vez(ana, monkeypatch):
     sancionar(ana, Sancion.Tipo.TEMPORAL, fin=timezone.now() + timedelta(days=3))
     ficha(Estado.EN_TRANSITO, cuidador=ana)

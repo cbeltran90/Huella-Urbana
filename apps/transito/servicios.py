@@ -1,6 +1,7 @@
 """Reglas del hogar de tránsito que usan otras partes del sistema."""
 
 from constance import config
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.cuentas.models import CAMPOS_HOGAR, Domicilio, EstadoCuenta, Rol, TipoVivienda
@@ -8,7 +9,7 @@ from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
 from apps.moderacion.auditoria import registrar_accion
 
-from .models import MAX_CUPO_DECLARADO, Alojamiento, PerfilTransito
+from .models import MAX_CUPO_DECLARADO, Alojamiento, PerfilTransito, Postulacion
 
 # Tope provisorio de la duración máxima que puede declarar un hogar.
 MAX_DURACION_MAXIMA_DIAS = 365
@@ -278,12 +279,16 @@ def tiene_animales_a_cargo(usuario):
 
 
 def tiene_eleccion_pendiente(usuario):
-    """True si la persona tiene una postulación elegida o un adoptante elegido sin concretar.
+    """True si la persona tiene una elección pendiente de concretar.
 
-    Provisorio: las postulaciones todavía no existen, así que por ahora devuelve False.
-    Es el único punto que hay que conectar cuando existan.
+    Es de cualquiera de los dos lados: una postulación suya que fue elegida, o una
+    postulación elegida (hogar o adoptante) en un animal del que ella es responsable o
+    está a su cargo. Dura hasta que la entrega se concrete o se cancele.
     """
-    return False
+    elegidas = Postulacion.objects.filter(estado=Postulacion.Estado.ELEGIDA)
+    suya = Q(usuario=usuario)
+    sobre_sus_animales = Q(ficha__cuidador=usuario) | Q(ficha__responsable=usuario)
+    return elegidas.filter(suya | sobre_sus_animales).exists()
 
 
 def cupo_libre(perfil):

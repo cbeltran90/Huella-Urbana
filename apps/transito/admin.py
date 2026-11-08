@@ -7,7 +7,7 @@ from unfold.admin import ModelAdmin
 from apps.cuentas.permisos_admin import es_moderador_o_administrador
 
 from . import servicios
-from .models import Alojamiento, PerfilTransito
+from .models import Alojamiento, PerfilTransito, Postulacion
 
 
 @admin.register(PerfilTransito)
@@ -100,6 +100,32 @@ class AlojamientoAdmin(ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return es_moderador_o_administrador(request)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Postulacion)
+class PostulacionAdmin(ModelAdmin):
+    """Postulaciones a animales en adopción: solo de consulta para moderación."""
+
+    list_display = ("ficha", "usuario", "tipo", "estado", "fecha")
+    list_filter = ("tipo", "estado")
+    list_select_related = ("ficha", "usuario")
+    search_fields = ("ficha__nombre", "usuario__email", "usuario__nombre_usuario")
+    date_hierarchy = "fecha"
+
+    def has_module_permission(self, request):
+        return es_moderador_o_administrador(request)
+
+    def has_view_permission(self, request, obj=None):
+        return es_moderador_o_administrador(request)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def has_delete_permission(self, request, obj=None):
         return False

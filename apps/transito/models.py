@@ -96,3 +96,51 @@ class Alojamiento(models.Model):
 
     def __str__(self):
         return f"{self.ficha} en {self.hogar.usuario}"
+
+
+class Postulacion(models.Model):
+    """Ofrecimiento de una persona para quedarse con un animal que está en adopción.
+
+    La usan los dos caminos: el hogar que se postula para alojarlo (tipo tránsito) y la
+    persona que quiere adoptarlo (tipo adopción). Está "activa" mientras es pendiente o
+    elegida; una persona solo puede tener una activa por ficha.
+    """
+
+    class Tipo(models.TextChoices):
+        ADOPCION = "adopcion", "Adopción"
+        TRANSITO = "transito", "Tránsito"
+
+    class Estado(models.TextChoices):
+        PENDIENTE = "pendiente", "Pendiente"
+        ELEGIDA = "elegida", "Elegida"
+        DESCARTADA = "descartada", "Descartada"
+
+    ficha = models.ForeignKey(FichaAnimal, on_delete=models.CASCADE, related_name="postulaciones")
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="postulaciones"
+    )
+    tipo = models.CharField(max_length=20, choices=Tipo.choices)
+    # Canal propio con el que quien tiene el animal puede comunicarse (teléfono, correo, etc.).
+    contacto = models.CharField("canal de contacto", max_length=120)
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)
+    fecha = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["fecha"]
+        verbose_name = "postulación"
+        verbose_name_plural = "postulaciones"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ficha", "usuario"],
+                condition=models.Q(estado__in=["pendiente", "elegida"]),
+                name="postulacion_una_activa_por_ficha_y_usuario",
+                violation_error_message="Ya tenés una postulación activa para este animal.",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario} → {self.ficha} ({self.get_estado_display()})"
+
+    @property
+    def activa(self):
+        return self.estado in (self.Estado.PENDIENTE, self.Estado.ELEGIDA)
