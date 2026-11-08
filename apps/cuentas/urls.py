@@ -63,6 +63,9 @@ urlpatterns = [
     path("perfil/contrasena/", views.cambiar_contrasena, name="cambiar_contrasena"),
     path("perfil/eliminar/", views.eliminar_cuenta, name="eliminar_cuenta"),
     path("eliminada/", views.cuenta_eliminada, name="cuenta_eliminada"),
+    path(
+        "suspendida/eliminar/", views.eliminar_cuenta_suspendida, name="eliminar_cuenta_suspendida"
+    ),
     path("perfil/correo/", views.cambiar_correo, name="cambiar_correo"),
     path("perfil/correo/enviado/", views.cambiar_correo_enviado, name="cambiar_correo_enviado"),
     path("correo/confirmar/<str:token>/", views.confirmar_correo, name="confirmar_correo"),

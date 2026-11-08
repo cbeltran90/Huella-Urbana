@@ -23,7 +23,7 @@ from .forms import (
     ReenviarConfirmacionForm,
     RegistroForm,
 )
-from .models import Domicilio, EstadoCuenta, PerfilAdoptante, Sancion
+from .models import Domicilio, EstadoCuenta, PerfilAdoptante, Sancion, Usuario
 
 MENSAJE_ERROR_GENERAL = "Error al crear cuenta. Revisar nombre de usuario y correo."
 MENSAJE_ENVIO_FALLIDO = "No pudimos enviar el correo. Probá de nuevo en unos minutos"
@@ -34,7 +34,7 @@ MINUTOS_PARA_ELIMINAR_SUSPENDIDA = 15
 
 
 class IngresoView(auth_views.LoginView):
-    """Inicio de sesión (CU-02). Recuerda la cuenta con suspensión permanente.
+    """Inicio de sesión. Recuerda la cuenta con suspensión permanente.
 
     Si la contraseña es correcta pero la cuenta tiene una suspensión permanente, no se abre la
     sesión: solo se recuerda la cuenta, sin ningún permiso, para poder ofrecerle eliminarla.
@@ -278,7 +278,59 @@ def eliminar_cuenta(request):
         else:
             logout(request)
             return redirect("cuentas:cuenta_eliminada")
-    return render(request, "cuentas/eliminar_cuenta.html", {"impedimentos": impedimentos})
+    contexto = {
+        "impedimentos": impedimentos,
+        "volver_url": reverse("cuentas:perfil"),
+        "volver_texto": "Volver al perfil",
+    }
+    return render(request, "cuentas/eliminar_cuenta.html", contexto)
+
+
+def _cuenta_con_suspension_permanente(request):
+    """La cuenta que el ingreso recordó, si todavía puede eliminarse por esta vía; si no, None.
+
+    Tiene que haberse recordado hace menos de MINUTOS_PARA_ELIMINAR_SUSPENDIDA, estar activa y
+    seguir con una suspensión permanente vigente.
+    """
+    recordada = request.session.get(CLAVE_SESION_ELIMINACION)
+    if not recordada or recordada["hasta"] < time.time():
+        return None
+    usuario = Usuario.objects.filter(
+        pk=recordada["usuario"], estado_cuenta=EstadoCuenta.ACTIVA
+    ).first()
+    if usuario is None:
+        return None
+    sancion = servicios.sancion_vigente(usuario)
+    if sancion is None or sancion.tipo != Sancion.Tipo.PERMANENTE:
+        return None
+    return usuario
+
+
+def eliminar_cuenta_suspendida(request):
+    """Eliminar la cuenta con suspensión permanente, sin sesión.
+
+    La persona puso bien su contraseña en el ingreso, que recordó la cuenta unos minutos. No
+    tiene sesión ni ningún otro permiso: lo único que puede hacer es eliminarla.
+    """
+    usuario = _cuenta_con_suspension_permanente(request)
+    if usuario is None:
+        request.session.pop(CLAVE_SESION_ELIMINACION, None)
+        return redirect("cuentas:login")
+    impedimentos = eliminacion.impedimentos_para_eliminar(usuario)
+    if request.method == "POST" and not impedimentos:
+        try:
+            eliminacion.eliminar_cuenta(usuario)
+        except eliminacion.EliminacionNoPermitida as error:
+            impedimentos = list(error.impedimentos)
+        else:
+            request.session.flush()
+            return redirect("cuentas:cuenta_eliminada")
+    contexto = {
+        "impedimentos": impedimentos,
+        "volver_url": reverse("cuentas:login"),
+        "volver_texto": "Volver al ingreso",
+    }
+    return render(request, "cuentas/eliminar_cuenta.html", contexto)
 
 
 def cuenta_eliminada(request):
