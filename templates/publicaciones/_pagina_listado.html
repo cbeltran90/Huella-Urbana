@@ -1,0 +1,14 @@
+{% for p in pagina %}
+  {% include "publicaciones/_tarjeta_publicacion.html" %}
+{% empty %}
+  <li class="rounded border bg-white p-4 text-sm">No hay resultados para esos filtros.</li>
+{% endfor %}
+{% if pagina.has_next %}
+  <li>
+    <a href="?{{ consulta }}&pagina={{ pagina.next_page_number }}"
+       hx-get="?{{ consulta }}&pagina={{ pagina.next_page_number }}"
+       hx-target="closest li"
+       hx-swap="outerHTML"
+       class="block min-h-11 rounded border bg-white p-3 text-center text-sm underline">Ver más</a>
+  </li>
+{% endif %}

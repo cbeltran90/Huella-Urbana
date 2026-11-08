@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -194,38 +195,49 @@ def coincidencias(request):
     return render(request, "publicaciones/coincidencias.html", contexto)
 
 
+POR_PAGINA = 12
+
+
+def _listado(request, plantilla, publicaciones, contexto):
+    """Muestra una página del listado; si la pide htmx ("Ver más"), solo sus tarjetas."""
+    consulta = request.GET.copy()
+    consulta.pop("pagina", None)
+    contexto |= {
+        "pagina": Paginator(publicaciones, POR_PAGINA).get_page(request.GET.get("pagina")),
+        "consulta": consulta.urlencode(),
+        "filtros": request.GET,
+        "especies": FichaAnimal.Especie.choices,
+        "tamanos": FichaAnimal.Tamano.choices,
+    }
+    if request.headers.get("HX-Request"):
+        plantilla = "publicaciones/_pagina_listado.html"
+    return render(request, plantilla, contexto)
+
+
 def perdidos(request):
     """Listado público de perdidos (CU-20): visitantes incluidos, sin cambios en el sistema."""
     filtros = request.GET
     punto = listados.punto_desde(filtros.get("lat"), filtros.get("lon"))
+    publicaciones = listados.perdidos(
+        tipo=filtros.get("tipo", ""),
+        especie=filtros.get("especie", ""),
+        tamano=filtros.get("tamano", ""),
+        punto=punto,
+    )
     contexto = {
-        "publicaciones": listados.perdidos(
-            tipo=filtros.get("tipo", ""),
-            especie=filtros.get("especie", ""),
-            tamano=filtros.get("tamano", ""),
-            punto=punto,
-        ),
-        "filtros": filtros,
         "con_punto": punto is not None,
         "tipos": [(t.value, t.label) for t in listados.TIPOS_PERDIDOS],
-        "especies": FichaAnimal.Especie.choices,
-        "tamanos": FichaAnimal.Tamano.choices,
     }
-    return render(request, "publicaciones/perdidos.html", contexto)
+    return _listado(request, "publicaciones/perdidos.html", publicaciones, contexto)
 
 
 def disponibles(request):
     """Listado público de disponibles (CU-20): adopción y tránsito, sin orden por cercanía."""
     filtros = request.GET
-    contexto = {
-        "publicaciones": listados.disponibles(
-            tipo=filtros.get("tipo", ""),
-            especie=filtros.get("especie", ""),
-            tamano=filtros.get("tamano", ""),
-        ),
-        "filtros": filtros,
-        "tipos": [(t.value, t.label) for t in listados.TIPOS_DISPONIBLES],
-        "especies": FichaAnimal.Especie.choices,
-        "tamanos": FichaAnimal.Tamano.choices,
-    }
-    return render(request, "publicaciones/disponibles.html", contexto)
+    publicaciones = listados.disponibles(
+        tipo=filtros.get("tipo", ""),
+        especie=filtros.get("especie", ""),
+        tamano=filtros.get("tamano", ""),
+    )
+    contexto = {"tipos": [(t.value, t.label) for t in listados.TIPOS_DISPONIBLES]}
+    return _listado(request, "publicaciones/disponibles.html", publicaciones, contexto)

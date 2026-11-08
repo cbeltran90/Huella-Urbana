@@ -19,11 +19,7 @@
       </div>
     </form>
     <ul class="mt-4 space-y-3">
-      {% for p in publicaciones %}
-        {% include "publicaciones/_tarjeta_publicacion.html" %}
-      {% empty %}
-        <li class="rounded border bg-white p-4 text-sm">No hay resultados para esos filtros.</li>
-      {% endfor %}
+      {% include "publicaciones/_pagina_listado.html" %}
     </ul>
   </section>
   {{ mapa_config|json_script:"mapa-config" }}
