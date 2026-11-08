@@ -19,6 +19,18 @@
         <p role="alert"
            class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
       {% endfor %}
+      {% if form.sancion %}
+        <div class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+          <p>
+            <strong>Motivo:</strong> {{ form.sancion.motivo }}
+          </p>
+          {% if form.sancion.fin %}
+            <p class="mt-1">La suspensión termina el {{ form.sancion.fin|date:"d/m/Y H:i" }}.</p>
+          {% else %}
+            <p class="mt-1">La suspensión es permanente.</p>
+          {% endif %}
+        </div>
+      {% endif %}
       {% if form.cuenta_pendiente %}
         <p class="text-sm">
           <a href="{% url 'cuentas:reenviar' %}" class="underline">Pedir un enlace nuevo</a>
