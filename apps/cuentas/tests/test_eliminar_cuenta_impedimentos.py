@@ -4,7 +4,7 @@ import pytest
 from django.utils import timezone
 
 from apps.cuentas import eliminacion
-from apps.cuentas.models import EstadoCuenta, Sancion, Usuario
+from apps.cuentas.models import EstadoCuenta, Rol, Sancion, Usuario
 from apps.fichas.models import FichaAnimal
 from apps.transito import servicios as servicios_transito
 
@@ -150,3 +150,39 @@ def test_se_informan_todos_los_impedimentos_a_la_vez(ana, monkeypatch):
     monkeypatch.setattr(servicios_transito, "tiene_eleccion_pendiente", lambda usuario: True)
 
     assert codigos(ana) == ["suspension_temporal", "fichas_en_circuito", "eleccion_pendiente"]
+
+
+def administrador(correo, **campos):
+    return Usuario.objects.create_superuser(correo, correo.split("@")[0], CLAVE, **campos)
+
+
+def test_el_unico_administrador_activo_no_puede_eliminar_su_cuenta():
+    root = administrador("root@example.com")
+
+    (impedimento,) = eliminacion.impedimentos_para_eliminar(root)
+
+    assert impedimento.codigo == "ultimo_administrador"
+    assert impedimento.mensaje == eliminacion.MENSAJE_ULTIMO_ADMINISTRADOR
+
+
+def test_con_otro_administrador_activo_se_puede_eliminar_la_cuenta():
+    root = administrador("root@example.com")
+    administrador("otro@example.com")
+
+    assert codigos(root) == []
+
+
+@pytest.mark.parametrize("estado", [EstadoCuenta.PENDIENTE, EstadoCuenta.ELIMINADA])
+def test_otro_administrador_sin_la_cuenta_activa_no_cuenta(estado):
+    root = administrador("root@example.com")
+    administrador("otro@example.com", estado_cuenta=estado)
+
+    assert codigos(root) == ["ultimo_administrador"]
+
+
+def test_un_moderador_no_es_el_ultimo_administrador():
+    moderador = Usuario.objects.create_user(
+        "mod@example.com", "Mod", CLAVE, estado_cuenta=EstadoCuenta.ACTIVA, rol=Rol.MODERADOR
+    )
+
+    assert codigos(moderador) == []

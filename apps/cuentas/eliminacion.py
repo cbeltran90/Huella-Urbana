@@ -20,6 +20,10 @@ MENSAJE_FICHAS_EN_CIRCUITO = (
 MENSAJE_ELECCION_PENDIENTE = (
     "No podés eliminar tu cuenta hasta que se concrete o se cancele la entrega pendiente."
 )
+MENSAJE_ULTIMO_ADMINISTRADOR = (
+    "No podés eliminar tu cuenta porque sos el único administrador activo. "
+    "Primero asigná el rol de administrador a otra persona."
+)
 
 
 @dataclass(frozen=True)
@@ -60,11 +64,18 @@ def fichas_en_circuito(usuario):
     return tuple(FichaAnimal.objects.filter(en_circuito | sin_responsable).order_by("id"))
 
 
+def es_ultimo_administrador(usuario):
+    """True si es administrador y no queda otro con la cuenta activa."""
+    if usuario.rol != Rol.ADMINISTRADOR:
+        return False
+    otros = Usuario.objects.filter(rol=Rol.ADMINISTRADOR, estado_cuenta=EstadoCuenta.ACTIVA)
+    return not otros.exclude(pk=usuario.pk).exists()
+
+
 def impedimentos_para_eliminar(usuario):
     """Todo lo que impide eliminar la cuenta hoy. Vacío si se puede.
 
     Una suspensión permanente no impide: es justamente lo único que la persona puede hacer
-    (CU-02, extensión 4C).
     """
     impedimentos = []
     sancion = sancion_vigente(usuario)
@@ -74,6 +85,8 @@ def impedimentos_para_eliminar(usuario):
                 "suspension_temporal", mensaje_suspension_temporal(sancion.fin), fin=sancion.fin
             )
         )
+    if es_ultimo_administrador(usuario):
+        impedimentos.append(Impedimento("ultimo_administrador", MENSAJE_ULTIMO_ADMINISTRADOR))
     fichas = fichas_en_circuito(usuario)
     if fichas or servicios_transito.tiene_animales_a_cargo(usuario):
         impedimentos.append(

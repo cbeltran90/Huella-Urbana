@@ -193,6 +193,8 @@ def test_quien_tiene_una_suspension_permanente_puede_eliminar_su_cuenta(ana):
 
 @pytest.mark.parametrize("rol", [Rol.MODERADOR, Rol.ADMINISTRADOR])
 def test_la_cuenta_eliminada_pierde_el_rol(rol):
+    # Hay otro administrador: el último no puede eliminar su cuenta.
+    Usuario.objects.create_superuser("root@example.com", "Root", CLAVE)
     usuario = Usuario.objects.create_user(
         "mod@example.com", "Mod", CLAVE, estado_cuenta=EstadoCuenta.ACTIVA, rol=rol
     )
