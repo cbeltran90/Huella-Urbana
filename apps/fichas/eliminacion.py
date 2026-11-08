@@ -4,18 +4,7 @@ from apps.cuentas.eliminacion import al_eliminar_cuenta
 
 from . import servicios
 from .models import FichaAnimal
-
-
-def tiene_adopcion_registrada(ficha):
-    """True si la ficha es la de un animal adoptado (tiene una adopción registrada).
-
-    La consulta es del módulo de adopciones. Mientras no exista, ninguna ficha cuenta.
-    """
-    try:
-        from apps.adopcion.servicios import tiene_adopcion_registrada as consulta
-    except ImportError:
-        return False
-    return consulta(ficha)
+from .permisos import tiene_adopcion_registrada
 
 
 @al_eliminar_cuenta
