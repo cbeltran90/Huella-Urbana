@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titulo %}Cuenta eliminada · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Tu cuenta fue eliminada</h1>
+    <p class="mt-2">
+      Cerramos tu sesión y eliminamos tus datos personales. Gracias por haber sido parte de Huella Urbana.
+    </p>
+    <a href="{% url 'core:inicio' %}"
+       class="mt-4 inline-block min-h-11 rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Volver al inicio</a>
+  </section>
+{% endblock %}
