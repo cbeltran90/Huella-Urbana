@@ -21,8 +21,8 @@
           {% endif %}
         </div>
       {% endfor %}
-      <a href="{% url 'cuentas:perfil' %}"
-         class="mt-6 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Volver al perfil</a>
+      <a href="{{ volver_url }}"
+         class="mt-6 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">{{ volver_texto }}</a>
     {% else %}
       <p class="mt-4 text-sm text-stone-700">
         Eliminar tu cuenta no se puede deshacer. Esto es lo que va a pasar con tus datos.
@@ -49,7 +49,7 @@
         {% csrf_token %}
         <button type="submit"
                 class="min-h-11 w-full rounded bg-red-700 px-4 py-2 font-semibold text-white">Sí, eliminar mi cuenta</button>
-        <a href="{% url 'cuentas:perfil' %}"
+        <a href="{{ volver_url }}"
            class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
       </form>
     {% endif %}

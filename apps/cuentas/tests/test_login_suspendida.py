@@ -97,3 +97,20 @@ def test_la_suspension_de_otra_cuenta_no_afecta(client, ana):
     sancionar(otra, Sancion.Tipo.PERMANENTE)
 
     assert entrar(client).status_code == 302
+
+
+def test_la_suspension_permanente_ofrece_eliminar_la_cuenta(client, ana):
+    sancionar(ana, Sancion.Tipo.PERMANENTE)
+
+    contenido = entrar(client).content.decode()
+
+    assert f'href="{reverse("cuentas:eliminar_cuenta_suspendida")}"' in contenido
+    assert "Eliminar mi cuenta" in contenido
+
+
+def test_la_suspension_temporal_no_ofrece_eliminar_la_cuenta(client, ana):
+    sancionar(ana, Sancion.Tipo.TEMPORAL, fin=timezone.now() + timedelta(days=7))
+
+    contenido = entrar(client).content.decode()
+
+    assert "Eliminar mi cuenta" not in contenido
