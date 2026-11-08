@@ -18,7 +18,7 @@ def _notificar(usuario, titulo, mensaje, publicacion):
     except ImportError:
         return
     notificar(
-        usuario, "coincidencia", titulo, mensaje, ficha=publicacion.ficha, publicacion=publicacion
+        usuario, "vinculacion", titulo, mensaje, ficha=publicacion.ficha, publicacion=publicacion
     )
 
 
