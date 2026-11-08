@@ -6,35 +6,7 @@
     <form method="get"
           id="filtros"
           class="mt-4 flex flex-wrap items-end gap-3 text-sm">
-      <label class="flex flex-col">
-        Tipo
-        <select name="tipo" class="rounded border px-2 py-1">
-          <option value="">Todos</option>
-          {% for valor, nombre in tipos %}
-            <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ nombre }}</option>
-          {% endfor %}
-        </select>
-      </label>
-      <label class="flex flex-col">
-        Especie
-        <select name="especie" class="rounded border px-2 py-1">
-          <option value="">Todas</option>
-          {% for valor, nombre in especies %}
-            <option value="{{ valor }}"
-                    {% if filtros.especie == valor %}selected{% endif %}>{{ nombre }}</option>
-          {% endfor %}
-        </select>
-      </label>
-      <label class="flex flex-col">
-        Tamaño
-        <select name="tamano" class="rounded border px-2 py-1">
-          <option value="">Todos</option>
-          {% for valor, nombre in tamanos %}
-            <option value="{{ valor }}"
-                    {% if filtros.tamano == valor %}selected{% endif %}>{{ nombre }}</option>
-          {% endfor %}
-        </select>
-      </label>
+      {% include "publicaciones/_filtros_listado.html" %}
       <button type="submit" class="min-h-11 rounded bg-stone-800 px-3 text-white">Filtrar</button>
       <input type="hidden" name="lat" id="id_lat" value="{{ filtros.lat }}">
       <input type="hidden" name="lon" id="id_lon" value="{{ filtros.lon }}">
@@ -47,25 +19,7 @@
       </div>
     </form>
     <ul class="mt-4 space-y-3">
-      {% for p in publicaciones %}
-        <li class="rounded-lg border bg-white p-4">
-          <a href="{% url 'publicaciones:detalle' p.pk %}" class="block min-h-11">
-            <span class="font-semibold">
-              {{ p.get_tipo_display }}
-              {% if p.ficha and not p.ficha.es_privada and p.ficha.nombre %}· {{ p.ficha.nombre }}{% endif %}
-            </span>
-            <span class="block text-sm text-stone-600">
-              {{ p.especie|default:"Especie sin dato" }}
-              {% if p.tamano %}· {{ p.tamano }}{% endif %}
-              {% if p.color %}· {{ p.color }}{% endif %}
-              · {{ p.fecha|date:"j/n/Y" }}
-              {% if con_punto %}· a {{ p.distancia.m|floatformat:0 }} m{% endif %}
-            </span>
-          </a>
-        </li>
-      {% empty %}
-        <li class="rounded border bg-white p-4 text-sm">No hay resultados para esos filtros.</li>
-      {% endfor %}
+      {% include "publicaciones/_pagina_listado.html" %}
     </ul>
   </section>
   {{ mapa_config|json_script:"mapa-config" }}

@@ -10,6 +10,7 @@ urlpatterns = [
     path("adopcion/", views.alta_adopcion, name="alta_adopcion"),
     path("coincidencias/", views.coincidencias, name="coincidencias"),
     path("perdidos/", views.perdidos, name="perdidos"),
+    path("disponibles/", views.disponibles, name="disponibles"),
     path("<int:pk>/", views.detalle, name="detalle"),
     path("<int:pk>/candidatas/", views.candidatas, name="candidatas"),
     path("<int:pk>/desvincular/", views.desvincular, name="desvincular"),
