@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block titulo %}Animales perdidos · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-2xl">
+    <h1 class="text-2xl font-bold">Animales perdidos</h1>
+    <form method="get"
+          id="filtros"
+          class="mt-4 flex flex-wrap items-end gap-3 text-sm">
+      <label class="flex flex-col">
+        Tipo
+        <select name="tipo" class="rounded border px-2 py-1">
+          <option value="">Todos</option>
+          {% for valor, nombre in tipos %}
+            <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="flex flex-col">
+        Especie
+        <select name="especie" class="rounded border px-2 py-1">
+          <option value="">Todas</option>
+          {% for valor, nombre in especies %}
+            <option value="{{ valor }}"
+                    {% if filtros.especie == valor %}selected{% endif %}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="flex flex-col">
+        Tamaño
+        <select name="tamano" class="rounded border px-2 py-1">
+          <option value="">Todos</option>
+          {% for valor, nombre in tamanos %}
+            <option value="{{ valor }}"
+                    {% if filtros.tamano == valor %}selected{% endif %}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit" class="min-h-11 rounded bg-stone-800 px-3 text-white">Filtrar</button>
+      <input type="hidden" name="lat" id="id_lat" value="{{ filtros.lat }}">
+      <input type="hidden" name="lon" id="id_lon" value="{{ filtros.lon }}">
+      <div class="w-full">
+        <p class="text-stone-600">Tocá el mapa para ordenar por cercanía a ese punto.</p>
+        <div id="mapa-cercania" class="mt-1 h-64 w-full rounded"></div>
+        {% if con_punto %}
+          <button type="button" id="quitar-punto" class="mt-1 underline">Quitar el punto</button>
+        {% endif %}
+      </div>
+    </form>
+    <ul class="mt-4 space-y-3">
+      {% for p in publicaciones %}
+        <li class="rounded-lg border bg-white p-4">
+          <a href="{% url 'publicaciones:detalle' p.pk %}" class="block min-h-11">
+            <span class="font-semibold">
+              {{ p.get_tipo_display }}
+              {% if p.ficha and not p.ficha.es_privada and p.ficha.nombre %}· {{ p.ficha.nombre }}{% endif %}
+            </span>
+            <span class="block text-sm text-stone-600">
+              {{ p.especie|default:"Especie sin dato" }}
+              {% if p.tamano %}· {{ p.tamano }}{% endif %}
+              {% if p.color %}· {{ p.color }}{% endif %}
+              · {{ p.fecha|date:"j/n/Y" }}
+              {% if con_punto %}· a {{ p.distancia.m|floatformat:0 }} m{% endif %}
+            </span>
+          </a>
+        </li>
+      {% empty %}
+        <li class="rounded border bg-white p-4 text-sm">No hay resultados para esos filtros.</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {{ mapa_config|json_script:"mapa-config" }}
+  <script>
+    const config = JSON.parse(document.getElementById("mapa-config").textContent);
+    const formulario = document.getElementById("filtros");
+    const campoLat = document.getElementById("id_lat");
+    const campoLon = document.getElementById("id_lon");
+    const mapa = L.map("mapa-cercania").setView([-54.8019, -68.3030], 13);
+    L.tileLayer(config.tiles_url, { maxZoom: 19, attribution: config.atribucion }).addTo(mapa);
+    if (campoLat.value && campoLon.value) {
+      L.marker([campoLat.value, campoLon.value]).addTo(mapa);
+      mapa.setView([campoLat.value, campoLon.value], 14);
+    }
+    mapa.on("click", (e) => {
+      campoLat.value = e.latlng.lat.toFixed(5);
+      campoLon.value = e.latlng.lng.toFixed(5);
+      formulario.submit();
+    });
+    const quitar = document.getElementById("quitar-punto");
+    if (quitar) {
+      quitar.addEventListener("click", () => {
+        campoLat.value = "";
+        campoLon.value = "";
+        formulario.submit();
+      });
+    }
+  </script>
+{% endblock %}

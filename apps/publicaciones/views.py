@@ -7,10 +7,10 @@ from django.views.decorators.http import require_POST
 from apps.core.limites import limite_publicaciones
 from apps.cuentas.decoradores import cuenta_habilitada
 from apps.cuentas.servicios import DomicilioInvalido
-from apps.fichas.models import Coincidencia
+from apps.fichas.models import Coincidencia, FichaAnimal
 from apps.imagenes.procesamiento import ImagenInvalida
 
-from . import servicios, ubicacion, vinculacion
+from . import listados, servicios, ubicacion, vinculacion
 from .forms import AltaAdopcionForm, ExtravioForm, HallazgoForm
 from .models import Publicacion
 
@@ -192,3 +192,23 @@ def coincidencias(request):
     """Coincidencias que esperan la decisión de esta persona (confirmar o descartar)."""
     contexto = {"coincidencias": vinculacion.pendientes_para(request.user)}
     return render(request, "publicaciones/coincidencias.html", contexto)
+
+
+def perdidos(request):
+    """Listado público de perdidos (CU-20): visitantes incluidos, sin cambios en el sistema."""
+    filtros = request.GET
+    punto = listados.punto_desde(filtros.get("lat"), filtros.get("lon"))
+    contexto = {
+        "publicaciones": listados.perdidos(
+            tipo=filtros.get("tipo", ""),
+            especie=filtros.get("especie", ""),
+            tamano=filtros.get("tamano", ""),
+            punto=punto,
+        ),
+        "filtros": filtros,
+        "con_punto": punto is not None,
+        "tipos": [(t.value, t.label) for t in listados.TIPOS_PERDIDOS],
+        "especies": FichaAnimal.Especie.choices,
+        "tamanos": FichaAnimal.Tamano.choices,
+    }
+    return render(request, "publicaciones/perdidos.html", contexto)
