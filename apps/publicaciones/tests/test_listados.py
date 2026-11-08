@@ -60,3 +60,21 @@ def test_sin_punto_ordena_de_la_mas_nueva_a_la_mas_vieja(ana):
     nueva = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, fecha=ahora)
 
     assert list(listados.perdidos()) == [nueva, vieja]
+
+
+@pytest.mark.parametrize(
+    ("lat", "lon"),
+    [
+        (None, None),  # sin punto
+        ("abc", "-68.30"),  # no es un número
+        ("-34.60", "-58.38"),  # Buenos Aires: fuera de la zona
+        ("nan", "nan"),  # float() lo acepta, pero no es un lugar
+    ],
+)
+def test_un_punto_invalido_no_se_usa(lat, lon):
+    assert listados.punto_desde(lat, lon) is None
+
+
+def test_un_punto_de_la_zona_se_usa_con_longitud_primero():
+    punto = listados.punto_desde("-54.8025", "-68.3040")
+    assert (punto.x, punto.y) == (-68.3040, -54.8025)
