@@ -15,7 +15,7 @@ urlpatterns = [
     path("reenviar/listo/", views.reenvio_listo, name="reenvio_listo"),
     path(
         "ingresar/",
-        auth_views.LoginView.as_view(
+        views.IngresoView.as_view(
             template_name="cuentas/login.html",
             authentication_form=InicioSesionForm,
             redirect_authenticated_user=True,

@@ -1,5 +1,8 @@
+import time
+
 from constance import config
 from django.contrib.auth import logout, update_session_auth_hash
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -20,10 +23,35 @@ from .forms import (
     ReenviarConfirmacionForm,
     RegistroForm,
 )
-from .models import Domicilio, EstadoCuenta, PerfilAdoptante
+from .models import Domicilio, EstadoCuenta, PerfilAdoptante, Sancion
 
 MENSAJE_ERROR_GENERAL = "Error al crear cuenta. Revisar nombre de usuario y correo."
 MENSAJE_ENVIO_FALLIDO = "No pudimos enviar el correo. Probá de nuevo en unos minutos"
+# La cuenta con suspensión permanente que puso bien su contraseña queda "recordada" unos minutos
+# para ofrecerle una sola opción: eliminarla (CU-02, extensión 4C).
+CLAVE_SESION_ELIMINACION = "eliminacion_cuenta_suspendida"
+MINUTOS_PARA_ELIMINAR_SUSPENDIDA = 15
+
+
+class IngresoView(auth_views.LoginView):
+    """Inicio de sesión (CU-02). Recuerda la cuenta con suspensión permanente.
+
+    Si la contraseña es correcta pero la cuenta tiene una suspensión permanente, no se abre la
+    sesión: solo se recuerda la cuenta, sin ningún permiso, para poder ofrecerle eliminarla.
+    """
+
+    def form_invalid(self, form):
+        sancion = form.sancion
+        if sancion is not None and sancion.tipo == Sancion.Tipo.PERMANENTE:
+            self.request.session[CLAVE_SESION_ELIMINACION] = {
+                "usuario": sancion.usuario_id,
+                "hasta": time.time() + MINUTOS_PARA_ELIMINAR_SUSPENDIDA * 60,
+            }
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        self.request.session.pop(CLAVE_SESION_ELIMINACION, None)
+        return super().form_valid(form)
 
 
 def registro(request):
