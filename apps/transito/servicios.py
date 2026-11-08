@@ -8,7 +8,7 @@ from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
 from apps.moderacion.auditoria import registrar_accion
 
-from .models import MAX_CUPO_DECLARADO, PerfilTransito
+from .models import MAX_CUPO_DECLARADO, Alojamiento, PerfilTransito
 
 # Tope provisorio de la duración máxima que puede declarar un hogar.
 MAX_DURACION_MAXIMA_DIAS = 365
@@ -265,13 +265,11 @@ def esta_disponible(perfil, hoy=None):
 
 
 def animales_alojados(usuario):
-    """Cuántos animales tiene alojados el hogar hoy.
+    """Cuántos animales tiene alojados el hogar hoy (alojamientos sin fecha de fin real).
 
-    Provisorio: los alojamientos todavía no existen, así que por ahora
-    es siempre 0. Cuando los tengamos, esta es la única función a conectar: de ella salen
-    tiene_animales_a_cargo y cupo_libre.
+    Es la única fuente: de acá salen tiene_animales_a_cargo y cupo_libre.
     """
-    return 0
+    return Alojamiento.objects.filter(hogar_id=usuario.pk, fecha_fin_real__isnull=True).count()
 
 
 def tiene_animales_a_cargo(usuario):

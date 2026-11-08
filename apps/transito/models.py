@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from apps.fichas.models import FichaAnimal
 
@@ -52,3 +53,46 @@ class PerfilTransito(models.Model):
     def especies(self):
         """Las especies que acepta, como lista."""
         return [especie for especie in self.especies_aceptadas.split(",") if especie]
+
+
+class Alojamiento(models.Model):
+    """Período en que un hogar de tránsito aloja a un animal.
+
+    Está abierto mientras "fecha_fin_real" esté vacía: de ahí salen los animales alojados
+    y el cupo libre del hogar (ver servicios.animales_alojados).
+    """
+
+    class MotivoFin(models.TextChoices):
+        ADOPCION = "adopcion", "Adopción"
+        RELEVO = "relevo", "Relevo"
+        DEVUELTO = "devuelto", "Devuelto al responsable"
+
+    ficha = models.ForeignKey(FichaAnimal, on_delete=models.PROTECT, related_name="alojamientos")
+    hogar = models.ForeignKey(PerfilTransito, on_delete=models.PROTECT, related_name="alojamientos")
+    fecha_ingreso = models.DateField(default=timezone.localdate)
+    # Ingreso + duración máxima del hogar; se actualiza al extender.
+    fecha_fin_prevista = models.DateField()
+    extensiones = models.PositiveSmallIntegerField(default=0)
+    # Nulo si aún no se avisó; se reinicia al extender.
+    aviso_enviado_at = models.DateTimeField(null=True, blank=True)
+    fecha_fin_real = models.DateField(null=True, blank=True)
+    vacunado_al_ingreso = models.BooleanField(default=False)
+    castrado_al_ingreso = models.BooleanField(default=False)
+    desparasitado_al_ingreso = models.BooleanField(default=False)
+    motivo_fin = models.CharField(max_length=20, choices=MotivoFin.choices, blank=True)
+
+    class Meta:
+        ordering = ["-fecha_ingreso"]
+        verbose_name = "alojamiento"
+        verbose_name_plural = "alojamientos"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ficha"],
+                condition=models.Q(fecha_fin_real__isnull=True),
+                name="alojamiento_uno_abierto_por_ficha",
+                violation_error_message="El animal ya está alojado en un hogar.",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.ficha} en {self.hogar.usuario}"
