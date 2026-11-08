@@ -1,5 +1,10 @@
 <li class="rounded-lg border bg-white p-4">
-  <a href="{% url 'publicaciones:detalle' p.pk %}" class="block min-h-11">
+  {% if p.ficha and not p.ficha.es_privada %}
+    {% url 'fichas:detalle' p.ficha_id as destino %}
+  {% else %}
+    {% url 'publicaciones:detalle' p.pk as destino %}
+  {% endif %}
+  <a href="{{ destino }}" class="block min-h-11">
     <span class="font-semibold">
       {{ p.get_tipo_display }}
       {% if p.ficha and not p.ficha.es_privada and p.ficha.nombre %}· {{ p.ficha.nombre }}{% endif %}
