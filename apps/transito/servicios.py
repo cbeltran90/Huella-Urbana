@@ -279,6 +279,15 @@ def tiene_animales_a_cargo(usuario):
     return animales_alojados(usuario) > 0
 
 
+def tiene_eleccion_pendiente(usuario):
+    """True si la persona tiene una postulación elegida o un adoptante elegido sin concretar.
+
+    Provisorio: las postulaciones todavía no existen, así que por ahora devuelve False.
+    Es el único punto que hay que conectar cuando existan.
+    """
+    return False
+
+
 def cupo_libre(perfil):
     """Plazas que le quedan al hogar: el cupo declarado menos los animales alojados."""
     return max(perfil.cupo_declarado - animales_alojados(perfil.usuario), 0)
