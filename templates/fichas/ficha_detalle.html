@@ -38,7 +38,7 @@
           {{ ficha.temperamento }}
         </dd>
       {% endif %}
-      {% if ficha.chip %}
+      {% if ficha.chip and puede_editar %}
         <dt class="text-stone-600">Chip</dt>
         <dd>
           {{ ficha.chip }}

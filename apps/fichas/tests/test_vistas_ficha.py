@@ -132,3 +132,29 @@ def test_no_se_da_de_baja_una_ficha_que_esta_en_adopcion(entrar, ana):
 
     assert respuesta.status_code == 403
     assert FichaAnimal.objects.filter(pk=ficha.pk).exists()
+
+
+def test_un_visitante_ve_una_ficha_publica_sin_el_chip(client):
+    ficha = baker.make(FichaAnimal, nombre="Luna", es_privada=False, chip="985-123")
+
+    respuesta = client.get(reverse("fichas:detalle", args=[ficha.pk]))
+
+    assert respuesta.status_code == 200
+    html = respuesta.content.decode()
+    assert "Luna" in html and "985-123" not in html
+
+
+def test_un_visitante_no_ve_una_ficha_privada(client, ana):
+    ficha = baker.make(FichaAnimal, responsable=ana, es_privada=True)
+
+    respuesta = client.get(reverse("fichas:detalle", args=[ficha.pk]))
+
+    assert respuesta.status_code == 404
+
+
+def test_el_responsable_ve_el_chip_de_su_ficha(entrar, ana):
+    ficha = baker.make(FichaAnimal, responsable=ana, chip="985-123")
+
+    html = entrar(ana).get(reverse("fichas:detalle", args=[ficha.pk])).content.decode()
+
+    assert "985-123" in html

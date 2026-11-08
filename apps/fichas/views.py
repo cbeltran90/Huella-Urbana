@@ -38,10 +38,10 @@ def ficha_nueva(request):
     return render(request, "fichas/ficha_form.html", {"form": form, "ficha": None})
 
 
-@login_required
 def ficha_detalle(request, pk):
+    # Es una consulta pública: puede_ver oculta las fichas privadas a quien no corresponde.
     ficha = _ficha_visible(request, pk)
-    suspendido = esta_suspendido(request.user)
+    suspendido = request.user.is_authenticated and esta_suspendido(request.user)
     contexto = {
         "ficha": ficha,
         "puede_editar": permisos.puede_editar(request.user, ficha) and not suspendido,
