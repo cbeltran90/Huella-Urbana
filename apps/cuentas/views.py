@@ -1,5 +1,6 @@
 from constance import config
-from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
@@ -7,7 +8,7 @@ from django.urls import reverse
 
 from apps.transito import servicios as servicios_transito
 
-from . import servicios
+from . import eliminacion, servicios
 from .decoradores import cuenta_habilitada
 from .forms import (
     CambioContrasenaForm,
@@ -230,3 +231,27 @@ def cambiar_correo(request):
 @cuenta_habilitada
 def cambiar_correo_enviado(request):
     return render(request, "cuentas/cambiar_correo_enviado.html")
+
+
+@login_required
+def eliminar_cuenta(request):
+    """Eliminar la cuenta: informa, pide confirmación y elimina.
+
+    Cancelar es volver al perfil: no hay nada que deshacer. Sirve también a quien tiene una
+    suspensión permanente, por eso no usa "cuenta_habilitada".
+    """
+    impedimentos = eliminacion.impedimentos_para_eliminar(request.user)
+    if request.method == "POST" and not impedimentos:
+        try:
+            eliminacion.eliminar_cuenta(request.user)
+        except eliminacion.EliminacionNoPermitida as error:
+            # Algo cambió entre que se abrió la pantalla y se confirmó.
+            impedimentos = list(error.impedimentos)
+        else:
+            logout(request)
+            return redirect("cuentas:cuenta_eliminada")
+    return render(request, "cuentas/eliminar_cuenta.html", {"impedimentos": impedimentos})
+
+
+def cuenta_eliminada(request):
+    return render(request, "cuentas/cuenta_eliminada.html")
