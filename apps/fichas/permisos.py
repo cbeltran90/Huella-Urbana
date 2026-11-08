@@ -1,7 +1,5 @@
 """Quién puede ver, editar y dar de baja una ficha."""
 
-from django.apps import apps as django_apps
-
 from apps.cuentas.models import Rol
 
 from .models import FichaAnimal
@@ -20,12 +18,13 @@ def es_cuidador(usuario, ficha):
 
 
 def tiene_adopcion_registrada(ficha):
-    """Un animal adoptado es una ficha en "registrado" con un registro Adopcion"""
-    try:
-        adopcion = django_apps.get_model("adopcion", "Adopcion")
-    except LookupError:
-        return False
-    return adopcion.objects.filter(ficha=ficha).exists()
+    """Un animal adoptado es una ficha en "registrado" con un registro Adopcion.
+
+    La regla es del módulo de adopciones (apps/adopcion/servicios.py).
+    """
+    from apps.adopcion.servicios import tiene_adopcion_registrada as consulta
+
+    return consulta(ficha)
 
 
 def puede_ver(usuario, ficha):
