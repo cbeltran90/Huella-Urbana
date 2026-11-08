@@ -53,3 +53,10 @@ def test_una_pagina_invalida_muestra_la_primera(client, ana):
 
     assert respuesta.status_code == 200
     assert tarjetas(respuesta.content.decode()) == 1
+
+
+def test_el_menu_muestra_los_listados_tambien_al_visitante(client):
+    html = client.get(reverse("core:inicio")).content.decode()
+
+    assert reverse("publicaciones:perdidos") in html
+    assert reverse("publicaciones:disponibles") in html

@@ -1,6 +1,14 @@
 {% load navegacion avisos %}
 <div class="flex flex-1 flex-wrap items-center justify-between gap-3">
   <ul class="flex flex-wrap items-center gap-1 text-sm">
+    <li>
+      <a href="{% url 'publicaciones:perdidos' %}"
+         class="inline-block min-h-11 px-2 py-2 underline">Perdidos</a>
+    </li>
+    <li>
+      <a href="{% url 'publicaciones:disponibles' %}"
+         class="inline-block min-h-11 px-2 py-2 underline">Disponibles</a>
+    </li>
     {% if user.is_authenticated %}
       {% coincidencias_pendientes as pendientes %}
       {% avisos_sin_leer as sin_leer %}
