@@ -7,7 +7,7 @@ from unfold.admin import ModelAdmin
 from apps.cuentas.permisos_admin import es_moderador_o_administrador
 
 from . import servicios
-from .models import PerfilTransito
+from .models import Alojamiento, PerfilTransito
 
 
 @admin.register(PerfilTransito)
@@ -76,3 +76,30 @@ class PerfilTransitoAdmin(ModelAdmin):
             self.message_user(
                 request, f"Roles de hogar de tránsito retirados: {retirados}.", messages.SUCCESS
             )
+
+
+@admin.register(Alojamiento)
+class AlojamientoAdmin(ModelAdmin):
+    """Alojamientos de animales en hogares de tránsito. No se borran: se cierran con su fecha."""
+
+    list_display = ("ficha", "hogar", "fecha_ingreso", "fecha_fin_prevista", "fecha_fin_real")
+    list_filter = ("motivo_fin",)
+    list_select_related = ("ficha", "hogar__usuario")
+    search_fields = ("ficha__nombre", "hogar__usuario__email", "hogar__usuario__nombre_usuario")
+    raw_id_fields = ("ficha", "hogar")
+    date_hierarchy = "fecha_ingreso"
+
+    def has_module_permission(self, request):
+        return es_moderador_o_administrador(request)
+
+    def has_view_permission(self, request, obj=None):
+        return es_moderador_o_administrador(request)
+
+    def has_add_permission(self, request):
+        return es_moderador_o_administrador(request)
+
+    def has_change_permission(self, request, obj=None):
+        return es_moderador_o_administrador(request)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
