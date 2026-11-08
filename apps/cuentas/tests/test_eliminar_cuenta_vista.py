@@ -172,3 +172,10 @@ def test_si_algo_cambia_entre_abrir_y_confirmar_se_informa(client, ana, monkeypa
     assert "Mensaje de prueba" in respuesta.content.decode()
     ana.refresh_from_db()
     assert ana.estado_cuenta == EstadoCuenta.ACTIVA
+
+
+def test_el_perfil_ofrece_eliminar_la_cuenta(client, ana):
+    contenido = client.get(reverse("cuentas:perfil")).content.decode()
+
+    assert f'href="{url()}"' in contenido
+    assert "Eliminar mi cuenta" in contenido
