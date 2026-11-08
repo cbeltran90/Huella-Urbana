@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}Mis avisos · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-2xl">
+    <h1 class="text-2xl font-bold">Mis avisos</h1>
+    {% for aviso in avisos %}
+      <article class="mt-4 rounded-lg border bg-white p-4 {% if not aviso.leida %}border-stone-800{% endif %}">
+        <p class="text-xs text-stone-600">
+          {{ aviso.get_tipo_display }} · {{ aviso.creada_at|date:"j/n/Y H:i" }}
+          {% if not aviso.leida %}
+            <span class="ml-1 rounded-full bg-stone-800 px-2 text-white">Nuevo</span>
+          {% endif %}
+        </p>
+        <h2 class="mt-1 font-semibold">{{ aviso.titulo }}</h2>
+        {% if aviso.mensaje %}<p class="mt-1 text-sm">{{ aviso.mensaje }}</p>{% endif %}
+        {% if aviso.publicacion %}
+          <a href="{% url 'publicaciones:detalle' aviso.publicacion_id %}"
+             class="mt-2 inline-block text-sm underline">Ver la publicación</a>
+        {% elif aviso.ficha %}
+          <a href="{% url 'fichas:detalle' aviso.ficha_id %}"
+             class="mt-2 inline-block text-sm underline">Ver la ficha</a>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="mt-6 rounded border bg-white p-4 text-sm">No tenés avisos.</p>
+    {% endfor %}
+  </section>
+{% endblock %}

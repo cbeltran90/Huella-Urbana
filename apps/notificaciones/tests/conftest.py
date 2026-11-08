@@ -23,3 +23,14 @@ def ana(django_user_model):
 @pytest.fixture
 def beto(django_user_model):
     return _crear(django_user_model, "Beto")
+
+
+@pytest.fixture
+def entrar(client):
+    """Devuelve una función que inicia sesión con un usuario y entrega el cliente."""
+
+    def _entrar(usuario):
+        client.force_login(usuario, backend=BACKEND_MODELO)
+        return client
+
+    return _entrar
