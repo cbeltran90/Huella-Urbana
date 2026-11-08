@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -9,6 +10,7 @@ from apps.core.limites import limite_publicaciones
 from apps.cuentas.decoradores import cuenta_habilitada
 from apps.cuentas.servicios import DomicilioInvalido
 from apps.fichas.models import Coincidencia, FichaAnimal
+from apps.fichas.permisos import es_moderador
 from apps.imagenes.procesamiento import ImagenInvalida
 
 from . import listados, servicios, ubicacion, vinculacion
@@ -54,12 +56,18 @@ def publicar_extravio(request):
     return render(request, "publicaciones/publicar_extravio.html", contexto)
 
 
-@login_required
 def detalle(request, pk):
+    # Consulta pública. Los avistamientos de fauna silvestre solo los ven su autor y los
+    # moderadores (DER): para el resto no existen.
     publicacion = get_object_or_404(
         Publicacion.objects.exclude(estado=Publicacion.Estado.ELIMINADA).select_related("ficha"),
         pk=pk,
     )
+    if publicacion.tipo == Publicacion.Tipo.AVISTAMIENTO and not (
+        request.user.is_authenticated
+        and (publicacion.autor_id == request.user.pk or es_moderador(request.user))
+    ):
+        raise Http404
     # La publicación muestra las fotos de su ficha (no tiene fotos propias).
     fotos = publicacion.ficha.fotografias.all() if publicacion.ficha else []
     contexto = {

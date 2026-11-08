@@ -4,6 +4,7 @@ from django.conf import settings
 from django.urls import reverse
 from model_bakery import baker
 
+from apps.cuentas.models import EstadoCuenta, Rol
 from apps.fichas.models import FichaAnimal
 from apps.publicaciones.models import Publicacion
 
@@ -121,3 +122,32 @@ def test_un_domicilio_fuera_de_la_zona_se_informa_y_no_publica_nada(entrar, ana)
     assert "Ushuaia" in respuesta.content.decode()
     assert not Publicacion.objects.exists()
     assert not FichaAnimal.objects.exists()
+
+
+def test_un_visitante_ve_el_detalle_de_una_publicacion(client, ana):
+    publicacion = hacer_publicacion(ana, ficha=None, descripcion="Se perdió cerca del puerto")
+
+    respuesta = client.get(reverse("publicaciones:detalle", args=[publicacion.pk]))
+
+    assert respuesta.status_code == 200
+    html = respuesta.content.decode()
+    assert "Se perdió cerca del puerto" in html and "Desvincular" not in html
+
+
+def test_el_avistamiento_solo_lo_ven_el_autor_y_los_moderadores(
+    client, entrar, ana, beto, django_user_model
+):
+    avistamiento = hacer_publicacion(ana, tipo=Publicacion.Tipo.AVISTAMIENTO, ficha=None)
+    url = reverse("publicaciones:detalle", args=[avistamiento.pk])
+    moderador = django_user_model.objects.create_user(
+        "mod@example.com",
+        "Moni",
+        "clave-segura-123",
+        estado_cuenta=EstadoCuenta.ACTIVA,
+        rol=Rol.MODERADOR,
+    )
+
+    assert client.get(url).status_code == 404  # visitante
+    assert entrar(beto).get(url).status_code == 404  # otra persona
+    assert entrar(ana).get(url).status_code == 200  # autora
+    assert entrar(moderador).get(url).status_code == 200
