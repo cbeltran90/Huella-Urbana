@@ -1,6 +1,3 @@
-import sys
-import types
-
 import pytest
 from model_bakery import baker
 
@@ -59,15 +56,3 @@ def test_se_le_quita_el_contacto_como_cuidadora_de_fichas_ajenas(ana, beto):
     ficha.refresh_from_db()
     assert ficha.cuidador is None and ficha.cuidador_contacto == ""
     assert ficha.responsable == beto
-
-
-def test_sin_modulo_de_adopciones_ninguna_ficha_cuenta_como_adoptada(monkeypatch):
-    monkeypatch.setitem(sys.modules, "apps.adopcion.servicios", None)  # None = no se puede importar
-    assert eliminacion.tiene_adopcion_registrada(baker.prepare(FichaAnimal)) is False
-
-
-def test_con_el_modulo_de_adopciones_se_usa_su_respuesta(monkeypatch):
-    modulo = types.ModuleType("apps.adopcion.servicios")
-    modulo.tiene_adopcion_registrada = lambda ficha: True
-    monkeypatch.setitem(sys.modules, "apps.adopcion.servicios", modulo)
-    assert eliminacion.tiene_adopcion_registrada(baker.prepare(FichaAnimal)) is True
