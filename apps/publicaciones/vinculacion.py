@@ -94,12 +94,13 @@ def responder(coincidencia, usuario, *, confirmar):
         sobrante.fusionada_en = principal
         sobrante.save(update_fields=["fusionada_en"])
     publicacion.refresh_from_db()
-    _notificar(
-        publicacion.autor,
-        "Coincidencia confirmada",
-        "Se confirmó que es el mismo animal.",
-        publicacion,
-    )
+    if publicacion.autor_id:  # si eliminó su cuenta, no hay a quién avisar
+        _notificar(
+            publicacion.autor,
+            "Coincidencia confirmada",
+            "Se confirmó que es el mismo animal.",
+            publicacion,
+        )
     return coincidencia
 
 
