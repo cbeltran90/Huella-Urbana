@@ -2,13 +2,14 @@
 
 from dataclasses import dataclass
 
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
 from apps.fichas.models import FichaAnimal
 from apps.transito import servicios as servicios_transito
 
-from .models import Sancion
+from .models import Domicilio, EstadoCuenta, PerfilAdoptante, Rol, Sancion, Usuario
 from .servicios import sancion_vigente
 
 MENSAJE_SUSPENSION_TEMPORAL = "No podés eliminar tu cuenta mientras dure la suspensión."
@@ -35,6 +36,14 @@ class Impedimento:
     fin: object = None
 
 
+class EliminacionNoPermitida(Exception):
+    """La cuenta todavía no se puede eliminar. "impedimentos" dice por qué."""
+
+    def __init__(self, impedimentos):
+        super().__init__(" ".join(impedimento.mensaje for impedimento in impedimentos))
+        self.impedimentos = impedimentos
+
+
 def mensaje_suspension_temporal(fin):
     return f"{MENSAJE_SUSPENSION_TEMPORAL} Termina el {timezone.localtime(fin):%d/%m/%Y %H:%M}."
 
@@ -55,6 +64,7 @@ def impedimentos_para_eliminar(usuario):
     """Todo lo que impide eliminar la cuenta hoy. Vacío si se puede.
 
     Una suspensión permanente no impide: es justamente lo único que la persona puede hacer
+    (CU-02, extensión 4C).
     """
     impedimentos = []
     sancion = sancion_vigente(usuario)
@@ -72,3 +82,65 @@ def impedimentos_para_eliminar(usuario):
     if servicios_transito.tiene_eleccion_pendiente(usuario):
         impedimentos.append(Impedimento("eleccion_pendiente", MENSAJE_ELECCION_PENDIENTE))
     return impedimentos
+
+
+# Pasos de la eliminación que son de otros módulos. Cada uno se registra
+# con "al_eliminar_cuenta" y se ejecuta dentro de la misma transacción.
+_LIMPIEZAS = []
+
+
+def al_eliminar_cuenta(funcion):
+    """Registra un paso que se ejecuta al eliminar una cuenta.
+
+    La función recibe la cuenta que se elimina y corre dentro de la transacción: si lanza un
+    error, no se elimina nada. Se usa como decorador.
+    """
+    _LIMPIEZAS.append(funcion)
+    return funcion
+
+
+def _vaciar_datos_propios(usuario):
+    """Paso 5: domicilio y datos del hogar (se borran) y perfiles (la fila queda sin datos)."""
+    Domicilio.objects.filter(usuario=usuario).delete()
+    PerfilAdoptante.objects.filter(usuario=usuario).update(experiencia_previa="")
+    servicios_transito.vaciar_perfil_transito(usuario)
+
+
+def _marcar_eliminada(usuario):
+    """Paso 9: la cuenta queda eliminada, sin nombre ni correo y sin poder entrar.
+
+    La fila se conserva (la usan las fichas adoptadas, las sanciones y los registros). El
+    nombre y el correo se reemplazan por valores únicos, que además dejan libres los
+    originales.
+    """
+    usuario.nombre_usuario = f"usuario-eliminado-{usuario.pk}"
+    usuario.email = f"eliminada-{usuario.pk}@eliminada.invalid"
+    usuario.rol = Rol.REGISTRADO
+    usuario.estado_cuenta = EstadoCuenta.ELIMINADA
+    usuario.set_unusable_password()
+    usuario.save()
+
+
+def eliminar_cuenta(usuario):
+    """Elimina la cuenta y devuelve la cuenta ya eliminada.
+
+    Vuelve a verificar los impedimentos dentro de la transacción: si hay alguno lanza
+    EliminacionNoPermitida y no cambia nada. Si la cuenta ya estaba eliminada, no hace nada.
+
+    Conserva el hash del correo y las sanciones, que usa la detección de reincidencia
+    el hash vive en cada sanción. Los pasos 6 a 8 son de otros módulos y se
+    enganchan con "al_eliminar_cuenta".
+    """
+    with transaction.atomic():
+        # Se bloquea la cuenta para que dos pedidos a la vez no se pisen.
+        usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
+        if usuario.estado_cuenta == EstadoCuenta.ELIMINADA:
+            return usuario
+        impedimentos = impedimentos_para_eliminar(usuario)
+        if impedimentos:
+            raise EliminacionNoPermitida(impedimentos)
+        _vaciar_datos_propios(usuario)
+        for limpieza in _LIMPIEZAS:
+            limpieza(usuario)
+        _marcar_eliminada(usuario)
+    return usuario

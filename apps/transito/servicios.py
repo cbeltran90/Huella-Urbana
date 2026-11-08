@@ -384,3 +384,21 @@ def retirar_rol_transito(usuario, retirado_por):
     perfil.save(update_fields=["activo"])
     registrar_accion(retirado_por, usuario, REGISTRO_RETIRO)
     return perfil
+
+
+def vaciar_perfil_transito(usuario):
+    """Deja el perfil de tránsito sin datos y desactivado, y conserva la fila.
+
+    La fila queda para el historial: sin especies, tamaño ni cupo, y sin rol de hogar.
+    """
+    PerfilTransito.objects.filter(usuario=usuario).update(
+        especies_aceptadas="",
+        tamano_maximo="",
+        duracion_maxima_dias=0,
+        acepta_medicacion=False,
+        acepta_conducta=False,
+        disponibilidad=False,
+        pausa_hasta=None,
+        cupo_declarado=0,
+        activo=False,
+    )
