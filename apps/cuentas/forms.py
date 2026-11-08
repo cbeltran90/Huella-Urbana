@@ -34,6 +34,7 @@ MENSAJE_LOGIN_INVALIDO = "Correo o contraseña incorrectos"
 MENSAJE_CUENTA_PENDIENTE = (
     "Tu cuenta todavía no está confirmada. Abrí el enlace que te enviamos por correo."
 )
+MENSAJE_CUENTA_SUSPENDIDA = "Tu cuenta está suspendida"
 
 
 class RegistroForm(forms.Form):
@@ -124,6 +125,15 @@ class InicioSesionForm(AuthenticationForm):
     }
     # Pasa a True cuando la clave es correcta pero la cuenta sigue sin confirmar.
     cuenta_pendiente = False
+    # La sanción vigente, cuando la clave es correcta pero la cuenta está suspendida.
+    sancion = None
+
+    def confirm_login_allowed(self, user):
+        super().confirm_login_allowed(user)
+        sancion = servicios.sancion_vigente(user)
+        if sancion is not None:
+            self.sancion = sancion
+            raise ValidationError(MENSAJE_CUENTA_SUSPENDIDA, code="cuenta_suspendida")
 
     def clean(self):
         try:
