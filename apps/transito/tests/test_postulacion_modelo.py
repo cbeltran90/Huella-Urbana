@@ -40,6 +40,7 @@ def test_una_postulacion_nueva_queda_pendiente_y_activa(ficha):
         (Postulacion.Estado.PENDIENTE, True),
         (Postulacion.Estado.ELEGIDA, True),
         (Postulacion.Estado.DESCARTADA, False),
+        (Postulacion.Estado.CONCRETADA, False),
     ],
 )
 def test_solo_pendiente_y_elegida_estan_activas(ficha, estado, activa):
@@ -63,6 +64,13 @@ def test_una_elegida_tambien_cuenta_como_activa(ficha):
 def test_puede_volver_a_postularse_si_la_anterior_fue_descartada(ficha):
     lucia = crear_usuario("lucia")
     postular(lucia, ficha, estado=Postulacion.Estado.DESCARTADA)
+    nueva = postular(lucia, ficha)
+    assert nueva.activa is True
+
+
+def test_puede_volver_a_postularse_si_la_anterior_fue_concretada(ficha):
+    lucia = crear_usuario("lucia")
+    postular(lucia, ficha, estado=Postulacion.Estado.CONCRETADA)
     nueva = postular(lucia, ficha)
     assert nueva.activa is True
 

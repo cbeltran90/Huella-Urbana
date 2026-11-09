@@ -103,7 +103,8 @@ class Postulacion(models.Model):
 
     La usan los dos caminos: el hogar que se postula para alojarlo (tipo tránsito) y la
     persona que quiere adoptarlo (tipo adopción). Está "activa" mientras es pendiente o
-    elegida; una persona solo puede tener una activa por ficha.
+    elegida; una persona solo puede tener una activa por ficha. Cuando la entrega se
+    concreta, la elegida pasa a concretada; si no prospera, pasa a descartada.
     """
 
     class Tipo(models.TextChoices):
@@ -114,6 +115,7 @@ class Postulacion(models.Model):
         PENDIENTE = "pendiente", "Pendiente"
         ELEGIDA = "elegida", "Elegida"
         DESCARTADA = "descartada", "Descartada"
+        CONCRETADA = "concretada", "Concretada"
 
     ficha = models.ForeignKey(FichaAnimal, on_delete=models.CASCADE, related_name="postulaciones")
     usuario = models.ForeignKey(

@@ -1,6 +1,7 @@
 """Reglas del hogar de tránsito que usan otras partes del sistema."""
 
 from constance import config
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -276,6 +277,31 @@ def animales_alojados(usuario):
 def tiene_animales_a_cargo(usuario):
     """True si el hogar tiene animales alojados hoy."""
     return animales_alojados(usuario) > 0
+
+
+MENSAJE_NO_ELEGIDA = "Solo se puede concretar una postulación elegida."
+
+
+class PostulacionNoElegida(ValueError):
+    """Se quiso concretar una postulación que no está elegida."""
+
+
+@transaction.atomic
+def marcar_concretada(postulacion):
+    """La entrega se concretó: la postulación elegida pasa a concretada y se devuelve.
+
+    Lo llaman quienes concretan la entrega (tránsito o adopción). Deja libres a la persona
+    elegida y a quien tenía el animal para eliminar su cuenta, y a la persona elegida para
+    volver a postularse. Lanza PostulacionNoElegida si no está elegida (sigue pendiente, o
+    ya fue descartada o concretada) y no cambia nada.
+    """
+    actual = Postulacion.objects.select_for_update().get(pk=postulacion.pk)
+    if actual.estado != Postulacion.Estado.ELEGIDA:
+        raise PostulacionNoElegida(MENSAJE_NO_ELEGIDA)
+    actual.estado = Postulacion.Estado.CONCRETADA
+    actual.save(update_fields=["estado"])
+    postulacion.estado = actual.estado
+    return postulacion
 
 
 def tiene_eleccion_pendiente(usuario):
