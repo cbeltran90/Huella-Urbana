@@ -18,11 +18,13 @@ get $CDN/alpinejs@3.14.8/dist/cdn.min.js                       $V/alpine/alpine.
 
 get $CDN/leaflet@1.9.4/dist/leaflet.js                         $V/leaflet/leaflet.js
 get $CDN/leaflet@1.9.4/dist/leaflet.css                        $V/leaflet/leaflet.css
+get $CDN/leaflet@1.9.4/dist/leaflet.js.map                     $V/leaflet/leaflet.js.map
 for img in layers.png layers-2x.png marker-icon.png marker-icon-2x.png marker-shadow.png; do
   get $CDN/leaflet@1.9.4/dist/images/$img                      $V/leaflet/images/$img
 done
 
 get $CDN/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js   $V/markercluster/leaflet.markercluster.js
+get $CDN/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js.map $V/markercluster/leaflet.markercluster.js.map
 get $CDN/leaflet.markercluster@1.5.3/dist/MarkerCluster.css          $V/markercluster/MarkerCluster.css
 get $CDN/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css  $V/markercluster/MarkerCluster.Default.css
 
