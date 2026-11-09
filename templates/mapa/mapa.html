@@ -25,6 +25,9 @@
          class="mt-2 h-[70vh] w-full rounded"
          role="region"
          aria-label="Mapa de publicaciones de Ushuaia"></div>
+    <div id="mapa-detalle" class="mt-4">
+      <p class="text-sm text-stone-600">Tocá un marcador para ver su detalle.</p>
+    </div>
   </section>
   {{ mapa_config|json_script:"mapa-config" }}
   {{ capas_config|json_script:"capas-config" }}
@@ -33,6 +36,7 @@
     const capas = JSON.parse(document.getElementById("capas-config").textContent);
     const estado = document.getElementById("mapa-estado");
     const casillas = document.querySelectorAll('input[name="capa"]');
+    const detalle = document.getElementById("mapa-detalle");
 
     const mapa = L.map("mapa", { maxBounds: capas.limites, maxBoundsViscosity: 1 })
       .setView([-54.8019, -68.3030], 13);
@@ -50,6 +54,22 @@
         iconSize: [32, 32],
       });
     }
+
+    function mostrarDetalle(id) {
+      const url = capas.resumen_url.replace(/\/0\/$/, `/${id}/`);
+      htmx.ajax("GET", url, { target: detalle, swap: "innerHTML" }).then(() => {
+        const resumen = document.getElementById("mapa-resumen");
+        if (resumen) {
+          resumen.focus({ preventScroll: true });
+          resumen.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      });
+    }
+
+    // Si la publicación dejó de estar vigente desde que se cargó el mapa.
+    detalle.addEventListener("htmx:responseError", () => {
+      detalle.innerHTML = '<p class="text-sm text-stone-600">Esta publicación ya no está disponible.</p>';
+    });
 
     function mostrarCapasElegidas() {
       grupo.clearLayers();
@@ -76,7 +96,15 @@
           const { id, tipo, capa } = punto.properties;
           const [lon, lat] = punto.geometry.coordinates;
           const marcador = L.marker([lat, lon], { icon: iconos[capa], title: capas.tipos[tipo] });
-          marcador.publicacionId = id;
+          marcador.on("click", () => mostrarDetalle(id));
+          // Leaflet enfoca los marcadores pero no los abre con el teclado (RNF19).
+          marcador.on("keydown", (evento) => {
+            const tecla = evento.originalEvent.key;
+            if (tecla === "Enter" || tecla === " ") {
+              evento.originalEvent.preventDefault();
+              mostrarDetalle(id);
+            }
+          });
           marcadores[capa].push(marcador);
         }
         mostrarCapasElegidas();

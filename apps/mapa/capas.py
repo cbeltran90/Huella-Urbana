@@ -20,11 +20,14 @@ LEYENDAS = {
 }
 
 
+def vigentes():
+    """Las publicaciones que muestra el mapa: las vigentes de alguna capa."""
+    return Publicacion.objects.filter(estado=Publicacion.Estado.VIGENTE, tipo__in=list(_CAPA_DE))
+
+
 def geojson():
     """Las publicaciones vigentes de todas las capas, como FeatureCollection de GeoJSON."""
-    publicaciones = Publicacion.objects.filter(
-        estado=Publicacion.Estado.VIGENTE, tipo__in=list(_CAPA_DE)
-    ).values_list("pk", "tipo", "ubicacion")
+    publicaciones = vigentes().values_list("pk", "tipo", "ubicacion")
     return {
         "type": "FeatureCollection",
         "features": [_punto(pk, tipo, ubicacion) for pk, tipo, ubicacion in publicaciones],
