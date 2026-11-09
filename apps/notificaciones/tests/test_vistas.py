@@ -114,3 +114,36 @@ def test_el_menu_cuenta_los_sin_leer_y_baja_al_abrir_uno(entrar, ana):
 
     assert re.search(r'id="avisos-sin-leer"[^>]*>\s*2\s*<', antes)
     assert re.search(r'id="avisos-sin-leer"[^>]*>\s*1\s*<', despues)
+
+
+def test_filtra_por_tipo_y_lo_deja_elegido(entrar, ana):
+    notificar(ana, Tipo.EVENTO, "Jornada de vacunación")
+    notificar(ana, Tipo.NOVEDAD, "Campaña de castración")
+
+    html = entrar(ana).get(MIS_AVISOS, {"tipo": Tipo.EVENTO}).content.decode()
+
+    assert "Jornada de vacunación" in html
+    assert "Campaña de castración" not in html
+    assert re.search(r'<option value="evento"\s+selected>', html)
+
+
+def test_solo_ofrece_los_tipos_que_tiene(entrar, ana):
+    notificar(ana, Tipo.EVENTO, "Jornada de vacunación")
+
+    html = entrar(ana).get(MIS_AVISOS).content.decode()
+
+    assert 'value="evento"' in html
+    assert 'value="alerta_sanitaria"' not in html
+
+
+def test_un_tipo_que_no_existe_muestra_todos(entrar, ana):
+    notificar(ana, Tipo.EVENTO, "Jornada de vacunación")
+    notificar(ana, Tipo.NOVEDAD, "Campaña de castración")
+
+    html = entrar(ana).get(MIS_AVISOS, {"tipo": "xyz"}).content.decode()
+
+    assert "Jornada de vacunación" in html and "Campaña de castración" in html
+
+
+def test_sin_avisos_no_muestra_el_filtro(entrar, ana):
+    assert 'name="tipo"' not in entrar(ana).get(MIS_AVISOS).content.decode()
