@@ -6,4 +6,5 @@ app_name = "notificaciones"
 
 urlpatterns = [
     path("", views.mis_avisos, name="mis_avisos"),
+    path("<int:pk>/abrir/", views.abrir, name="abrir"),
 ]
