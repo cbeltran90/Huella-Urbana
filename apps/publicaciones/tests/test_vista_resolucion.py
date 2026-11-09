@@ -67,3 +67,40 @@ def test_sin_permiso_da_403_y_no_cambia_nada(entrar, beto, caso_de_ana):
     assert entrar(beto).post(_resolver(ficha)).status_code == 403
     extravio.refresh_from_db()
     assert extravio.estado == Estado.VIGENTE
+
+
+def test_quien_lo_tiene_a_cargo_confirma_y_termina_en_el_listado(entrar, ana, beto):
+    ficha = baker.make(
+        FichaAnimal,
+        especie="perro",
+        estado=FichaAnimal.Estado.SIN_RESPONSABLE,
+        responsable=None,
+        cuidador=beto,
+    )
+    extravio = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=ficha)
+    cliente = entrar(beto)
+    url = reverse("publicaciones:confirmar_dueno", args=[extravio.pk])
+
+    html = cliente.get(reverse("fichas:detalle", args=[ficha.pk])).content.decode()
+    respuesta = cliente.post(url)
+
+    assert url in html
+    assert respuesta.url == reverse("publicaciones:perdidos")
+    ficha.refresh_from_db()
+    assert ficha.responsable == ana
+
+
+def test_quien_reclama_no_ve_la_opcion(entrar, ana, beto):
+    ficha = baker.make(
+        FichaAnimal,
+        especie="perro",
+        estado=FichaAnimal.Estado.SIN_RESPONSABLE,
+        responsable=None,
+        cuidador=beto,
+        es_privada=False,
+    )
+    extravio = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=ficha)
+
+    html = entrar(ana).get(reverse("fichas:detalle", args=[ficha.pk])).content.decode()
+
+    assert reverse("publicaciones:confirmar_dueno", args=[extravio.pk]) not in html

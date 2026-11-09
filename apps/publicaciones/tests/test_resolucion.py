@@ -1,4 +1,5 @@
 import pytest
+from django.utils import timezone
 from model_bakery import baker
 
 from apps.cuentas.models import EstadoCuenta, Rol
@@ -98,3 +99,59 @@ def test_al_resolver_sale_del_listado_y_del_mapa_de_perdidos(ana, ficha_de_ana):
 
     assert not listados.perdidos().exists()
     assert not capas.vigentes().exists()
+
+
+@pytest.fixture
+def ficha_hallada_por_beto(beto):
+    return baker.make(
+        FichaAnimal,
+        especie="perro",
+        estado=FichaAnimal.Estado.SIN_RESPONSABLE,
+        responsable=None,
+        cuidador=beto,
+        sin_responsable_desde=timezone.localdate(),
+    )
+
+
+def test_quien_lo_tiene_a_cargo_confirma_al_dueno_transicion_4(ana, beto, ficha_hallada_por_beto):
+    ficha = ficha_hallada_por_beto
+    hallazgo = hacer_publicacion(beto, tipo=Tipo.HALLAZGO, ficha=ficha)
+    extravio = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=ficha)
+
+    resolucion.confirmar_dueno(ficha, extravio, beto)
+
+    ficha.refresh_from_db()
+    assert ficha.estado == FichaAnimal.Estado.REGISTRADO
+    assert ficha.responsable == ana
+    assert ficha.cuidador is None and ficha.sin_responsable_desde is None
+    for publicacion in (hallazgo, extravio):
+        publicacion.refresh_from_db()
+        assert publicacion.estado == Estado.RESUELTA
+
+
+def test_un_moderador_tambien_confirma_al_dueno(ana, moderadora, ficha_hallada_por_beto):
+    hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=ficha_hallada_por_beto)
+
+    assert resolucion.puede_confirmar_dueno(moderadora, ficha_hallada_por_beto)
+
+
+def test_quien_reclama_no_puede_confirmarse_a_si_mismo(ana, ficha_hallada_por_beto):
+    hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=ficha_hallada_por_beto)
+
+    assert not resolucion.puede_confirmar_dueno(ana, ficha_hallada_por_beto)
+
+
+def test_sin_extravio_vinculado_no_hay_dueno_para_confirmar(beto, ficha_hallada_por_beto):
+    hacer_publicacion(beto, tipo=Tipo.HALLAZGO, ficha=ficha_hallada_por_beto)
+
+    assert not resolucion.puede_confirmar_dueno(beto, ficha_hallada_por_beto)
+
+
+def test_un_extravio_de_otra_ficha_no_sirve(ana, beto, ficha_hallada_por_beto):
+    hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=ficha_hallada_por_beto)
+    ajeno = hacer_publicacion(
+        ana, tipo=Tipo.EXTRAVIO, ficha=baker.make(FichaAnimal, especie="gato")
+    )
+
+    with pytest.raises(ValueError):
+        resolucion.confirmar_dueno(ficha_hallada_por_beto, ajeno, beto)

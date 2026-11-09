@@ -219,6 +219,23 @@ def resolver_caso(request, pk):
 
 @login_required
 @cuenta_habilitada
+def confirmar_dueno(request, pk):
+    """Confirma que el autor de un extravío es el dueño (CU-14, extensión 2A)."""
+    extravio = get_object_or_404(Publicacion.objects.select_related("ficha", "autor"), pk=pk)
+    ficha = extravio.ficha
+    if ficha is None or not resolucion.puede_confirmar_dueno(request.user, ficha):
+        raise PermissionDenied
+    if not resolucion.extravios_del_caso(ficha).filter(pk=extravio.pk).exists():
+        raise Http404
+    if request.method == "POST":  # sin POST (o si cancela) no se cambia nada
+        resolucion.confirmar_dueno(ficha, extravio, request.user)
+        return redirect(_volver_desde(request.user, ficha))
+    contexto = {"extravio": extravio, "volver": _volver_desde(request.user, ficha)}
+    return render(request, "publicaciones/confirmar_dueno.html", contexto)
+
+
+@login_required
+@cuenta_habilitada
 def coincidencias(request):
     """Coincidencias que esperan la decisión de esta persona (confirmar o descartar)."""
     contexto = {"coincidencias": vinculacion.pendientes_para(request.user)}
