@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load secuencia %}
+{% load secuencia caso %}
 {% block titulo %}{{ ficha.nombre|default:"Ficha" }} · Huella Urbana{% endblock %}
 {% block contenido %}
   <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
@@ -88,6 +88,7 @@
           Dar de baja
         </a>
       {% endif %}
+      {% boton_resolver_caso ficha %}
       <a href="{% url 'fichas:mis_fichas' %}"
          class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Volver</a>
     </div>
