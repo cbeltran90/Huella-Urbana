@@ -13,7 +13,7 @@ DISPONIBLES = reverse("publicaciones:disponibles")
 pytestmark = pytest.mark.django_db
 
 
-def test_un_visitante_ve_las_adopciones_y_los_transitos(client, ana):
+def test_un_visitante_ve_las_adopciones(client, ana):
     hacer_publicacion(ana, tipo=Tipo.ADOPCION, color="negro")
     hacer_publicacion(ana, tipo=Tipo.TRANSITO, color="blanco")
     hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, color="marrón")
@@ -22,8 +22,8 @@ def test_un_visitante_ve_las_adopciones_y_los_transitos(client, ana):
     html = respuesta.content.decode()
 
     assert respuesta.status_code == 200
-    assert "negro" in html and "blanco" in html
-    assert "marrón" not in html
+    assert "negro" in html
+    assert "blanco" not in html and "marrón" not in html
 
 
 def test_los_filtros_se_aplican_y_quedan_elegidos(client, ana):
@@ -48,3 +48,7 @@ def test_no_tiene_mapa_ni_distancia_aunque_vengan_coordenadas(client, ana):
 def test_sin_resultados_lo_dice(client):
     html = client.get(DISPONIBLES).content.decode()
     assert "No hay resultados para esos filtros." in html
+
+
+def test_no_ofrece_elegir_el_tipo_porque_hay_uno_solo(client):
+    assert 'name="tipo"' not in client.get(DISPONIBLES).content.decode()

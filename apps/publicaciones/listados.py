@@ -9,7 +9,7 @@ from .models import Publicacion
 
 Tipo = Publicacion.Tipo
 TIPOS_PERDIDOS = (Tipo.EXTRAVIO, Tipo.HALLAZGO)
-TIPOS_DISPONIBLES = (Tipo.ADOPCION, Tipo.TRANSITO)
+TIPOS_DISPONIBLES = (Tipo.ADOPCION,)
 
 
 def _vigentes(tipos, *, tipo, especie, tamano):
@@ -38,14 +38,12 @@ def perdidos(*, tipo="", especie="", tamano="", punto=None):
     return publicaciones.order_by("-fecha")
 
 
-def disponibles(*, tipo="", especie="", tamano=""):
-    """Publicaciones vigentes de adopción y tránsito, con filtros, de la más nueva a la más vieja.
+def disponibles(*, especie="", tamano=""):
+    """Publicaciones vigentes de adopción, con filtros, de la más nueva a la más vieja.
 
     CU-20 pide orden por cercanía solo en perdidos.
     """
-    return _vigentes(TIPOS_DISPONIBLES, tipo=tipo, especie=especie, tamano=tamano).order_by(
-        "-fecha"
-    )
+    return _vigentes(TIPOS_DISPONIBLES, tipo="", especie=especie, tamano=tamano).order_by("-fecha")
 
 
 def punto_desde(lat, lon):

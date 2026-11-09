@@ -82,21 +82,20 @@ def test_un_punto_de_la_zona_se_usa_con_longitud_primero():
     assert (punto.x, punto.y) == (-68.3040, -54.8025)
 
 
-def test_disponibles_lista_solo_adopciones_y_transitos_vigentes(ana):
+def test_disponibles_lista_solo_adopciones_vigentes(ana):
     adopcion = hacer_publicacion(ana, tipo=Tipo.ADOPCION)
-    transito = hacer_publicacion(ana, tipo=Tipo.TRANSITO)
+    hacer_publicacion(ana, tipo=Tipo.TRANSITO)
     hacer_publicacion(ana, tipo=Tipo.EXTRAVIO)
     hacer_publicacion(ana, tipo=Tipo.ADOPCION, estado=Publicacion.Estado.RESUELTA)
 
-    assert set(listados.disponibles()) == {adopcion, transito}
+    assert list(listados.disponibles()) == [adopcion]
 
 
-def test_disponibles_filtra_y_ignora_tipos_de_perdidos(ana):
+def test_disponibles_filtra_por_especie(ana):
     perro = hacer_publicacion(ana, tipo=Tipo.ADOPCION, especie="perro")
     hacer_publicacion(ana, tipo=Tipo.ADOPCION, especie="gato")
 
     assert list(listados.disponibles(especie="perro")) == [perro]
-    assert list(listados.disponibles(tipo=Tipo.EXTRAVIO, especie="perro")) == [perro]
 
 
 def test_la_secuencia_va_de_la_mas_vieja_a_la_mas_nueva_sin_las_eliminadas(ana):

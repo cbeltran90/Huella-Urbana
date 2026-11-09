@@ -73,3 +73,7 @@ def test_la_tarjeta_lleva_a_la_ficha_si_es_publica_y_si_no_a_la_publicacion(clie
     assert reverse("publicaciones:detalle", args=[con_privada.pk]) in html
     assert reverse("publicaciones:detalle", args=[sin_ficha.pk]) in html
     assert reverse("publicaciones:detalle", args=[con_publica.pk]) not in html
+
+
+def test_ofrece_elegir_entre_extravio_y_hallazgo(client):
+    assert 'name="tipo"' in client.get(PERDIDOS).content.decode()

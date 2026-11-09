@@ -240,12 +240,10 @@ def perdidos(request):
 
 
 def disponibles(request):
-    """Listado público de disponibles (CU-20): adopción y tránsito, sin orden por cercanía."""
+    """Listado público de disponibles (CU-20): animales en adopción, sin orden por cercanía."""
     filtros = request.GET
     publicaciones = listados.disponibles(
-        tipo=filtros.get("tipo", ""),
         especie=filtros.get("especie", ""),
         tamano=filtros.get("tamano", ""),
     )
-    contexto = {"tipos": [(t.value, t.label) for t in listados.TIPOS_DISPONIBLES]}
-    return _listado(request, "publicaciones/disponibles.html", publicaciones, contexto)
+    return _listado(request, "publicaciones/disponibles.html", publicaciones, {})
