@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
+    "config.estaticos.EstaticosConfig",
     "django.contrib.gis",
     "constance",
     "constance.backends.database",
