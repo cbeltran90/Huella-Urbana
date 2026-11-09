@@ -13,6 +13,12 @@ CAPAS = {
 }
 _CAPA_DE = {tipo: capa for capa, tipos in CAPAS.items() for tipo in tipos}
 
+# Cómo se presenta cada capa. La letra distingue los marcadores sin depender del color (RNF19).
+LEYENDAS = {
+    "perdidos": {"nombre": "Animales perdidos", "letra": "P", "color": "bg-red-700"},
+    "adopcion": {"nombre": "Adopción y tránsito", "letra": "A", "color": "bg-emerald-700"},
+}
+
 
 def geojson():
     """Las publicaciones vigentes de todas las capas, como FeatureCollection de GeoJSON."""

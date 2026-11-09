@@ -44,3 +44,7 @@ def test_el_punto_va_en_longitud_latitud(ana):
     (punto,) = capas.geojson()["features"]
 
     assert punto["geometry"] == {"type": "Point", "coordinates": [-68.304, -54.8025]}
+
+
+def test_cada_capa_tiene_su_leyenda():
+    assert capas.LEYENDAS.keys() == capas.CAPAS.keys()
