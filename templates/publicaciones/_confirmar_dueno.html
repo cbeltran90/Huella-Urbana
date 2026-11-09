@@ -1,0 +1,15 @@
+{% if extravios %}
+  <h2 class="mt-6 text-lg font-semibold">¿Apareció el dueño?</h2>
+  <p class="mt-1 text-sm text-stone-600">
+    Si quien publicó el extravío es el dueño, confirmalo: el animal pasa a su cuenta y el caso se cierra.
+  </p>
+  <ul class="mt-2 space-y-2 text-sm">
+    {% for extravio in extravios %}
+      <li>
+        Extravío del {{ extravio.fecha|date:"j/n/Y" }}, publicado por {{ extravio.autor.nombre_usuario }} ·
+        <a href="{% url 'publicaciones:confirmar_dueno' extravio.pk %}"
+           class="inline-flex min-h-11 items-center underline">Es el dueño</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

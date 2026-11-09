@@ -4,16 +4,17 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.core.limites import limite_publicaciones
 from apps.cuentas.decoradores import cuenta_habilitada
 from apps.cuentas.servicios import DomicilioInvalido
 from apps.fichas.models import Coincidencia, FichaAnimal
-from apps.fichas.permisos import es_moderador
+from apps.fichas.permisos import es_moderador, puede_ver
 from apps.imagenes.procesamiento import ImagenInvalida
 
-from . import listados, servicios, ubicacion, vinculacion
+from . import listados, resolucion, servicios, ubicacion, vinculacion
 from .forms import AltaAdopcionForm, ExtravioForm, HallazgoForm
 from .models import Publicacion
 
@@ -193,6 +194,44 @@ def desvincular(request, pk):
         vinculacion.desvincular(publicacion, request.user)
         return redirect("publicaciones:detalle", pk=publicacion.pk)
     return render(request, "publicaciones/desvincular_confirmar.html", {"publicacion": publicacion})
+
+
+def _volver_desde(usuario, ficha):
+    """La ficha, si quien resuelve la puede ver; si no (ficha privada), el listado."""
+    if puede_ver(usuario, ficha):
+        return reverse("fichas:detalle", args=[ficha.pk])
+    return reverse("publicaciones:perdidos")
+
+
+@login_required
+@cuenta_habilitada
+def resolver_caso(request, pk):
+    """Cierra el caso de extravío de la ficha (CU-14), después de pedir confirmación."""
+    ficha = get_object_or_404(FichaAnimal, pk=pk)
+    if not resolucion.puede_resolver(request.user, ficha):
+        raise PermissionDenied
+    volver = _volver_desde(request.user, ficha)
+    if request.method == "POST":  # sin POST (o si cancela) no se cambia nada
+        resolucion.resolver_caso(ficha, request.user)
+        return redirect(volver)
+    return render(request, "publicaciones/resolver_caso_confirmar.html", {"volver": volver})
+
+
+@login_required
+@cuenta_habilitada
+def confirmar_dueno(request, pk):
+    """Confirma que el autor de un extravío es el dueño (CU-14, extensión 2A)."""
+    extravio = get_object_or_404(Publicacion.objects.select_related("ficha", "autor"), pk=pk)
+    ficha = extravio.ficha
+    if ficha is None or not resolucion.puede_confirmar_dueno(request.user, ficha):
+        raise PermissionDenied
+    if not resolucion.extravios_del_caso(ficha).filter(pk=extravio.pk).exists():
+        raise Http404
+    if request.method == "POST":  # sin POST (o si cancela) no se cambia nada
+        resolucion.confirmar_dueno(ficha, extravio, request.user)
+        return redirect(_volver_desde(request.user, ficha))
+    contexto = {"extravio": extravio, "volver": _volver_desde(request.user, ficha)}
+    return render(request, "publicaciones/confirmar_dueno.html", contexto)
 
 
 @login_required

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Confirmar al dueño · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">¿{{ extravio.autor.nombre_usuario }} es el dueño?</h1>
+    <p class="mt-2 text-sm text-stone-600">
+      La ficha pasa a su cuenta y el caso se cierra: el extravío y el hallazgo salen del mapa y del listado de perdidos. Si tenías al animal a tu cargo, deja de estarlo.
+    </p>
+    <form method="post" class="mt-4 flex flex-wrap gap-3">
+      {% csrf_token %}
+      <button type="submit"
+              class="inline-flex min-h-11 items-center rounded bg-stone-800 px-4 text-white">Sí, es el dueño</button>
+      <a href="{{ volver }}"
+         class="inline-flex min-h-11 items-center rounded border px-4">Cancelar</a>
+    </form>
+  </section>
+{% endblock %}

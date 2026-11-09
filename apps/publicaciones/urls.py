@@ -14,6 +14,8 @@ urlpatterns = [
     path("<int:pk>/", views.detalle, name="detalle"),
     path("<int:pk>/candidatas/", views.candidatas, name="candidatas"),
     path("<int:pk>/desvincular/", views.desvincular, name="desvincular"),
+    path("caso/<int:pk>/resolver/", views.resolver_caso, name="resolver_caso"),
+    path("<int:pk>/es-el-dueno/", views.confirmar_dueno, name="confirmar_dueno"),
     path(
         "coincidencia/<int:pk>/responder/",
         views.responder_coincidencia,
