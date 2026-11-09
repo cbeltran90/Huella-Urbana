@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block titulo %}Mapa · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-4xl">
+    <h1 class="text-2xl font-bold">Mapa</h1>
+    <fieldset class="mt-4 flex flex-wrap gap-4 text-sm">
+      <legend class="sr-only">Capas que se muestran en el mapa</legend>
+      {% for clave, leyenda in leyendas.items %}
+        <label class="flex min-h-11 items-center gap-2">
+          <input type="checkbox"
+                 name="capa"
+                 value="{{ clave }}"
+                 checked
+                 class="size-5">
+          <span class="flex size-6 items-center justify-center rounded-full text-xs font-bold text-white {{ leyenda.color }}"
+                aria-hidden="true">{{ leyenda.letra }}</span>
+          {{ leyenda.nombre }}
+        </label>
+      {% endfor %}
+    </fieldset>
+    <p id="mapa-estado"
+       class="mt-2 text-sm text-stone-600"
+       aria-live="polite"></p>
+    <div id="mapa"
+         class="mt-2 h-[70vh] w-full rounded"
+         role="region"
+         aria-label="Mapa de publicaciones de Ushuaia"></div>
+    <div id="mapa-detalle" class="mt-4">
+      <p class="text-sm text-stone-600">Tocá un marcador para ver su detalle.</p>
+    </div>
+  </section>
+  {{ mapa_config|json_script:"mapa-config" }}
+  {{ capas_config|json_script:"capas-config" }}
+  <script>
+    const config = JSON.parse(document.getElementById("mapa-config").textContent);
+    const capas = JSON.parse(document.getElementById("capas-config").textContent);
+    const estado = document.getElementById("mapa-estado");
+    const casillas = document.querySelectorAll('input[name="capa"]');
+    const detalle = document.getElementById("mapa-detalle");
+
+    const mapa = L.map("mapa", { maxBounds: capas.limites, maxBoundsViscosity: 1 })
+      .setView([-54.8019, -68.3030], 13);
+    L.tileLayer(config.tiles_url, { maxZoom: 19, attribution: config.atribucion }).addTo(mapa);
+
+    // Un solo grupo: así los marcadores de capas distintas se agrupan juntos y no se tapan.
+    const grupo = L.markerClusterGroup({ chunkedLoading: true }).addTo(mapa);
+    const marcadores = {};
+    const iconos = {};
+    for (const [clave, leyenda] of Object.entries(capas.leyendas)) {
+      marcadores[clave] = [];
+      iconos[clave] = L.divIcon({
+        className: "",
+        html: `<span class="flex size-8 items-center justify-center rounded-full border-2 border-white font-bold text-white shadow ${leyenda.color}">${leyenda.letra}</span>`,
+        iconSize: [32, 32],
+      });
+    }
+
+    function mostrarDetalle(id) {
+      const url = capas.resumen_url.replace(/\/0\/$/, `/${id}/`);
+      htmx.ajax("GET", url, { target: detalle, swap: "innerHTML" }).then(() => {
+        const resumen = document.getElementById("mapa-resumen");
+        if (resumen) {
+          resumen.focus({ preventScroll: true });
+          resumen.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      });
+    }
+
+    // Si la publicación dejó de estar vigente desde que se cargó el mapa.
+    detalle.addEventListener("htmx:responseError", () => {
+      detalle.innerHTML = '<p class="text-sm text-stone-600">Esta publicación ya no está disponible.</p>';
+    });
+
+    function mostrarCapasElegidas() {
+      grupo.clearLayers();
+      let total = 0;
+      for (const casilla of casillas) {
+        if (casilla.checked) {
+          grupo.addLayers(marcadores[casilla.value]);
+          total += marcadores[casilla.value].length;
+        }
+      }
+      const palabra = total === 1 ? "publicación" : "publicaciones";
+      estado.textContent = total
+        ? `${total} ${palabra} en el mapa.`
+        : "No hay publicaciones en las capas elegidas.";
+    }
+
+    fetch(capas.datos_url)
+      .then((respuesta) => {
+        if (!respuesta.ok) throw new Error(respuesta.status);
+        return respuesta.json();
+      })
+      .then((datos) => {
+        for (const punto of datos.features) {
+          const { id, tipo, capa } = punto.properties;
+          const [lon, lat] = punto.geometry.coordinates;
+          const marcador = L.marker([lat, lon], { icon: iconos[capa], title: capas.tipos[tipo] });
+          marcador.on("click", () => mostrarDetalle(id));
+          // Leaflet enfoca los marcadores pero no los abre con el teclado (RNF19).
+          marcador.on("keydown", (evento) => {
+            const tecla = evento.originalEvent.key;
+            if (tecla === "Enter" || tecla === " ") {
+              evento.originalEvent.preventDefault();
+              mostrarDetalle(id);
+            }
+          });
+          marcadores[capa].push(marcador);
+        }
+        mostrarCapasElegidas();
+      })
+      .catch(() => {
+        estado.textContent = "No se pudieron cargar los datos del mapa. Probá recargar la página.";
+      });
+
+    casillas.forEach((casilla) => casilla.addEventListener("change", mostrarCapasElegidas));
+  </script>
+{% endblock %}

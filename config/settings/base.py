@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.estadisticas",
     "apps.notificaciones",
     "apps.imagenes",
+    "apps.mapa",
 ]
 
 MIDDLEWARE = [

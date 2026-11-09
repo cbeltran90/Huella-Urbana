@@ -1,0 +1,30 @@
+{% load static %}
+<article id="mapa-resumen"
+         tabindex="-1"
+         class="rounded-lg border bg-white p-4">
+  <h2 class="text-lg font-semibold">
+    {{ publicacion.get_tipo_display }}
+    {% if ficha_publica and publicacion.ficha.nombre %}· {{ publicacion.ficha.nombre }}{% endif %}
+  </h2>
+  <p class="text-sm text-stone-600">
+    {{ publicacion.especie|default:"Especie sin dato" }}
+    {% if publicacion.tamano %}· {{ publicacion.tamano }}{% endif %}
+    {% if publicacion.color %}· {{ publicacion.color }}{% endif %}
+    · {{ publicacion.fecha|date:"j/n/Y" }}
+  </p>
+  {% if publicacion.etiqueta_urgente %}<p class="mt-1 text-sm font-semibold text-red-800">Urgente</p>{% endif %}
+  {% if foto %}
+    <img src="{% get_media_prefix %}{{ foto.archivo }}"
+         alt="Foto del animal"
+         loading="lazy"
+         class="mt-3 h-48 w-full rounded object-cover">
+  {% endif %}
+  <div class="mt-3 flex flex-wrap gap-4 text-sm">
+    <a href="{% url 'publicaciones:detalle' publicacion.pk %}"
+       class="inline-flex min-h-11 items-center underline">Ver la publicación</a>
+    {% if ficha_publica %}
+      <a href="{% url 'fichas:detalle' publicacion.ficha_id %}"
+         class="inline-flex min-h-11 items-center underline">Ver la ficha y su historia</a>
+    {% endif %}
+  </div>
+</article>
