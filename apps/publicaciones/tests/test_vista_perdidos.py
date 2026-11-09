@@ -57,3 +57,19 @@ def test_una_ficha_privada_no_muestra_el_nombre(client, ana):
     hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=privada)
 
     assert "Secreta" not in client.get(PERDIDOS).content.decode()
+
+
+def test_la_tarjeta_lleva_a_la_ficha_si_es_publica_y_si_no_a_la_publicacion(client, ana):
+    publica = baker.make(FichaAnimal, especie="perro", es_privada=False)
+    privada = baker.make(FichaAnimal, especie="perro", es_privada=True)
+    con_publica = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=publica)
+    con_privada = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=privada)
+    sin_ficha = hacer_publicacion(ana, tipo=Tipo.HALLAZGO, ficha=None)
+
+    html = client.get(PERDIDOS).content.decode()
+
+    assert reverse("fichas:detalle", args=[publica.pk]) in html
+    assert reverse("fichas:detalle", args=[privada.pk]) not in html
+    assert reverse("publicaciones:detalle", args=[con_privada.pk]) in html
+    assert reverse("publicaciones:detalle", args=[sin_ficha.pk]) in html
+    assert reverse("publicaciones:detalle", args=[con_publica.pk]) not in html

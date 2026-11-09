@@ -1,0 +1,11 @@
+<h2 class="mt-6 text-lg font-semibold">Publicaciones</h2>
+<ol class="mt-2 space-y-2 text-sm">
+  {% for p in publicaciones %}
+    <li>
+      <a href="{% url 'publicaciones:detalle' p.pk %}" class="underline">{{ p.get_tipo_display }}</a>
+      · {{ p.fecha|date:"j/n/Y" }} · {{ p.get_estado_display }}
+    </li>
+  {% empty %}
+    <li class="text-stone-600">Esta ficha no tiene publicaciones.</li>
+  {% endfor %}
+</ol>

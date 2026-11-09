@@ -3,7 +3,9 @@ from datetime import timedelta
 import pytest
 from django.contrib.gis.geos import Point
 from django.utils import timezone
+from model_bakery import baker
 
+from apps.fichas.models import FichaAnimal
 from apps.publicaciones import listados
 from apps.publicaciones.models import Publicacion
 
@@ -95,3 +97,19 @@ def test_disponibles_filtra_y_ignora_tipos_de_perdidos(ana):
 
     assert list(listados.disponibles(especie="perro")) == [perro]
     assert list(listados.disponibles(tipo=Tipo.EXTRAVIO, especie="perro")) == [perro]
+
+
+def test_la_secuencia_va_de_la_mas_vieja_a_la_mas_nueva_sin_las_eliminadas(ana):
+    ficha = baker.make(FichaAnimal, especie="perro")
+    ahora = timezone.now()
+    nueva = hacer_publicacion(ana, ficha=ficha, fecha=ahora)
+    vieja = hacer_publicacion(
+        ana,
+        ficha=ficha,
+        fecha=ahora - timedelta(days=3),
+        estado=Publicacion.Estado.RESUELTA,
+    )
+    hacer_publicacion(ana, ficha=ficha, estado=Publicacion.Estado.ELIMINADA)
+    hacer_publicacion(ana, ficha=baker.make(FichaAnimal, especie="gato"))
+
+    assert list(listados.secuencia(ficha)) == [vieja, nueva]

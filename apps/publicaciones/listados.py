@@ -57,3 +57,8 @@ def punto_desde(lat, lon):
     if not geo.en_zona(lon, lat):
         return None
     return Point(lon, lat, srid=4326)
+
+
+def secuencia(ficha):
+    """Las publicaciones de la ficha, de la más vieja a la más nueva, sin las eliminadas (CU-20)."""
+    return ficha.publicaciones.exclude(estado=Publicacion.Estado.ELIMINADA).order_by("fecha")
