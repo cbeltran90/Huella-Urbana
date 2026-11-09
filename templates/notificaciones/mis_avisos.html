@@ -13,12 +13,19 @@
         </p>
         <h2 class="mt-1 font-semibold">{{ aviso.titulo }}</h2>
         {% if aviso.mensaje %}<p class="mt-1 text-sm">{{ aviso.mensaje }}</p>{% endif %}
-        {% if aviso.publicacion %}
-          <a href="{% url 'publicaciones:detalle' aviso.publicacion_id %}"
-             class="mt-2 inline-block text-sm underline">Ver la publicación</a>
-        {% elif aviso.ficha %}
-          <a href="{% url 'fichas:detalle' aviso.ficha_id %}"
-             class="mt-2 inline-block text-sm underline">Ver la ficha</a>
+        {% if aviso.publicacion_id or aviso.ficha_id or not aviso.leida %}
+          <form method="post" action="{% url 'notificaciones:abrir' aviso.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="mt-2 min-h-11 text-sm underline">
+              {% if aviso.publicacion_id %}
+                Ver la publicación
+              {% elif aviso.ficha_id %}
+                Ver la ficha
+              {% else %}
+                Marcar como leído
+              {% endif %}
+            </button>
+          </form>
         {% endif %}
       </article>
     {% empty %}
