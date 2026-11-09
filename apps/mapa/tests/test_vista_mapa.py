@@ -24,3 +24,9 @@ def test_la_pagina_le_indica_al_mapa_de_donde_sacar_los_datos(client):
     assert configuracion["datos_url"] == reverse("mapa:datos")
     assert configuracion["tipos"]["extravio"] == "Extravío"
     assert configuracion["resumen_url"] == reverse("mapa:resumen", args=[0])
+
+
+def test_el_menu_lleva_al_mapa_tambien_al_visitante(client):
+    html = client.get(reverse("core:inicio")).content.decode()
+
+    assert reverse("mapa:mapa") in html
