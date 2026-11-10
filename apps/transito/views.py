@@ -1,6 +1,7 @@
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from apps.cuentas.decoradores import cuenta_habilitada
 from apps.cuentas.models import Domicilio
@@ -9,7 +10,7 @@ from apps.fichas.models import FichaAnimal
 
 from . import postulaciones, servicios
 from .forms import PerfilTransitoForm, PostulacionForm
-from .models import PerfilTransito
+from .models import PerfilTransito, Postulacion
 
 
 def _inicial(perfil, estimado):
@@ -106,3 +107,16 @@ def postular(request, ficha_pk):
         "advertencias": postulaciones.advertencias_de_postulacion(request.user, ficha),
     }
     return render(request, "transito/postular.html", contexto)
+
+
+@cuenta_habilitada
+@require_POST
+def retirar(request, pk):
+    """El hogar retira su postulación pendiente."""
+    postulacion = get_object_or_404(Postulacion, pk=pk, usuario=request.user)
+    destino = reverse("fichas:detalle", args=[postulacion.ficha_id])
+    try:
+        postulaciones.retirar_postulacion(postulacion, request.user)
+    except postulaciones.RetiroPostulacionNoPermitido:
+        return redirect(destino)
+    return redirect(f"{destino}?retirada=1")
