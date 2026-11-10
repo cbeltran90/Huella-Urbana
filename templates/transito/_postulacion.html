@@ -1,0 +1,48 @@
+{% if mostrar %}
+  {% if postulado %}
+    <p role="status"
+       class="mt-6 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+      Enviamos tu postulación. Quien tiene al animal a su cargo la va a ver.
+    </p>
+  {% endif %}
+  {% if retirada %}
+    <p role="status"
+       class="mt-6 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+      Retiraste tu postulación.
+    </p>
+  {% endif %}
+  {% if propia %}
+    <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
+      <h2 class="font-semibold">Tu postulación como hogar de tránsito</h2>
+      <p class="mt-1">
+        {% if propia.estado == "elegida" %}
+          Te eligieron como hogar de tránsito para este animal.
+        {% else %}
+          Está pendiente: quien tiene al animal a su cargo la va a ver y elegir.
+        {% endif %}
+      </p>
+      <p class="mt-1 text-stone-600">Tu canal de contacto: {{ propia.contacto }}</p>
+      {% if propia.estado == "pendiente" %}
+        <form method="post"
+              action="{% url 'transito:retirar_postulacion' propia.pk %}"
+              class="mt-2">
+          {% csrf_token %}
+          <button type="submit"
+                  class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">
+            Retirar postulación
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  {% elif puede %}
+    <a href="{% url 'transito:postular' ficha.pk %}"
+       class="mt-6 inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Postularme como hogar de tránsito</a>
+  {% elif motivo %}
+    <p class="mt-6 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+      {{ motivo }}
+      {% if en_pausa %}
+        <a href="{% url 'transito:perfil_transito' %}" class="underline">Ir a mi hogar de tránsito</a>
+      {% endif %}
+    </p>
+  {% endif %}
+{% endif %}

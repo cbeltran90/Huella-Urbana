@@ -53,3 +53,9 @@ class PerfilTransitoForm(forms.Form):
         error_messages={"invalid": "Indicá el cupo con un número"},
     )
     confirmar_exceso = forms.BooleanField(required=False)
+
+
+class PostulacionForm(forms.Form):
+    """Canal de contacto de la postulación; el servicio valida que no esté vacío ni sea largo."""
+
+    contacto = forms.CharField(label="Canal de contacto", required=False)
