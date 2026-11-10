@@ -1,11 +1,14 @@
-from django.shortcuts import redirect, render
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from apps.cuentas.decoradores import cuenta_habilitada
 from apps.cuentas.models import Domicilio
+from apps.fichas import permisos
+from apps.fichas.models import FichaAnimal
 
-from . import servicios
-from .forms import PerfilTransitoForm
+from . import postulaciones, servicios
+from .forms import PerfilTransitoForm, PostulacionForm
 from .models import PerfilTransito
 
 
@@ -77,3 +80,29 @@ def desactivar_perfil_transito(request):
             return redirect(f"{reverse('cuentas:perfil')}?guardado=1")
     contexto = {"no_permitido": servicios.tiene_animales_a_cargo(request.user)}
     return render(request, "transito/desactivar_perfil.html", contexto)
+
+
+@cuenta_habilitada
+def postular(request, ficha_pk):
+    """Postularse como hogar de tránsito a una ficha en adopción."""
+    ficha = get_object_or_404(FichaAnimal, pk=ficha_pk)
+    if not permisos.puede_ver(request.user, ficha):
+        raise Http404
+    motivo = postulaciones.motivo_para_no_postularse(request.user, ficha)
+    form = PostulacionForm(request.POST or None)
+    if motivo is None and form.is_valid():
+        try:
+            postulaciones.postular_transito(request.user, ficha, form.cleaned_data["contacto"])
+        except postulaciones.PostulacionNoPermitida as error:
+            motivo = (error.codigo, error.mensaje)
+        except postulaciones.ContactoInvalido as error:
+            form.add_error("contacto", str(error))
+        else:
+            return redirect(f"{reverse('fichas:detalle', args=[ficha.pk])}?postulado=1")
+    contexto = {
+        "ficha": ficha,
+        "form": form,
+        "motivo": motivo,
+        "advertencias": postulaciones.advertencias_de_postulacion(request.user, ficha),
+    }
+    return render(request, "transito/postular.html", contexto)
