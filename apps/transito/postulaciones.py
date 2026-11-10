@@ -1,4 +1,4 @@
-"""Postularse como hogar de tránsito"""
+"""Postularse como hogar de tránsito y retirar la postulación."""
 
 from django.db import IntegrityError, transaction
 from django.utils import timezone
@@ -20,6 +20,8 @@ MENSAJE_TIENE_EL_ANIMAL = "No podés postularte para un animal que tenés a tu c
 MENSAJE_YA_POSTULADO = "Ya tenés una postulación activa para este animal."
 MENSAJE_CONTACTO_VACIO = "Indicá un canal de contacto."
 MENSAJE_CONTACTO_LARGO = f"El canal de contacto no puede superar los {CONTACTO_MAXIMO} caracteres."
+MENSAJE_NO_ES_SUYA = "Esa postulación no es tuya."
+MENSAJE_NO_PENDIENTE = "Solo se puede retirar una postulación pendiente."
 
 
 class PostulacionNoPermitida(Exception):
@@ -33,6 +35,10 @@ class PostulacionNoPermitida(Exception):
 
 class ContactoInvalido(ValueError):
     """El canal de contacto está vacío o es demasiado largo."""
+
+
+class RetiroPostulacionNoPermitido(ValueError):
+    """La postulación no se puede retirar: no es de la persona o ya no está pendiente."""
 
 
 def _tiene_el_animal(usuario, ficha):
@@ -103,3 +109,21 @@ def postular_transito(usuario, ficha, contacto):
     except IntegrityError:
         # Dos pedidos a la vez: la restricción de la base evita la segunda.
         raise PostulacionNoPermitida("ya_postulado", MENSAJE_YA_POSTULADO) from None
+
+
+def retirar_postulacion(postulacion, usuario):
+    """El hogar retira su postulación pendiente: queda descartada y se devuelve.
+
+    Lanza RetiroPostulacionNoPermitido si la postulación no es de esa persona o ya no está
+    pendiente (elegida, descartada o concretada), y no cambia nada.
+    """
+    with transaction.atomic():
+        actual = Postulacion.objects.select_for_update().get(pk=postulacion.pk)
+        if actual.usuario_id != usuario.pk:
+            raise RetiroPostulacionNoPermitido(MENSAJE_NO_ES_SUYA)
+        if actual.estado != Postulacion.Estado.PENDIENTE:
+            raise RetiroPostulacionNoPermitido(MENSAJE_NO_PENDIENTE)
+        actual.estado = Postulacion.Estado.DESCARTADA
+        actual.save(update_fields=["estado"])
+    postulacion.estado = actual.estado
+    return postulacion
