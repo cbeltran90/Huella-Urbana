@@ -59,3 +59,12 @@ class PostulacionForm(forms.Form):
     """Canal de contacto de la postulación; el servicio valida que no esté vacío ni sea largo."""
 
     contacto = forms.CharField(label="Canal de contacto", required=False)
+
+
+class SolicitudTransitoForm(forms.Form):
+    """Contacto de quien tiene al animal, solo cuando lo carga un moderador.
+
+    El servicio valida el largo.
+    """
+
+    contacto = forms.CharField(label="Contacto de quien lo tiene", required=False)

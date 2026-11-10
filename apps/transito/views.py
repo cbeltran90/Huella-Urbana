@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -8,8 +9,8 @@ from apps.cuentas.models import Domicilio
 from apps.fichas import permisos
 from apps.fichas.models import FichaAnimal
 
-from . import postulaciones, servicios
-from .forms import PerfilTransitoForm, PostulacionForm
+from . import postulaciones, servicios, solicitud
+from .forms import PerfilTransitoForm, PostulacionForm, SolicitudTransitoForm
 from .models import PerfilTransito, Postulacion
 
 
@@ -120,3 +121,30 @@ def retirar(request, pk):
     except postulaciones.RetiroPostulacionNoPermitido:
         return redirect(destino)
     return redirect(f"{destino}?retirada=1")
+
+
+@cuenta_habilitada
+def solicitar(request, ficha_pk):
+    """Pide tránsito para un animal encontrado, después de pedir confirmación."""
+    ficha = get_object_or_404(FichaAnimal, pk=ficha_pk)
+    if not permisos.puede_ver(request.user, ficha):
+        raise Http404
+    if not solicitud.puede_solicitar(request.user, ficha):
+        raise PermissionDenied
+    if request.method == "POST":  # sin POST (o si cancela) no se cambia nada
+        form = SolicitudTransitoForm(request.POST)
+        if form.is_valid():
+            try:
+                solicitud.solicitar_transito(
+                    ficha, request.user, contacto=form.cleaned_data["contacto"]
+                )
+            except solicitud.SolicitudNoPermitida:
+                raise PermissionDenied from None
+            except solicitud.ContactoInvalido as error:
+                form.add_error("contacto", str(error))
+            else:
+                return redirect(f"{reverse('fichas:detalle', args=[ficha.pk])}?solicitado=1")
+    else:
+        form = SolicitudTransitoForm()
+    contexto = {"ficha": ficha, "form": form, "pide_contacto": ficha.cuidador_id is None}
+    return render(request, "transito/solicitar.html", contexto)
