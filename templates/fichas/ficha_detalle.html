@@ -1,13 +1,32 @@
 {% extends "base.html" %}
+{% load static %}
 {% load secuencia caso postulacion solicitar_transito %}
 {% block titulo %}{{ ficha.nombre|default:"Ficha" }} · Huella Urbana{% endblock %}
 {% block contenido %}
   <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+    {% if unida %}
+      <p role="status"
+         class="mb-4 rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900">
+        Esa ficha se unió a esta: es el mismo animal.
+      </p>
+    {% endif %}
     <h1 class="text-2xl font-bold">{{ ficha.nombre|default:"Sin nombre" }}</h1>
     <p class="mt-1 text-sm text-stone-600">
       {{ ficha.get_especie_display }} · {{ ficha.get_estado_display }}
       {% if ficha.es_privada %}· Privada{% endif %}
     </p>
+    {% if fotos %}
+      <ul class="mt-4 grid grid-cols-2 gap-2">
+        {% for foto in fotos %}
+          <li>
+            <img src="{% get_media_prefix %}{{ foto.archivo }}"
+                 alt="Foto de {{ ficha.nombre|default:'un animal' }}"
+                 loading="lazy"
+                 class="aspect-square w-full rounded object-cover">
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
     <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
       {% if ficha.tamano %}
         <dt class="text-stone-600">Tamaño</dt>
