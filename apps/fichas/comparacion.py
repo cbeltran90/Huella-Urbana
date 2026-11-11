@@ -60,7 +60,9 @@ def buscar_candidatas(publicacion):
         # registradas (incluso las privadas) también son candidatas de un hallazgo.
         por_publicacion |= Q(estado=FichaAnimal.Estado.REGISTRADO)
     fichas = (
-        FichaAnimal.objects.filter(por_publicacion, especie=publicacion.especie)
+        FichaAnimal.objects.filter(
+            por_publicacion, especie=publicacion.especie, fusionada_en__isnull=True
+        )
         .exclude(pk=publicacion.ficha_id)
         .distinct()
     )

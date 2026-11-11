@@ -43,7 +43,7 @@ def test_muestra_la_ficha_solo_si_es_publica(client, ana):
 
 @pytest.mark.parametrize(
     "campos",
-    [{"estado": Estado.RESUELTA}, {"estado": Estado.ELIMINADA}, {"tipo": Tipo.AVISTAMIENTO}],
+    [{"estado": Estado.RESUELTA}, {"estado": Estado.ELIMINADA}, {"tipo": Tipo.SILVESTRE}],
 )
 def test_lo_que_no_esta_en_el_mapa_no_tiene_resumen(client, ana, campos):
     assert _resumen(client, hacer_publicacion(ana, **campos)).status_code == 404

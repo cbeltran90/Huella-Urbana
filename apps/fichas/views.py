@@ -22,7 +22,9 @@ def _ficha_visible(request, pk):
 
 @login_required
 def mis_fichas(request):
-    fichas = FichaAnimal.objects.filter(Q(responsable=request.user) | Q(cuidador=request.user))
+    fichas = FichaAnimal.objects.filter(
+        Q(responsable=request.user) | Q(cuidador=request.user), fusionada_en__isnull=True
+    )
     return render(request, "fichas/mis_fichas.html", {"fichas": fichas})
 
 

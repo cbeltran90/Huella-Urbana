@@ -92,8 +92,10 @@
         </a>
       {% endif %}
       {% boton_resolver_caso ficha %}
-      <a href="{% url 'fichas:mis_fichas' %}"
-         class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Volver</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'fichas:mis_fichas' %}"
+           class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Volver</a>
+      {% endif %}
     </div>
   </section>
 {% endblock %}

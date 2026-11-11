@@ -238,6 +238,11 @@ CONSTANCE_CONFIG = {
         "Días de la primera suspensión de una cuenta (CU-59)",
         "dias",
     ),
+    "DIAS_VIGENCIA_AVISTAMIENTO": (
+        15,
+        "Días que un avistamiento permanece vigente en la capa activa (9.2.2, RF3.7)",
+        "dias",
+    ),
     # Valores por definir: el de abajo es provisorio
     "MAX_PUBLICACIONES_HORA": (
         10,
@@ -260,7 +265,7 @@ CONSTANCE_CONFIG = {
         "Días que se conservan las notificaciones leídas",
         "dias_retencion",
     ),
-    # Todavía sin parámetro (definirlos): vigencia de avistamientos, umbrales de nivel,
+    # Todavía sin parámetro (definirlos): umbrales de nivel,
     # reparto de los puntos 5/10/20/30, mínimo de días de un tránsito para sumar puntos,
     # fórmula del cupo estimado, rangos predefinidos del mapa de calor y reintentos de push.
 }

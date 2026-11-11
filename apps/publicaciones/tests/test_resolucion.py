@@ -179,6 +179,6 @@ def test_un_hallazgo_en_una_ficha_sin_responsable_lo_cierra_un_moderador(ana):
 
 
 def test_un_avistamiento_no_ofrece_retiro(ana):
-    avistamiento = hacer_publicacion(ana, tipo=Tipo.AVISTAMIENTO)
+    avistamiento = hacer_publicacion(ana, tipo=Tipo.SILVESTRE)
 
     assert resolucion.como_se_retira(avistamiento, ana) is None

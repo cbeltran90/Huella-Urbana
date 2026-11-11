@@ -1,5 +1,8 @@
+import logging
+
 from django.db import transaction
 
+from apps.fichas.models import FichaAnimal
 from apps.fichas.servicios import (
     crear_ficha,
     crear_ficha_en_adopcion,
@@ -9,6 +12,8 @@ from apps.imagenes.servicios import registrar_fotografia
 
 from . import avisos, ubicacion
 from .models import Publicacion
+
+logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
@@ -137,4 +142,83 @@ def alta_en_adopcion(usuario, *, animal, archivos, punto=None, descripcion="", t
         punto=punto,
     )
     avisos.avisar_hogares_compatibles(publicacion)
+    return publicacion
+
+
+def _punto_para_publicar(ficha, punto):
+    """El punto que se muestra en la publicación de adopción de una ficha ya existente.
+
+    - A cargo de un usuario con domicilio: su punto desplazado.
+    - A cargo de un usuario sin domicilio: "punto", que se registra como su domicilio.
+    - Sin un usuario a cargo (lo carga un moderador): "punto" tal cual, que además se guarda
+      en "ubicacion_desplazada". Devuelve (ubicacion, ubicacion_desplazada).
+    """
+    cuidador = ficha.cuidador
+    if cuidador is None:
+        if punto is None:
+            raise ValueError("Falta la ubicación: el animal no está a cargo de un usuario.")
+        return punto, punto
+    lugar = ubicacion.punto_de_domicilio(cuidador)
+    if lugar is None:
+        if punto is None:
+            raise ValueError("Falta la ubicación: quien lo tiene a cargo no tiene domicilio.")
+        lugar = ubicacion.registrar_domicilio(cuidador, punto)
+    return lugar, None
+
+
+@transaction.atomic
+def _crear_publicacion_de_adopcion(ficha, actor, *, punto, descripcion, telefono_visible):
+    lugar, desplazada = _punto_para_publicar(ficha, punto)
+    # Una sola publicación vigente de adopción o tránsito por ficha (ahora vuelve a adopción).
+    ficha.publicaciones.filter(
+        estado=Publicacion.Estado.VIGENTE,
+        tipo__in=[Publicacion.Tipo.ADOPCION, Publicacion.Tipo.TRANSITO],
+    ).update(estado=Publicacion.Estado.RESUELTA)
+    # El hallazgo ya cumplió: se cierra y sigue vinculado a la ficha, como parte de su historia.
+    # Su ubicación exacta queda solo en él: no se copia a la publicación de adopción.
+    ficha.publicaciones.filter(
+        estado=Publicacion.Estado.VIGENTE, tipo=Publicacion.Tipo.HALLAZGO
+    ).update(estado=Publicacion.Estado.RESUELTA)
+
+    return Publicacion.objects.create(
+        tipo=Publicacion.Tipo.ADOPCION,
+        autor=ficha.cuidador or actor,
+        ficha=ficha,
+        ubicacion=lugar,
+        ubicacion_desplazada=desplazada,
+        descripcion=descripcion,
+        telefono_visible=telefono_visible,
+        especie=ficha.especie,
+        tamano=ficha.tamano,
+        raza=ficha.raza,
+        color=ficha.color,
+    )
+
+
+def publicar_adopcion_de_ficha(ficha, actor, *, punto=None, descripcion="", telefono_visible=""):
+    """Publica en adopción una ficha que ya existe.
+
+    No cambia el estado de la ficha: antes tiene que estar en "en adopción" (lo hace
+    "cambiar_estado") o lanza ValueError. Quien llama puede hacer las dos cosas en una misma
+    transacción.
+    - 'actor': quien publica; es el autor si el animal no está a cargo de un usuario.
+    - 'punto': solo hace falta si no hay un domicilio de quien lo tiene a cargo, o si no lo
+      tiene a cargo un usuario (lo carga un moderador).
+    La publicación sale con una ubicación aproximada, nunca la exacta. Cierra el hallazgo
+    vigente de la ficha (sigue vinculado) y la publicación de adopción o tránsito anterior.
+    Después de guardar, avisa a los hogares compatibles; si el aviso falla, la publicación queda.
+    """
+    if ficha.estado != FichaAnimal.Estado.EN_ADOPCION:
+        raise ValueError("La ficha tiene que estar en adopción para publicarla.")
+    publicacion = _crear_publicacion_de_adopcion(
+        ficha,
+        actor,
+        punto=punto,
+        descripcion=descripcion,
+        telefono_visible=telefono_visible,
+    )
+    try:
+        avisos.avisar_hogares_compatibles(publicacion)
+    except Exception:
+        logger.exception("No se pudo avisar a los hogares compatibles")
     return publicacion
