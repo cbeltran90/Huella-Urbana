@@ -56,3 +56,12 @@ def test_sin_htmx_lleva_al_detalle_completo(client, ana):
 
     assert respuesta.status_code == 302
     assert respuesta.url == reverse("publicaciones:detalle", args=[publicacion.pk])
+
+
+def test_muestra_el_telefono_para_escribir_por_whatsapp(client, ana):
+    publicacion = hacer_publicacion(ana, tipo=Tipo.ADOPCION, telefono_visible="2901 444444")
+
+    html = _resumen(client, publicacion).content.decode()
+
+    assert "Para consultar, escribile al" in html
+    assert 'href="https://wa.me/5492901444444"' in html

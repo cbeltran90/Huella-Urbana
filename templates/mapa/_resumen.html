@@ -1,4 +1,4 @@
-{% load static %}
+{% load static contacto %}
 <article id="mapa-resumen"
          tabindex="-1"
          class="rounded-lg border bg-white p-4">
@@ -19,6 +19,7 @@
          loading="lazy"
          class="mt-3 h-48 w-full rounded object-cover">
   {% endif %}
+  {% telefono_de_contacto publicacion %}
   <div class="mt-3 flex flex-wrap gap-4 text-sm">
     <a href="{% url 'publicaciones:detalle' publicacion.pk %}"
        class="inline-flex min-h-11 items-center underline">Ver la publicación</a>
