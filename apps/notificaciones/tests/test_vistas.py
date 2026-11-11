@@ -100,7 +100,7 @@ def test_abrir_no_acepta_get(entrar, ana):
 
 def test_sin_avisos_lo_dice(entrar, ana):
     html = entrar(ana).get(MIS_AVISOS).content.decode()
-    assert "No tenés avisos." in html
+    assert "Todavía no tenés avisos." in html
 
 
 def test_el_menu_cuenta_los_sin_leer_y_baja_al_abrir_uno(entrar, ana):
