@@ -6,6 +6,7 @@ from apps.adopcion import postulaciones
 from apps.cuentas import servicios as cuentas
 from apps.cuentas.models import Domicilio, Rol, Sancion
 from apps.fichas.models import FichaAnimal
+from apps.notificaciones.models import Notificacion
 from apps.transito.models import Alojamiento, PerfilTransito, Postulacion
 from apps.transito.postulaciones import ContactoInvalido, PostulacionNoPermitida
 
@@ -102,9 +103,6 @@ def test_una_postulacion_retirada_no_impide_volver_a_postularse(ana):
     assert postulaciones.motivo_para_no_postularse(ana, ficha) is None
 
 
-# Postularse (CU-28)
-
-
 def test_queda_una_postulacion_de_adopcion_pendiente(ana):
     ficha = hacer_ficha()
 
@@ -132,9 +130,6 @@ def test_sin_un_contacto_valido_no_se_crea_nada(ana, contacto):
     assert not Postulacion.objects.exists()
 
 
-# Aviso de incompatibilidad (CU-28 2B)
-
-
 def test_avisa_si_hay_ninos_y_no_sabemos_si_se_lleva_bien_con_ellos(ana):
     con_perfil(ana, hay_ninos=True)
 
@@ -160,3 +155,40 @@ def test_sin_avisos_si_la_ficha_dice_que_se_lleva_bien(ana):
 
 def test_sin_domicilio_no_hay_avisos(ana):
     assert postulaciones.advertencias_de_postulacion(ana, hacer_ficha()) == []
+
+
+def test_el_cuidador_recibe_un_aviso(ana, beto):
+    ficha = hacer_ficha(cuidador=beto, nombre="Firulais")
+
+    postulaciones.postular_adopcion(con_perfil(ana), ficha, "2901 444444")
+
+    aviso = Notificacion.objects.get()
+    assert aviso.usuario == beto
+    assert aviso.tipo == Notificacion.Tipo.POSTULACION_RECIBIDA
+    assert aviso.ficha == ficha
+    assert aviso.titulo == "¡Firulais tiene una persona interesada!"
+    assert aviso.mensaje == "Alguien se postuló para adoptarlo."
+
+
+def test_sin_nombre_el_aviso_habla_del_animal_que_cuida(ana, beto):
+    ficha = hacer_ficha(cuidador=beto, nombre="")
+
+    postulaciones.postular_adopcion(con_perfil(ana), ficha, "2901 444444")
+
+    assert (
+        Notificacion.objects.get().titulo == "¡El animal que cuidás tiene una persona interesada!"
+    )
+
+
+def test_sin_cuidador_no_se_avisa_a_nadie(ana):
+    postulaciones.postular_adopcion(con_perfil(ana), hacer_ficha(cuidador=None), "2901 444444")
+
+    assert not Notificacion.objects.exists()
+
+
+def test_el_cuidador_que_se_postula_no_se_avisa_a_si_mismo(ana):
+    ficha = hacer_ficha(cuidador=ana)
+
+    postulaciones.postular_adopcion(con_perfil(ana), ficha, "2901 444444")
+
+    assert not Notificacion.objects.exists()

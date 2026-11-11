@@ -5,6 +5,8 @@ from django.db import IntegrityError, transaction
 from apps.cuentas.models import Domicilio
 from apps.cuentas.servicios import esta_suspendido, puede_postularse_a_adoptar
 from apps.fichas.models import FichaAnimal
+from apps.notificaciones.models import Notificacion
+from apps.notificaciones.servicios import notificar
 from apps.transito.models import Postulacion
 from apps.transito.postulaciones import (
     CONTACTO_MAXIMO,
@@ -25,6 +27,7 @@ MENSAJE_ES_RESPONSABLE = "No podés postularte para adoptar a tu propio animal."
 MENSAJE_YA_POSTULADO = "Ya te postulaste para este animal."
 MOTIVO_NINOS = "En tu hogar hay niños y no sabemos si este animal se lleva bien con ellos."
 MOTIVO_ANIMALES = "Tenés mascotas y no sabemos si este animal se lleva bien con otros animales."
+MENSAJE_AVISO = "Alguien se postuló para adoptarlo."
 
 
 def motivo_para_no_postularse(usuario, ficha):
@@ -80,7 +83,7 @@ def postular_adopcion(usuario, ficha, contacto):
         raise ContactoInvalido(MENSAJE_CONTACTO_LARGO)
     try:
         with transaction.atomic():
-            return Postulacion.objects.create(
+            postulacion = Postulacion.objects.create(
                 ficha=ficha,
                 usuario=usuario,
                 tipo=Postulacion.Tipo.ADOPCION,
@@ -89,3 +92,23 @@ def postular_adopcion(usuario, ficha, contacto):
     except IntegrityError:
         # Dos pedidos a la vez: la restricción de la base evita la segunda.
         raise PostulacionNoPermitida("ya_postulado", MENSAJE_YA_POSTULADO) from None
+    _avisar_al_cuidador(postulacion)
+    return postulacion
+
+
+def _avisar_al_cuidador(postulacion):
+    """Avisa a quien tiene el animal a cargo que alguien quiere adoptarlo.
+
+    Si no hay cuidador con cuenta, o es él quien se postula para quedárselo, no se avisa.
+    """
+    ficha = postulacion.ficha
+    if ficha.cuidador_id is None or ficha.cuidador_id == postulacion.usuario_id:
+        return
+    animal = ficha.nombre or "El animal que cuidás"
+    notificar(
+        ficha.cuidador,
+        Notificacion.Tipo.POSTULACION_RECIBIDA,
+        f"¡{animal} tiene una persona interesada!",
+        MENSAJE_AVISO,
+        ficha=ficha,
+    )
