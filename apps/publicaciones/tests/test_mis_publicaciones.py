@@ -40,7 +40,7 @@ def test_las_mas_nuevas_primero(entrar, ana):
 
 
 def test_sin_publicaciones_lo_dice(entrar, ana):
-    assert "No tenés publicaciones vigentes" in entrar(ana).get(MIS_PUBLICACIONES).content.decode()
+    assert "No tenés publicaciones abiertas" in entrar(ana).get(MIS_PUBLICACIONES).content.decode()
 
 
 def test_pide_ingresar(client):
@@ -74,6 +74,6 @@ def test_explica_por_que_no_se_puede_retirar(entrar, ana):
 
     html = entrar(ana).get(MIS_PUBLICACIONES).content.decode()
 
-    assert "Solo un moderador puede cerrar este caso." in html
-    assert "Se cierra cuando cambia el estado de la ficha." in html
+    assert "Este caso lo cierra un moderador." in html
+    assert "Se cierra sola cuando el animal consiga un hogar." in html
     assert reverse("publicaciones:resolver_caso", args=[sin_responsable.pk]) not in html

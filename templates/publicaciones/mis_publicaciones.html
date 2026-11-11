@@ -26,15 +26,15 @@
               {% endif %}
             </div>
             {% if retiro == "moderador" %}
-              <p class="mt-1 text-sm text-stone-600">Solo un moderador puede cerrar este caso.</p>
+              <p class="mt-1 text-sm text-stone-600">Este caso lo cierra un moderador.</p>
             {% elif retiro == "ficha" %}
-              <p class="mt-1 text-sm text-stone-600">Se cierra cuando cambia el estado de la ficha.</p>
+              <p class="mt-1 text-sm text-stone-600">Se cierra sola cuando el animal consiga un hogar.</p>
             {% endif %}
           </li>
         {% endfor %}
       </ul>
     {% else %}
-      <p class="mt-6 rounded-lg border bg-white p-6 text-center text-stone-600">No tenés publicaciones vigentes.</p>
+      <p class="mt-6 rounded-lg border bg-white p-6 text-center text-stone-600">No tenés publicaciones abiertas.</p>
     {% endif %}
   </section>
 {% endblock %}
