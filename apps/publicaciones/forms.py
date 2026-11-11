@@ -62,7 +62,9 @@ class ExtravioForm(forms.Form):
     def __init__(self, *args, usuario, tiene_domicilio, **kwargs):
         super().__init__(*args, **kwargs)
         self.tiene_domicilio = tiene_domicilio
-        self.fields["ficha"].queryset = FichaAnimal.objects.filter(responsable=usuario)
+        self.fields["ficha"].queryset = FichaAnimal.objects.filter(
+            responsable=usuario, fusionada_en__isnull=True
+        )
         for nombre in ("nombre", "raza", "color", "estado_aparente", "descripcion"):
             self.fields[nombre].validators.append(NoOfensivo(MENSAJE_TEXTO_OFENSIVO))
         for campo in self.fields.values():

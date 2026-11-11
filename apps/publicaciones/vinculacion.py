@@ -91,8 +91,19 @@ def responder(coincidencia, usuario, *, confirmar):
         if sobrante.cuidador_id and not principal.cuidador_id:
             principal.cuidador = sobrante.cuidador
             principal.save(update_fields=["cuidador"])
+        # La sobrante queda solo como rastro: sin cuidador ni plazo de "sin responsable".
         sobrante.fusionada_en = principal
-        sobrante.save(update_fields=["fusionada_en"])
+        sobrante.cuidador = None
+        sobrante.cuidador_contacto = ""
+        sobrante.sin_responsable_desde = None
+        sobrante.save(
+            update_fields=[
+                "fusionada_en",
+                "cuidador",
+                "cuidador_contacto",
+                "sin_responsable_desde",
+            ]
+        )
     publicacion.refresh_from_db()
     if publicacion.autor_id:  # si eliminó su cuenta, no hay a quién avisar
         _notificar(
