@@ -15,7 +15,7 @@ from apps.fichas.permisos import es_moderador, puede_ver
 from apps.imagenes.procesamiento import ImagenInvalida
 
 from . import listados, resolucion, servicios, ubicacion, vinculacion
-from .forms import AltaAdopcionForm, ExtravioForm, HallazgoForm
+from .forms import AltaAdopcionForm, EditarPublicacionForm, ExtravioForm, HallazgoForm
 from .models import Publicacion
 
 
@@ -299,3 +299,20 @@ def mis_publicaciones(request):
         .order_by("-fecha")
     )
     return render(request, "publicaciones/mis_publicaciones.html", {"publicaciones": publicaciones})
+
+
+@cuenta_habilitada
+def editar_publicacion(request, pk):
+    """Edita una publicación vigente propia (CU-65). Otra persona recibe un 404."""
+    publicacion = get_object_or_404(
+        request.user.publicaciones, pk=pk, estado=Publicacion.Estado.VIGENTE
+    )
+    if request.method == "POST":
+        form = EditarPublicacionForm(request.POST, instance=publicacion)
+        if form.is_valid():
+            form.save()
+            return redirect("publicaciones:mis_publicaciones")
+    else:
+        form = EditarPublicacionForm(instance=publicacion)
+    contexto = {"form": form, "publicacion": publicacion}
+    return render(request, "publicaciones/editar_publicacion.html", contexto)

@@ -15,8 +15,12 @@
             {% if publicacion.descripcion %}
               <p class="mt-2">{{ publicacion.descripcion|truncatechars:140 }}</p>
             {% endif %}
-            <a href="{% url 'publicaciones:detalle' publicacion.pk %}"
-               class="mt-2 inline-block min-h-11 py-2 underline">Ver publicación</a>
+            <div class="mt-2 flex flex-wrap gap-4">
+              <a href="{% url 'publicaciones:detalle' publicacion.pk %}"
+                 class="inline-block min-h-11 py-2 underline">Ver publicación</a>
+              <a href="{% url 'publicaciones:editar' publicacion.pk %}"
+                 class="inline-block min-h-11 py-2 underline">Editar</a>
+            </div>
           </li>
         {% endfor %}
       </ul>

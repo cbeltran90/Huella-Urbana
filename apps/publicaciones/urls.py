@@ -13,6 +13,7 @@ urlpatterns = [
     path("disponibles/", views.disponibles, name="disponibles"),
     path("mias/", views.mis_publicaciones, name="mis_publicaciones"),
     path("<int:pk>/", views.detalle, name="detalle"),
+    path("<int:pk>/editar/", views.editar_publicacion, name="editar"),
     path("<int:pk>/candidatas/", views.candidatas, name="candidatas"),
     path("<int:pk>/desvincular/", views.desvincular, name="desvincular"),
     path("caso/<int:pk>/resolver/", views.resolver_caso, name="resolver_caso"),
