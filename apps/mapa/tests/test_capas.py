@@ -31,7 +31,7 @@ def test_solo_muestra_lo_vigente_y_nunca_avistamientos(ana):
     vigente = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO)
     hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, estado=Estado.RESUELTA)
     hacer_publicacion(ana, tipo=Tipo.ADOPCION, estado=Estado.ELIMINADA)
-    hacer_publicacion(ana, tipo=Tipo.AVISTAMIENTO)
+    hacer_publicacion(ana, tipo=Tipo.SILVESTRE)
 
     puntos = capas.geojson()["features"]
 

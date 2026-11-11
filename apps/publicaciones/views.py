@@ -58,13 +58,14 @@ def publicar_extravio(request):
 
 
 def detalle(request, pk):
-    # Consulta pública. Los avistamientos de fauna silvestre solo los ven su autor y los
+    # Consulta pública. Los avistamientos de fauna silvestre (no los de animales peligrosos,
+    # que son públicos) solo los ven su autor y los
     # moderadores (DER): para el resto no existen.
     publicacion = get_object_or_404(
         Publicacion.objects.exclude(estado=Publicacion.Estado.ELIMINADA).select_related("ficha"),
         pk=pk,
     )
-    if publicacion.tipo == Publicacion.Tipo.AVISTAMIENTO and not (
+    if publicacion.tipo == Publicacion.Tipo.SILVESTRE and not (
         request.user.is_authenticated
         and (publicacion.autor_id == request.user.pk or es_moderador(request.user))
     ):

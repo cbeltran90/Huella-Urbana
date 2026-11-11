@@ -137,7 +137,7 @@ def test_un_visitante_ve_el_detalle_de_una_publicacion(client, ana):
 def test_el_avistamiento_solo_lo_ven_el_autor_y_los_moderadores(
     client, entrar, ana, beto, django_user_model
 ):
-    avistamiento = hacer_publicacion(ana, tipo=Publicacion.Tipo.AVISTAMIENTO, ficha=None)
+    avistamiento = hacer_publicacion(ana, tipo=Publicacion.Tipo.SILVESTRE, ficha=None)
     url = reverse("publicaciones:detalle", args=[avistamiento.pk])
     moderador = django_user_model.objects.create_user(
         "mod@example.com",
@@ -151,3 +151,11 @@ def test_el_avistamiento_solo_lo_ven_el_autor_y_los_moderadores(
     assert entrar(beto).get(url).status_code == 404  # otra persona
     assert entrar(ana).get(url).status_code == 200  # autora
     assert entrar(moderador).get(url).status_code == 200
+
+
+def test_el_avistamiento_de_un_animal_peligroso_es_publico(client, ana):
+    peligroso = hacer_publicacion(ana, tipo=Publicacion.Tipo.PELIGROSO, ficha=None)
+
+    respuesta = client.get(reverse("publicaciones:detalle", args=[peligroso.pk]))
+
+    assert respuesta.status_code == 200

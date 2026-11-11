@@ -23,7 +23,7 @@ def test_solo_lista_extravios_y_hallazgos_vigentes(ana):
     extravio = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO)
     hallazgo = hacer_publicacion(ana, tipo=Tipo.HALLAZGO)
     hacer_publicacion(ana, tipo=Tipo.ADOPCION)
-    hacer_publicacion(ana, tipo=Tipo.AVISTAMIENTO)
+    hacer_publicacion(ana, tipo=Tipo.SILVESTRE)
     hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, estado=Publicacion.Estado.RESUELTA)
     hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, estado=Publicacion.Estado.ELIMINADA)
 

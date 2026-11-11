@@ -11,7 +11,8 @@ class Publicacion(models.Model):
         HALLAZGO = "hallazgo", "Hallazgo"
         ADOPCION = "adopcion", "Adopción"
         TRANSITO = "transito", "Tránsito"
-        AVISTAMIENTO = "avistamiento", "Avistamiento"
+        PELIGROSO = "peligroso", "Avistamiento de animal peligroso"
+        SILVESTRE = "silvestre", "Avistamiento de fauna silvestre"
 
     class Estado(models.TextChoices):
         VIGENTE = "vigente", "Vigente"
