@@ -8,6 +8,7 @@ urlpatterns = [
     path("publicaciones/", include("apps.publicaciones.urls")),
     path("", include("apps.core.urls")),
     path("transito/", include("apps.transito.urls")),
+    path("adopcion/", include("apps.adopcion.urls")),
     path("avisos/", include("apps.notificaciones.urls")),
     path("mapa/", include("apps.mapa.urls")),
 ]

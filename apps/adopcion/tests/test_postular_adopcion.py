@@ -1,39 +1,19 @@
 import pytest
-from django.contrib.gis.geos import Point
 from model_bakery import baker
 
 from apps.adopcion import postulaciones
 from apps.cuentas import servicios as cuentas
-from apps.cuentas.models import Domicilio, Rol, Sancion
+from apps.cuentas.models import Rol, Sancion
 from apps.fichas.models import FichaAnimal
 from apps.notificaciones.models import Notificacion
 from apps.transito.models import Alojamiento, PerfilTransito, Postulacion
 from apps.transito.postulaciones import ContactoInvalido, PostulacionNoPermitida
 
+from .conftest import con_perfil, hacer_ficha
+
 Estado = FichaAnimal.Estado
 
 pytestmark = pytest.mark.django_db
-
-PUNTO = Point(-68.3030, -54.8019, srid=4326)
-HOGAR = {
-    "tipo_vivienda": "casa",
-    "tiene_patio": True,
-    "convivientes": 2,
-    "hay_ninos": False,
-    "mascotas_propias": 0,
-}
-
-
-def con_perfil(usuario, **hogar):
-    Domicilio.objects.create(
-        usuario=usuario, ubicacion=PUNTO, ubicacion_desplazada=PUNTO, **{**HOGAR, **hogar}
-    )
-    cuentas.guardar_perfil_adoptante(usuario, "Tuve perros toda la vida.")
-    return usuario
-
-
-def hacer_ficha(estado=Estado.EN_ADOPCION, **campos):
-    return baker.make(FichaAnimal, estado=estado, especie="perro", **campos)
 
 
 def codigo(usuario, ficha):
