@@ -136,15 +136,25 @@ def solicitar(request, ficha_pk):
         if form.is_valid():
             try:
                 solicitud.solicitar_transito(
-                    ficha, request.user, contacto=form.cleaned_data["contacto"]
+                    ficha,
+                    request.user,
+                    contacto=form.cleaned_data["contacto"],
+                    punto=form.punto(),
                 )
             except solicitud.SolicitudNoPermitida:
                 raise PermissionDenied from None
             except solicitud.ContactoInvalido as error:
                 form.add_error("contacto", str(error))
+            except solicitud.UbicacionInvalida as error:
+                form.add_error("latitud", str(error))
             else:
                 return redirect(f"{reverse('fichas:detalle', args=[ficha.pk])}?solicitado=1")
     else:
         form = SolicitudTransitoForm()
-    contexto = {"ficha": ficha, "form": form, "pide_contacto": ficha.cuidador_id is None}
+    contexto = {
+        "ficha": ficha,
+        "form": form,
+        "pide_contacto": ficha.cuidador_id is None,
+        "pide_punto": solicitud.necesita_punto(ficha),
+    }
     return render(request, "transito/solicitar.html", contexto)
