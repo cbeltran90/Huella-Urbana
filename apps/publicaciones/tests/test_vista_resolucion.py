@@ -46,7 +46,7 @@ def test_get_pide_confirmacion_sin_cambiar_nada(entrar, ana, caso_de_ana):
 
     respuesta = entrar(ana).get(_resolver(ficha))
 
-    assert "¿Cerrar el caso de extravío?" in respuesta.content.decode()
+    assert "¿Cerrar el caso?" in respuesta.content.decode()
     extravio.refresh_from_db()
     assert extravio.estado == Estado.VIGENTE
 

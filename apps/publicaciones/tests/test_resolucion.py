@@ -155,3 +155,30 @@ def test_un_extravio_de_otra_ficha_no_sirve(ana, beto, ficha_hallada_por_beto):
 
     with pytest.raises(ValueError):
         resolucion.confirmar_dueno(ficha_hallada_por_beto, ajeno, beto)
+
+
+@pytest.mark.parametrize("tipo", [Tipo.ADOPCION, Tipo.TRANSITO])
+def test_adopcion_y_transito_se_retiran_con_la_ficha(ana, tipo):
+    publicacion = hacer_publicacion(ana, tipo=tipo)
+
+    assert resolucion.como_se_retira(publicacion, ana) == "ficha"
+
+
+def test_un_extravio_propio_se_retira_resolviendo_el_caso(ana):
+    ficha = baker.make(FichaAnimal, especie="perro", responsable=ana)
+    extravio = hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=ficha)
+
+    assert resolucion.como_se_retira(extravio, ana) == "resolver"
+
+
+def test_un_hallazgo_en_una_ficha_sin_responsable_lo_cierra_un_moderador(ana):
+    ficha = baker.make(FichaAnimal, especie="perro", responsable=None)
+    hallazgo = hacer_publicacion(ana, tipo=Tipo.HALLAZGO, ficha=ficha)
+
+    assert resolucion.como_se_retira(hallazgo, ana) == "moderador"
+
+
+def test_un_avistamiento_no_ofrece_retiro(ana):
+    avistamiento = hacer_publicacion(ana, tipo=Tipo.AVISTAMIENTO)
+
+    assert resolucion.como_se_retira(avistamiento, ana) is None
