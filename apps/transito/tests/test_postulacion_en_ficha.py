@@ -187,3 +187,37 @@ def test_recorrido_postularse_y_retirar_desde_la_ficha(client, lucia):
     assert respuesta.redirect_chain[-1][0] == f"{ficha_url}?retirada=1"
     assert "Retiraste tu postulación" in contenido
     assert BOTON in contenido
+
+
+def crear_postulacion_de_adopcion(ficha, usuario, estado=Estado.PENDIENTE):
+    return Postulacion.objects.create(
+        ficha=ficha,
+        usuario=usuario,
+        tipo=Postulacion.Tipo.ADOPCION,
+        contacto="2901-555555",
+        estado=estado,
+    )
+
+
+def test_una_postulacion_para_adoptar_no_se_muestra_como_de_transito(client, lucia):
+    ficha = crear_ficha()
+    crear_postulacion_de_adopcion(ficha, lucia)
+
+    contenido = ver(client, ficha)
+
+    assert "Tu postulación como hogar de tránsito" not in contenido
+    assert "Retirar postulación" not in contenido
+
+
+def test_con_una_postulacion_para_adoptar_activa_no_se_ofrece_el_boton_de_transito(client, lucia):
+    ficha = crear_ficha()
+    crear_postulacion_de_adopcion(ficha, lucia, estado=Estado.ELEGIDA)
+
+    assert BOTON not in ver(client, ficha)
+
+
+def test_con_una_postulacion_para_adoptar_descartada_se_ofrece_el_boton(client, lucia):
+    ficha = crear_ficha()
+    crear_postulacion_de_adopcion(ficha, lucia, estado=Estado.DESCARTADA)
+
+    assert BOTON in ver(client, ficha)
