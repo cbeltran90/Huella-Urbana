@@ -11,6 +11,7 @@ urlpatterns = [
     path("coincidencias/", views.coincidencias, name="coincidencias"),
     path("perdidos/", views.perdidos, name="perdidos"),
     path("disponibles/", views.disponibles, name="disponibles"),
+    path("mias/", views.mis_publicaciones, name="mis_publicaciones"),
     path("<int:pk>/", views.detalle, name="detalle"),
     path("<int:pk>/candidatas/", views.candidatas, name="candidatas"),
     path("<int:pk>/desvincular/", views.desvincular, name="desvincular"),

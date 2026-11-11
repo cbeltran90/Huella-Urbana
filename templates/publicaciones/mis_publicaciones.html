@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Mis publicaciones · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-2xl">
+    <h1 class="text-2xl font-bold">Mis publicaciones</h1>
+    {% if publicaciones %}
+      <ul class="mt-4 space-y-3">
+        {% for publicacion in publicaciones %}
+          <li class="rounded-lg border bg-white p-4">
+            <p class="font-semibold">
+              {{ publicacion.get_tipo_display }}
+              {% if publicacion.ficha.nombre %}· {{ publicacion.ficha.nombre }}{% endif %}
+            </p>
+            <p class="text-sm text-stone-600">{{ publicacion.fecha|date:"j/n/Y" }}</p>
+            {% if publicacion.descripcion %}
+              <p class="mt-2">{{ publicacion.descripcion|truncatechars:140 }}</p>
+            {% endif %}
+            <a href="{% url 'publicaciones:detalle' publicacion.pk %}"
+               class="mt-2 inline-block min-h-11 py-2 underline">Ver publicación</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="mt-6 rounded-lg border bg-white p-6 text-center text-stone-600">No tenés publicaciones vigentes.</p>
+    {% endif %}
+  </section>
+{% endblock %}

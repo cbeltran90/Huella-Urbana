@@ -288,3 +288,14 @@ def disponibles(request):
     )
     contexto = {"tipos": [(t.value, t.label) for t in listados.TIPOS_DISPONIBLES]}
     return _listado(request, "publicaciones/disponibles.html", publicaciones, contexto)
+
+
+@login_required
+def mis_publicaciones(request):
+    """Las publicaciones vigentes de quien entra, para editarlas o retirarlas (CU-65)."""
+    publicaciones = (
+        request.user.publicaciones.filter(estado=Publicacion.Estado.VIGENTE)
+        .select_related("ficha")
+        .order_by("-fecha")
+    )
+    return render(request, "publicaciones/mis_publicaciones.html", {"publicaciones": publicaciones})
