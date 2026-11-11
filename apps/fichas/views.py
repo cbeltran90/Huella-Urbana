@@ -25,7 +25,8 @@ def mis_fichas(request):
     fichas = FichaAnimal.objects.filter(
         Q(responsable=request.user) | Q(cuidador=request.user), fusionada_en__isnull=True
     )
-    return render(request, "fichas/mis_fichas.html", {"fichas": fichas})
+    contexto = {"fichas": fichas, "puede_crear": not esta_suspendido(request.user)}
+    return render(request, "fichas/mis_fichas.html", contexto)
 
 
 @cuenta_habilitada

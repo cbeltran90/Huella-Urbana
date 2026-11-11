@@ -73,3 +73,17 @@ def test_una_cuenta_sin_sancion_si_ve_los_botones(entrar, ana):
 
     assert reverse("fichas:editar", args=[ficha.pk]) in html
     assert reverse("fichas:baja", args=[ficha.pk]) in html
+
+
+def test_mis_fichas_no_ofrece_crear_a_una_cuenta_suspendida(entrar, suspendida):
+    html = entrar(suspendida).get(reverse("fichas:mis_fichas")).content.decode()
+
+    assert reverse("fichas:nueva") not in html
+    assert "Creá la primera" not in html
+
+
+def test_mis_fichas_ofrece_crear_a_una_cuenta_sin_sancion(entrar, ana):
+    html = entrar(ana).get(reverse("fichas:mis_fichas")).content.decode()
+
+    assert reverse("fichas:nueva") in html
+    assert "Creá la primera" in html
