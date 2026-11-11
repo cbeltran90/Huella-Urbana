@@ -8,7 +8,7 @@
   </h2>
   <p class="text-sm text-stone-600">
     {{ publicacion.especie|default:"Especie sin dato" }}
-    {% if publicacion.tamano %}· {{ publicacion.tamano }}{% endif %}
+    {% if publicacion.tamano %}· {{ publicacion.get_tamano_display }}{% endif %}
     {% if publicacion.color %}· {{ publicacion.color }}{% endif %}
     · {{ publicacion.fecha|date:"j/n/Y" }}
   </p>

@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib.gis.db import models
 from django.utils import timezone
 
+from apps.fichas.models import FichaAnimal
+
 
 class Publicacion(models.Model):
     """Hecho localizado en el tiempo y en el espacio."""
@@ -45,7 +47,9 @@ class Publicacion(models.Model):
     # Solo si el cuidador no tiene cuenta (lo carga un moderador).
     ubicacion_desplazada = models.PointField(srid=4326, null=True, blank=True)
     especie = models.CharField(max_length=20, blank=True)
-    tamano = models.CharField("tamaño", max_length=20, blank=True)
+    tamano = models.CharField(
+        "tamaño", max_length=20, choices=FichaAnimal.Tamano.choices, blank=True
+    )
     raza = models.CharField(max_length=100, blank=True)
     color = models.CharField(max_length=100, blank=True)
     estado_aparente = models.CharField(max_length=100, blank=True)

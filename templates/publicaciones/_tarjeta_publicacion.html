@@ -11,7 +11,7 @@
     </span>
     <span class="block text-sm text-stone-600">
       {{ p.especie|default:"Especie sin dato" }}
-      {% if p.tamano %}· {{ p.tamano }}{% endif %}
+      {% if p.tamano %}· {{ p.get_tamano_display }}{% endif %}
       {% if p.color %}· {{ p.color }}{% endif %}
       · {{ p.fecha|date:"j/n/Y" }}
       {% if con_punto %}· a {{ p.distancia.m|floatformat:0 }} m{% endif %}
