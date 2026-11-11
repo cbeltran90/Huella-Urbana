@@ -1,0 +1,15 @@
+{% if telefono %}
+  <p class="mt-4 text-sm">
+    {% if whatsapp %}
+      Para consultar, escribile al
+      <a href="{{ whatsapp }}"
+         target="_blank"
+         rel="noopener"
+         class="inline-flex min-h-11 items-center font-semibold underline">{{ telefono }}</a>
+    {% else %}
+      Para consultar, llamá al
+      <a href="tel:{{ telefono|cut:' ' }}"
+         class="inline-flex min-h-11 items-center font-semibold underline">{{ telefono }}</a>
+    {% endif %}
+  </p>
+{% endif %}

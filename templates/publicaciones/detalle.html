@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static contacto %}
 {% block titulo %}{{ publicacion.get_tipo_display }} · Huella Urbana{% endblock %}
 {% block contenido %}
   <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
@@ -39,6 +39,7 @@
       {% endif %}
     </dl>
     {% if publicacion.descripcion %}<p class="mt-4 text-sm">{{ publicacion.descripcion }}</p>{% endif %}
+    {% telefono_de_contacto publicacion %}
     {% if puede_desvincular %}
       <a href="{% url 'publicaciones:desvincular' publicacion.pk %}"
          class="mt-4 inline-block rounded border px-3 py-1 text-sm">Desvincular de la ficha</a>
