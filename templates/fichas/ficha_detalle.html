@@ -76,6 +76,12 @@
     </dl>
     {% secuencia_de_publicaciones ficha %}
     {% opciones_de_dueno ficha %}
+    {% if request.user.is_authenticated and request.GET.retirada == "1" %}
+      <p role="status"
+         class="mt-6 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+        Retiraste tu postulación.
+      </p>
+    {% endif %}
     {% postulacion_de_transito ficha %}
     {% postulacion_de_adopcion ficha %}
     {% boton_solicitar_transito ficha %}

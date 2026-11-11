@@ -16,7 +16,7 @@ def postulacion_de_transito(context, ficha):
     Solo lo ven los hogares de tránsito, y solo en una ficha en adopción. Un visitante, una
     persona sin perfil de tránsito o quien tiene el animal a su cargo no ven nada.
 
-    Solo muestra la postulación propia de tipo tránsito: la de adopción es de otro panel
+    Solo muestra la postulación propia de tipo tránsito: la de adopción es de otro panel.
     """
     request = context["request"]
     usuario = request.user
@@ -28,7 +28,6 @@ def postulacion_de_transito(context, ficha):
         "ficha": ficha,
         "csrf_token": context.get("csrf_token"),
         "postulado": request.GET.get("postulado") == "1",
-        "retirada": request.GET.get("retirada") == "1",
     }
     propia = Postulacion.objects.filter(
         ficha=ficha,
