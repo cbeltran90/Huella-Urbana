@@ -7,7 +7,7 @@ class FichaAnimal(models.Model):
 
     class Estado(models.TextChoices):
         REGISTRADO = "registrado", "Registrado"
-        SIN_RESPONSABLE = "sin_responsable", " Sin responsable"
+        SIN_RESPONSABLE = "sin_responsable", "Sin responsable"
         EN_ADOPCION = "en_adopcion", "En adopción"
         EN_TRANSITO = "en_transito", "En tránsito"
 
