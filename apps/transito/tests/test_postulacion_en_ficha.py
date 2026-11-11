@@ -73,7 +73,7 @@ def test_quien_no_es_hogar_de_transito_no_ve_nada(client):
 def test_el_hogar_ve_el_boton_que_lleva_a_la_pantalla(client, lucia):
     ficha = crear_ficha()
     contenido = ver(client, ficha)
-    assert BOTON in contenido
+    assert contenido.count(BOTON) == 1
     assert reverse("transito:postular", args=[ficha.pk]) in contenido
 
 
@@ -126,6 +126,7 @@ def test_con_una_postulacion_pendiente_se_ve_su_estado_y_se_puede_retirar(client
     contenido = ver(client, ficha)
 
     assert "Tu postulación como hogar de tránsito" in contenido
+    assert contenido.count("Tu postulación como hogar de tránsito") == 1
     assert "Está pendiente" in contenido
     assert "2901-555555" in contenido
     assert BOTON not in contenido
@@ -162,10 +163,23 @@ def test_el_aviso_de_postulacion_enviada(client, lucia):
     assert "Enviamos tu postulación" not in ver(client, ficha)
 
 
-def test_el_aviso_de_postulacion_retirada(client, lucia):
+def test_el_mensaje_de_retiro_se_muestra_una_sola_vez_en_la_ficha(client, lucia):
     ficha = crear_ficha()
-    assert "Retiraste tu postulación" in ver(client, ficha, "?retirada=1")
+
+    contenido = ver(client, ficha, "?retirada=1")
+
+    assert contenido.count("Retiraste tu postulación") == 1
     assert "Retiraste tu postulación" not in ver(client, ficha)
+
+
+def test_el_mensaje_de_retiro_sale_con_la_ficha_en_transito(client, lucia):
+    ficha = crear_ficha(estado=FichaAnimal.Estado.EN_TRANSITO)
+
+    assert "Retiraste tu postulación" in ver(client, ficha, "?retirada=1")
+
+
+def test_un_visitante_no_ve_el_mensaje_de_retiro(client):
+    assert "Retiraste tu postulación" not in ver(client, crear_ficha(), "?retirada=1")
 
 
 def test_recorrido_postularse_y_retirar_desde_la_ficha(client, lucia):
@@ -206,7 +220,8 @@ def test_una_postulacion_para_adoptar_no_se_muestra_como_de_transito(client, luc
     contenido = ver(client, ficha)
 
     assert "Tu postulación como hogar de tránsito" not in contenido
-    assert "Retirar postulación" not in contenido
+    # El botón sale una sola vez: lo muestra el panel de adopción, no el de tránsito.
+    assert contenido.count("Retirar postulación") == 1
 
 
 def test_con_una_postulacion_para_adoptar_activa_no_se_ofrece_el_boton_de_transito(client, lucia):
