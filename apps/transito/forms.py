@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.gis.geos import Point
 
 from apps.fichas.models import FichaAnimal
 
@@ -62,9 +63,20 @@ class PostulacionForm(forms.Form):
 
 
 class SolicitudTransitoForm(forms.Form):
-    """Contacto de quien tiene al animal, solo cuando lo carga un moderador.
+    """Contacto y punto del animal para solicitar tránsito.
 
-    El servicio valida el largo.
+    El contacto lo carga solo un moderador. El punto se pide solo si hace falta; el
+    servicio valida el largo del contacto y que el punto esté en la zona.
     """
 
     contacto = forms.CharField(label="Contacto de quien lo tiene", required=False)
+    latitud = forms.FloatField(required=False, min_value=-90, max_value=90)
+    longitud = forms.FloatField(required=False, min_value=-180, max_value=180)
+
+    def punto(self):
+        """El punto marcado en el mapa, o None si no se marcó."""
+        latitud = self.cleaned_data.get("latitud")
+        longitud = self.cleaned_data.get("longitud")
+        if latitud is None or longitud is None:
+            return None
+        return Point(longitud, latitud, srid=4326)

@@ -8,7 +8,7 @@
       {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
     </p>
     <p class="mt-4 text-sm text-stone-600">
-      La ficha pasa a «en adopción» y queda visible para todos, también para los hogares de tránsito que quieran recibir al animal.
+      La ficha pasa a «en adopción», queda visible para todos y se avisa a los hogares de tránsito que encajan con el animal.
     </p>
     <form method="post" novalidate class="mt-6 space-y-4">
       {% csrf_token %}
@@ -25,6 +25,35 @@
           {% include "cuentas/_errores.html" with errores=form.contacto.errors %}
         </div>
       {% endif %}
+      {% if pide_punto %}
+        <div>
+          <p class="block text-sm font-medium">¿Dónde está el animal?</p>
+          {% if ficha.cuidador_id %}
+            <p class="text-sm text-stone-600">
+              Quien lo tiene a su cargo no tiene domicilio registrado. Marcá dónde está el animal: se muestra de forma aproximada y queda guardado como su domicilio.
+            </p>
+          {% else %}
+            <p class="text-sm text-stone-600">
+              Marcá un punto aproximado, no la puerta de la casa: el punto se muestra tal cual en el mapa público.
+            </p>
+          {% endif %}
+          <button type="button"
+                  id="boton-gps"
+                  class="mt-2 min-h-11 rounded border border-stone-300 px-4 py-2 text-sm">
+            Usar mi ubicación (GPS)
+          </button>
+          <div id="mapa-ubicacion" class="mt-2 h-64 w-full rounded"></div>
+          <input type="hidden"
+                 name="latitud"
+                 id="id_latitud"
+                 value="{{ form.latitud.value|default_if_none:'' }}">
+          <input type="hidden"
+                 name="longitud"
+                 id="id_longitud"
+                 value="{{ form.longitud.value|default_if_none:'' }}">
+          {% include "cuentas/_errores.html" with errores=form.latitud.errors %}
+        </div>
+      {% endif %}
       <button type="submit"
               class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
         Sí, solicitar tránsito
@@ -33,4 +62,34 @@
     <a href="{% url 'fichas:detalle' ficha.pk %}"
        class="mt-4 block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
   </section>
+{% endblock %}
+{% block extra_js %}
+  {% if pide_punto %}
+    {{ mapa_config|json_script:"mapa-config" }}
+    <script>
+      const config = JSON.parse(document.getElementById("mapa-config").textContent);
+      const campoLat = document.getElementById("id_latitud");
+      const campoLng = document.getElementById("id_longitud");
+      const mapa = L.map("mapa-ubicacion").setView([-54.8019, -68.3030], 13);
+      L.tileLayer(config.tiles_url, { maxZoom: 19, attribution: config.atribucion }).addTo(mapa);
+      let marcador = null;
+      function marcar(lat, lng) {
+        campoLat.value = lat;
+        campoLng.value = lng;
+        if (marcador) { marcador.setLatLng([lat, lng]); } else { marcador = L.marker([lat, lng]).addTo(mapa); }
+      }
+      if (campoLat.value && campoLng.value) {
+        marcar(parseFloat(campoLat.value), parseFloat(campoLng.value));
+        mapa.setView([campoLat.value, campoLng.value], 15);
+      }
+      mapa.on("click", (e) => marcar(e.latlng.lat, e.latlng.lng));
+      document.getElementById("boton-gps").addEventListener("click", () => {
+        if (!navigator.geolocation) { return; }
+        navigator.geolocation.getCurrentPosition((pos) => {
+          marcar(pos.coords.latitude, pos.coords.longitude);
+          mapa.setView([pos.coords.latitude, pos.coords.longitude], 16);
+        });
+      });
+    </script>
+  {% endif %}
 {% endblock %}
