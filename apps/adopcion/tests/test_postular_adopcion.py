@@ -7,6 +7,7 @@ from apps.cuentas import servicios as cuentas
 from apps.cuentas.models import Domicilio, Rol, Sancion
 from apps.fichas.models import FichaAnimal
 from apps.transito.models import Alojamiento, PerfilTransito, Postulacion
+from apps.transito.postulaciones import ContactoInvalido, PostulacionNoPermitida
 
 Estado = FichaAnimal.Estado
 
@@ -22,8 +23,10 @@ HOGAR = {
 }
 
 
-def con_perfil(usuario):
-    Domicilio.objects.create(usuario=usuario, ubicacion=PUNTO, ubicacion_desplazada=PUNTO, **HOGAR)
+def con_perfil(usuario, **hogar):
+    Domicilio.objects.create(
+        usuario=usuario, ubicacion=PUNTO, ubicacion_desplazada=PUNTO, **{**HOGAR, **hogar}
+    )
     cuentas.guardar_perfil_adoptante(usuario, "Tuve perros toda la vida.")
     return usuario
 
@@ -97,3 +100,63 @@ def test_una_postulacion_retirada_no_impide_volver_a_postularse(ana):
     )
 
     assert postulaciones.motivo_para_no_postularse(ana, ficha) is None
+
+
+# Postularse (CU-28)
+
+
+def test_queda_una_postulacion_de_adopcion_pendiente(ana):
+    ficha = hacer_ficha()
+
+    postulacion = postulaciones.postular_adopcion(con_perfil(ana), ficha, "  2901 444444  ")
+
+    assert postulacion.tipo == Postulacion.Tipo.ADOPCION
+    assert postulacion.estado == Postulacion.Estado.PENDIENTE
+    assert postulacion.contacto == "2901 444444"
+    assert postulacion.ficha == ficha
+
+
+def test_si_no_puede_postularse_no_se_crea_nada(ana):
+    with pytest.raises(PostulacionNoPermitida) as error:
+        postulaciones.postular_adopcion(ana, hacer_ficha(), "2901 444444")
+
+    assert error.value.codigo == "perfil_incompleto"
+    assert not Postulacion.objects.exists()
+
+
+@pytest.mark.parametrize("contacto", ["", "   ", "x" * 121])
+def test_sin_un_contacto_valido_no_se_crea_nada(ana, contacto):
+    with pytest.raises(ContactoInvalido):
+        postulaciones.postular_adopcion(con_perfil(ana), hacer_ficha(), contacto)
+
+    assert not Postulacion.objects.exists()
+
+
+# Aviso de incompatibilidad (CU-28 2B)
+
+
+def test_avisa_si_hay_ninos_y_no_sabemos_si_se_lleva_bien_con_ellos(ana):
+    con_perfil(ana, hay_ninos=True)
+
+    advertencias = postulaciones.advertencias_de_postulacion(ana, hacer_ficha())
+
+    assert advertencias == [postulaciones.MOTIVO_NINOS]
+
+
+def test_avisa_si_hay_mascotas_y_no_sabemos_si_se_lleva_bien_con_otros(ana):
+    con_perfil(ana, mascotas_propias=2)
+
+    advertencias = postulaciones.advertencias_de_postulacion(ana, hacer_ficha())
+
+    assert advertencias == [postulaciones.MOTIVO_ANIMALES]
+
+
+def test_sin_avisos_si_la_ficha_dice_que_se_lleva_bien(ana):
+    con_perfil(ana, hay_ninos=True, mascotas_propias=2)
+    ficha = hacer_ficha(compatible_ninos=True, compatible_animales=True)
+
+    assert postulaciones.advertencias_de_postulacion(ana, ficha) == []
+
+
+def test_sin_domicilio_no_hay_avisos(ana):
+    assert postulaciones.advertencias_de_postulacion(ana, hacer_ficha()) == []
