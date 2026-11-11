@@ -16,7 +16,7 @@
       {% if publicacion.especie %}
         <dt class="text-stone-600">Especie</dt>
         <dd>
-          {{ publicacion.especie }}
+          {{ publicacion.get_especie_display }}
         </dd>
       {% endif %}
       {% if publicacion.raza %}

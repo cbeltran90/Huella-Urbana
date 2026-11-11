@@ -46,7 +46,7 @@ class Publicacion(models.Model):
     telefono_visible = models.CharField(max_length=30, blank=True)
     # Solo si el cuidador no tiene cuenta (lo carga un moderador).
     ubicacion_desplazada = models.PointField(srid=4326, null=True, blank=True)
-    especie = models.CharField(max_length=20, blank=True)
+    especie = models.CharField(max_length=20, choices=FichaAnimal.Especie.choices, blank=True)
     tamano = models.CharField(
         "tamaño", max_length=20, choices=FichaAnimal.Tamano.choices, blank=True
     )

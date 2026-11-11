@@ -10,7 +10,7 @@
       {% if p.ficha and not p.ficha.es_privada and p.ficha.nombre %}· {{ p.ficha.nombre }}{% endif %}
     </span>
     <span class="block text-sm text-stone-600">
-      {{ p.especie|default:"Especie sin dato" }}
+      {{ p.get_especie_display|default:"Especie sin dato" }}
       {% if p.tamano %}· {{ p.get_tamano_display }}{% endif %}
       {% if p.color %}· {{ p.color }}{% endif %}
       · {{ p.fecha|date:"j/n/Y" }}
