@@ -1,5 +1,6 @@
 services:
   web:
+    hostname: ${SITE_ADDRESS}
     build:
       args:
         REQUIREMENTS: base

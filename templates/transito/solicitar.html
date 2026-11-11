@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Solicitar tránsito · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">¿Solicitar tránsito?</h1>
+    <p class="mt-1 text-sm text-stone-600">
+      {{ ficha.nombre|default:"Sin nombre" }} · {{ ficha.get_especie_display }}
+      {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
+    </p>
+    <p class="mt-4 text-sm text-stone-600">
+      La ficha pasa a «en adopción» y queda visible para todos, también para los hogares de tránsito que quieran recibir al animal.
+    </p>
+    <form method="post" novalidate class="mt-6 space-y-4">
+      {% csrf_token %}
+      {% if pide_contacto %}
+        <div>
+          <label for="id_contacto" class="block text-sm font-medium">Contacto de quien lo tiene (opcional)</label>
+          <p class="text-sm text-stone-600">Cargalo solo si esa persona lo autoriza. Teléfono, correo u otro medio.</p>
+          <input type="text"
+                 name="contacto"
+                 id="id_contacto"
+                 autocomplete="off"
+                 value="{{ form.contacto.value|default_if_none:'' }}"
+                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+          {% include "cuentas/_errores.html" with errores=form.contacto.errors %}
+        </div>
+      {% endif %}
+      <button type="submit"
+              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+        Sí, solicitar tránsito
+      </button>
+    </form>
+    <a href="{% url 'fichas:detalle' ficha.pk %}"
+       class="mt-4 block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+  </section>
+{% endblock %}

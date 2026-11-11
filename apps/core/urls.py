@@ -1,12 +1,13 @@
 from django.urls import path
 
+from apps.mapa.views import mapa
+
 from . import views
 
 app_name = "core"
 
 urlpatterns = [
-    path("", views.inicio, name="inicio"),
+    # La pantalla de inicio es el mapa (CU-19); conserva el nombre para los redirect
+    path("", mapa, name="inicio"),
     path("salud/", views.salud, name="salud"),
-    path("prueba/", views.prueba, name="prueba"),
-    path("prueba/saludo/", views.prueba_saludo, name="prueba_saludo"),
 ]

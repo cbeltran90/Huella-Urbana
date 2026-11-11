@@ -1,0 +1,10 @@
+{% if solicitado %}
+  <p role="status"
+     class="mt-4 rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900">
+    La ficha pasó a «en adopción» y quedó pública.
+  </p>
+{% endif %}
+{% if puede %}
+  <a href="{% url 'transito:solicitar' ficha.pk %}"
+     class="mt-4 inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Solicitar tránsito</a>
+{% endif %}

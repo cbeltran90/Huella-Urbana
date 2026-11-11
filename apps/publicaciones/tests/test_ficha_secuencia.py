@@ -27,4 +27,4 @@ def test_una_ficha_sin_publicaciones_lo_dice(client):
 
     html = client.get(reverse("fichas:detalle", args=[ficha.pk])).content.decode()
 
-    assert "Esta ficha no tiene publicaciones." in html
+    assert "Todavía no hay publicaciones de este animal." in html

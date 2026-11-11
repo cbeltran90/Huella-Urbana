@@ -6,6 +6,8 @@ from apps.fichas.forms import CLASE_CAMPO, CLASE_CASILLA, MENSAJE_TEXTO_OFENSIVO
 from apps.fichas.models import FichaAnimal
 from apps.fichas.servicios import CAMPOS_EDITABLES
 
+from .models import Publicacion
+
 MENSAJE_ESPECIE = "Elegí la especie"
 MENSAJE_FOTO = "Subí una foto del animal"
 MENSAJE_UBICACION = "Indicá tu ubicación en el mapa o con el GPS"
@@ -168,6 +170,8 @@ MAX_FOTOS = 5
 MENSAJE_FOTOS = "Subí al menos una foto del animal"
 MENSAJE_MUCHAS_FOTOS = f"Podés subir hasta {MAX_FOTOS} fotos"
 MENSAJE_TELEFONO = "Ingresá un teléfono válido"
+VALIDAR_TELEFONO = RegexValidator(r"^[0-9+\-() ]{6,30}$", MENSAJE_TELEFONO)
+
 
 _EXTRAS_ADOPCION = ("fotos", "latitud", "longitud", "descripcion", "telefono_visible")
 _PASO_ADOPCION = {
@@ -212,7 +216,7 @@ class AltaAdopcionForm(FichaForm):
         label="Teléfono visible (opcional)",
         max_length=30,
         required=False,
-        validators=[RegexValidator(r"^[0-9+\-() ]{6,30}$", MENSAJE_TELEFONO)],
+        validators=[VALIDAR_TELEFONO],
     )
 
     def __init__(self, *args, tiene_domicilio, **kwargs):
@@ -243,3 +247,33 @@ class AltaAdopcionForm(FichaForm):
         """El paso del asistente donde hay que volver para corregir; el último si no hay error."""
         pasos = [_PASO_ADOPCION.get(campo, 1) for campo in self.errors]
         return min(pasos, default=4)
+
+
+class EditarPublicacionForm(forms.ModelForm):
+    """Lo que se puede cambiar de una publicación propia (CU-65): la descripción y, si es de
+    adopción, el teléfono visible."""
+
+    descripcion = forms.CharField(
+        label="Descripción",
+        max_length=500,
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+        validators=[NoOfensivo(MENSAJE_TEXTO_OFENSIVO)],
+    )
+    telefono_visible = forms.CharField(
+        label="Teléfono visible (opcional)",
+        max_length=30,
+        required=False,
+        validators=[VALIDAR_TELEFONO],
+    )
+
+    class Meta:
+        model = Publicacion
+        fields = ("descripcion", "telefono_visible")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.tipo != Publicacion.Tipo.ADOPCION:
+            del self.fields["telefono_visible"]
+        for campo in self.fields.values():
+            campo.widget.attrs["class"] = CLASE_CAMPO

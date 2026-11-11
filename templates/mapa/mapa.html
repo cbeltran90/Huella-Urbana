@@ -4,7 +4,7 @@
   <section class="mx-auto max-w-4xl">
     <h1 class="text-2xl font-bold">Mapa</h1>
     <fieldset class="mt-4 flex flex-wrap gap-4 text-sm">
-      <legend class="sr-only">Capas que se muestran en el mapa</legend>
+      <legend class="sr-only">Qué querés ver</legend>
       {% for clave, leyenda in leyendas.items %}
         <label class="flex min-h-11 items-center gap-2">
           <input type="checkbox"
@@ -26,7 +26,7 @@
          role="region"
          aria-label="Mapa de publicaciones de Ushuaia"></div>
     <div id="mapa-detalle" class="mt-4">
-      <p class="text-sm text-stone-600">Tocá un marcador para ver su detalle.</p>
+      <p class="text-sm text-stone-600">Tocá un punto para ver al animal.</p>
     </div>
   </section>
   {{ mapa_config|json_script:"mapa-config" }}
@@ -68,7 +68,7 @@
 
     // Si la publicación dejó de estar vigente desde que se cargó el mapa.
     detalle.addEventListener("htmx:responseError", () => {
-      detalle.innerHTML = '<p class="text-sm text-stone-600">Esta publicación ya no está disponible.</p>';
+      detalle.innerHTML = '<p class="text-sm text-stone-600">Esta publicación ya no está.</p>';
     });
 
     function mostrarCapasElegidas() {
@@ -83,7 +83,7 @@
       const palabra = total === 1 ? "publicación" : "publicaciones";
       estado.textContent = total
         ? `${total} ${palabra} en el mapa.`
-        : "No hay publicaciones en las capas elegidas.";
+        : "No hay publicaciones para mostrar.";
     }
 
     fetch(capas.datos_url)
@@ -110,7 +110,7 @@
         mostrarCapasElegidas();
       })
       .catch(() => {
-        estado.textContent = "No se pudieron cargar los datos del mapa. Probá recargar la página.";
+        estado.textContent = "No pudimos cargar el mapa. Probá recargar la página.";
       });
 
     casillas.forEach((casilla) => casilla.addEventListener("change", mostrarCapasElegidas));

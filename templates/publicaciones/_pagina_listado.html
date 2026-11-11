@@ -1,7 +1,7 @@
 {% for p in pagina %}
   {% include "publicaciones/_tarjeta_publicacion.html" %}
 {% empty %}
-  <li class="rounded border bg-white p-4 text-sm">No hay resultados para esos filtros.</li>
+  <li class="rounded border bg-white p-4 text-sm">No encontramos animales con esos datos. Probá con otros filtros.</li>
 {% endfor %}
 {% if pagina.has_next %}
   <li>
