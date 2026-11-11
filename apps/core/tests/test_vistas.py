@@ -10,6 +10,13 @@ def test_salud_responde_ok(client):
 
 
 @pytest.mark.django_db
-def test_inicio_y_prueba_cargan(client):
-    assert client.get(reverse("core:inicio")).status_code == 200
-    assert client.get(reverse("core:prueba")).status_code == 200
+def test_el_inicio_muestra_el_mapa(client):
+    respuesta = client.get(reverse("core:inicio"))
+
+    assert respuesta.status_code == 200
+    assert "mapa/mapa.html" in [plantilla.name for plantilla in respuesta.templates]
+
+
+@pytest.mark.django_db
+def test_la_prueba_del_stack_ya_no_existe(client):
+    assert client.get("/prueba/").status_code == 404
