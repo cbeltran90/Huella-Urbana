@@ -14,6 +14,7 @@ class Notificacion(models.Model):
         EVENTO = "evento", "Evento"
         VENCIMIENTO_PLAZO = "vencimiento_plazo", "Vencimiento de plazo"
         RESULTADO_POSTULACION = "resultado_postulacion", "Resultado de postulación"
+        POSTULACION_RECIBIDA = "postulacion_recibida", "Postulación recibida"
         ALERTA_SANITARIA = "alerta_sanitaria", "Alerta sanitaria"
 
     usuario = models.ForeignKey(

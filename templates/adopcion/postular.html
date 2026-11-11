@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titulo %}Postularme para adoptar · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Postularme para adoptar</h1>
+    <p class="mt-1 text-sm text-stone-600">
+      {{ ficha.nombre|default:"Sin nombre" }} · {{ ficha.get_especie_display }}
+      {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
+    </p>
+    {% if motivo %}
+      <p role="alert"
+         class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{{ motivo.1 }}</p>
+      {% if motivo.0 == "perfil_incompleto" %}
+        <a href="{% url 'cuentas:perfil_adoptante' %}"
+           class="mt-4 block min-h-11 rounded bg-emerald-600 px-4 py-2 text-center font-semibold text-white">Completar mi perfil</a>
+      {% endif %}
+    {% else %}
+      {% if advertencias %}
+        <div role="status"
+             class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          <ul class="list-disc pl-5">
+            {% for aviso in advertencias %}<li>{{ aviso }}</li>{% endfor %}
+          </ul>
+          <p class="mt-1">Podés postularte igual.</p>
+        </div>
+      {% endif %}
+      <form method="post" novalidate class="mt-6 space-y-4">
+        {% csrf_token %}
+        <div>
+          <label for="id_contacto" class="block text-sm font-medium">¿Cómo te contactamos?</label>
+          <p class="text-sm text-stone-600">Un teléfono o correo para que puedan hablar con vos.</p>
+          <input type="text"
+                 name="contacto"
+                 id="id_contacto"
+                 autocomplete="tel"
+                 value="{{ form.contacto.value|default_if_none:'' }}"
+                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+          {% include "cuentas/_errores.html" with errores=form.contacto.errors %}
+        </div>
+        <button type="submit"
+                class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+          Enviar postulación
+        </button>
+      </form>
+    {% endif %}
+    <a href="{% url 'fichas:detalle' ficha.pk %}"
+       class="mt-4 block min-h-11 px-4 py-2 text-center underline">Volver a la ficha</a>
+  </section>
+{% endblock %}
