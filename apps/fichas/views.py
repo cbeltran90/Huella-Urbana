@@ -1,14 +1,16 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.cuentas.decoradores import cuenta_habilitada
 from apps.cuentas.servicios import esta_suspendido
+from apps.imagenes.servicios import ImagenInvalida
 
 from . import permisos, servicios
-from .forms import FichaForm
+from .forms import FichaConFotosForm
 from .models import FichaAnimal
 
 
@@ -32,12 +34,18 @@ def mis_fichas(request):
 @cuenta_habilitada
 def ficha_nueva(request):
     if request.method == "POST":
-        form = FichaForm(request.POST)
+        form = FichaConFotosForm(request.POST, request.FILES)
         if form.is_valid():
-            servicios.crear_ficha(request.user, form.cleaned_data)
-            return redirect("fichas:mis_fichas")
+            try:
+                with transaction.atomic():
+                    ficha = servicios.crear_ficha(request.user, form.cleaned_data)
+                    servicios.agregar_fotografias(ficha, request.user, form.cleaned_data["fotos"])
+            except ImagenInvalida as error:
+                form.add_error("fotos", str(error))
+            else:
+                return redirect("fichas:mis_fichas")
     else:
-        form = FichaForm()
+        form = FichaConFotosForm()
     return render(request, "fichas/ficha_form.html", {"form": form, "ficha": None})
 
 
@@ -59,12 +67,18 @@ def ficha_editar(request, pk):
     if not permisos.puede_editar(request.user, ficha):
         raise PermissionDenied
     if request.method == "POST":
-        form = FichaForm(request.POST, instance=ficha)
+        form = FichaConFotosForm(request.POST, request.FILES, instance=ficha)
         if form.is_valid():
-            servicios.editar_ficha(ficha, form.cleaned_data)
-            return redirect("fichas:detalle", pk=ficha.pk)
+            try:
+                with transaction.atomic():
+                    servicios.editar_ficha(ficha, form.cleaned_data)
+                    servicios.agregar_fotografias(ficha, request.user, form.cleaned_data["fotos"])
+            except ImagenInvalida as error:
+                form.add_error("fotos", str(error))
+            else:
+                return redirect("fichas:detalle", pk=ficha.pk)
     else:
-        form = FichaForm(instance=ficha)
+        form = FichaConFotosForm(instance=ficha)
     return render(request, "fichas/ficha_form.html", {"form": form, "ficha": ficha})
 
 

@@ -5,6 +5,7 @@ from apps.core.filtros import NoOfensivo
 from apps.fichas.forms import CLASE_CAMPO, CLASE_CASILLA, MENSAJE_TEXTO_OFENSIVO, FichaForm
 from apps.fichas.models import FichaAnimal
 from apps.fichas.servicios import CAMPOS_EDITABLES
+from apps.imagenes.forms import MAX_FOTOS, CampoVariosArchivos
 
 from .models import Publicacion
 
@@ -166,7 +167,6 @@ class HallazgoForm(forms.Form):
         return min(pasos, default=4)
 
 
-MAX_FOTOS = 5
 MENSAJE_FOTOS = "Subí al menos una foto del animal"
 MENSAJE_MUCHAS_FOTOS = f"Podés subir hasta {MAX_FOTOS} fotos"
 MENSAJE_TELEFONO = "Ingresá un teléfono válido"
@@ -183,27 +183,10 @@ _PASO_ADOPCION = {
 }
 
 
-class _VariosArchivos(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-
-class _CampoVariosArchivos(forms.FileField):
-    """Un campo de archivos que acepta varios."""
-
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", _VariosArchivos())
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        limpiar = super().clean
-        archivos = data if isinstance(data, (list, tuple)) else [data]
-        return [limpiar(archivo, initial) for archivo in archivos if archivo]
-
-
 class AltaAdopcionForm(FichaForm):
     """Alta directa en adopción: los datos de la ficha más fotos, ubicación y publicación."""
 
-    fotos = _CampoVariosArchivos(label="Fotos", required=False)
+    fotos = CampoVariosArchivos(label="Fotos", required=False)
     latitud = forms.FloatField(required=False, min_value=-90, max_value=90)
     longitud = forms.FloatField(required=False, min_value=-180, max_value=180)
     descripcion = forms.CharField(
