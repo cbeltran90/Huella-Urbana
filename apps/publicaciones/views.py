@@ -298,7 +298,11 @@ def mis_publicaciones(request):
         .select_related("ficha")
         .order_by("-fecha")
     )
-    return render(request, "publicaciones/mis_publicaciones.html", {"publicaciones": publicaciones})
+    filas = [
+        (publicacion, resolucion.como_se_retira(publicacion, request.user))
+        for publicacion in publicaciones
+    ]
+    return render(request, "publicaciones/mis_publicaciones.html", {"filas": filas})
 
 
 @cuenta_habilitada

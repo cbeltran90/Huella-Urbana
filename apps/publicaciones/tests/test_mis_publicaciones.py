@@ -3,7 +3,9 @@ from datetime import timedelta
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from model_bakery import baker
 
+from apps.fichas.models import FichaAnimal
 from apps.publicaciones.models import Publicacion
 
 from .conftest import hacer_publicacion
@@ -52,3 +54,26 @@ def test_el_menu_lleva_a_mis_publicaciones(entrar, ana):
     html = entrar(ana).get(reverse("core:inicio")).content.decode()
 
     assert MIS_PUBLICACIONES in html
+
+
+def test_retirar_un_extravio_lo_saca_de_mis_publicaciones(entrar, ana):
+    ficha = baker.make(FichaAnimal, especie="perro", responsable=ana)
+    hacer_publicacion(ana, tipo=Tipo.EXTRAVIO, ficha=ficha, descripcion="Se perdió Toby")
+    cliente = entrar(ana)
+    retirar = reverse("publicaciones:resolver_caso", args=[ficha.pk])
+
+    assert retirar in cliente.get(MIS_PUBLICACIONES).content.decode()
+    cliente.post(retirar)
+    assert "Se perdió Toby" not in cliente.get(MIS_PUBLICACIONES).content.decode()
+
+
+def test_explica_por_que_no_se_puede_retirar(entrar, ana):
+    sin_responsable = baker.make(FichaAnimal, especie="gato", responsable=None)
+    hacer_publicacion(ana, tipo=Tipo.HALLAZGO, ficha=sin_responsable)
+    hacer_publicacion(ana, tipo=Tipo.ADOPCION)
+
+    html = entrar(ana).get(MIS_PUBLICACIONES).content.decode()
+
+    assert "Solo un moderador puede cerrar este caso." in html
+    assert "Se cierra cuando cambia el estado de la ficha." in html
+    assert reverse("publicaciones:resolver_caso", args=[sin_responsable.pk]) not in html

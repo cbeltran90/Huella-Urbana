@@ -86,3 +86,20 @@ def confirmar_dueno(ficha, extravio, usuario):
         cambios={"responsable": extravio.autor, "cuidador": None, "sin_responsable_desde": None},
     )
     return _cerrar(ficha)
+
+
+def como_se_retira(publicacion, usuario):
+    """Qué ofrece «Mis publicaciones» para retirar una publicación propia (CU-65).
+
+    "resolver": un extravío o un hallazgo se retira cerrando su caso (4B, continúa en CU-14).
+    "moderador": el caso es de una ficha sin responsable y solo lo cierra un moderador (CU-14, 1A).
+    "ficha": adopción y tránsito no se retiran desde acá; siguen el estado de la ficha (4A).
+    """
+    if publicacion.tipo in (Publicacion.Tipo.ADOPCION, Publicacion.Tipo.TRANSITO):
+        return "ficha"
+    # Fuera del alcance de la primera entrega: retirar un avistamiento (4C, CU-43).
+    if publicacion.tipo not in TIPOS_PERDIDOS or publicacion.ficha is None:
+        return None
+    if puede_resolver(usuario, publicacion.ficha):
+        return "resolver"
+    return "moderador"
