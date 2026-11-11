@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% load secuencia caso postulacion solicitar_transito %}
+{% load secuencia caso postulacion solicitar_transito postulacion_adopcion %}
 {% block titulo %}{{ ficha.nombre|default:"Ficha" }} · Huella Urbana{% endblock %}
 {% block contenido %}
   <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
@@ -96,6 +96,7 @@
     {% secuencia_de_publicaciones ficha %}
     {% opciones_de_dueno ficha %}
     {% postulacion_de_transito ficha %}
+    {% postulacion_de_adopcion ficha %}
     {% boton_solicitar_transito ficha %}
     <div class="mt-6 flex flex-wrap gap-3">
       {% if puede_editar %}

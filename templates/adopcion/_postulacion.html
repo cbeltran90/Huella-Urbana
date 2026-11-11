@@ -1,0 +1,37 @@
+{% if mostrar %}
+  {% if postulado %}
+    <p role="status"
+       class="mt-6 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+      ¡Gracias! Ya enviamos tu postulación.
+    </p>
+  {% endif %}
+  {% if propia %}
+    <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
+      <h2 class="font-semibold">Tu postulación para adoptar</h2>
+      <p class="mt-1">
+        {% if propia.estado == "elegida" %}
+          ¡Te eligieron para adoptarlo!
+        {% else %}
+          Ya te postulaste. Te avisamos cuando haya novedades.
+        {% endif %}
+      </p>
+      <p class="mt-1 text-stone-600">Te van a contactar por: {{ propia.contacto }}</p>
+      {% if propia.estado == "pendiente" %}
+        <form method="post"
+              action="{% url 'transito:retirar_postulacion' propia.pk %}"
+              class="mt-2">
+          {% csrf_token %}
+          <button type="submit"
+                  class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">
+            Retirar postulación
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  {% elif puede %}
+    <a href="{% url 'adopcion:postular' ficha.pk %}"
+       class="mt-6 inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Postularme para adoptar</a>
+  {% elif motivo %}
+    <p class="mt-6 text-sm text-stone-600">{{ motivo }}</p>
+  {% endif %}
+{% endif %}

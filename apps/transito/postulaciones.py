@@ -1,13 +1,19 @@
 """Postularse como hogar de tránsito y retirar la postulación."""
 
+import logging
+
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
+from apps.notificaciones.models import Notificacion
+from apps.notificaciones.servicios import notificar
 
 from .models import Alojamiento, PerfilTransito, Postulacion
 from .servicios import esta_disponible, incompatibilidades
+
+logger = logging.getLogger(__name__)
 
 CONTACTO_MAXIMO = Postulacion._meta.get_field("contacto").max_length
 ESTADOS_ACTIVOS = (Postulacion.Estado.PENDIENTE, Postulacion.Estado.ELEGIDA)
@@ -83,12 +89,38 @@ def advertencias_de_postulacion(usuario, ficha):
     return incompatibilidades(perfil, ficha) if perfil is not None else []
 
 
+def avisar_de_postulacion(postulacion):
+    """Avisa de la postulación nueva a quien tiene el animal a su cargo y a su responsable.
+
+    Sirve para los dos tipos de postulación. Si no hay ninguno que sea usuario no se avisa a
+    nadie. Si el aviso falla, la postulación queda igual. No dice quién se postuló: eso lo ve
+    quien elige en la pantalla de la ficha.
+    """
+    ficha = postulacion.ficha
+    nombre = ficha.nombre or "este animal"
+    if postulacion.tipo == Postulacion.Tipo.ADOPCION:
+        titulo = "Nueva postulación para adoptar"
+        mensaje = f"Hay una postulación nueva para adoptar a {nombre}."
+    else:
+        titulo = "Nueva postulación de tránsito"
+        mensaje = f"Hay una postulación nueva de tránsito para {nombre}."
+    destinatarios = {
+        usuario.pk: usuario for usuario in (ficha.cuidador, ficha.responsable) if usuario
+    }
+    for usuario in destinatarios.values():
+        try:
+            notificar(usuario, Notificacion.Tipo.NOVEDAD, titulo, mensaje, ficha=ficha)
+        except Exception:
+            logger.exception("No se pudo avisar de la postulación %s", postulacion.pk)
+
+
 def postular_transito(usuario, ficha, contacto):
     """Registra la postulación pendiente del hogar a una ficha en adopción y la devuelve.
 
     Lanza PostulacionNoPermitida si no puede (sin perfil, suspendido, en pausa, la ficha ya no
     está en adopción, el animal está a su cargo o ya está postulado) y ContactoInvalido si
     el canal de contacto no sirve. En ambos casos no se crea nada.
+    Después de guardar, avisa a quien tiene el animal a su cargo.
     """
     motivo = motivo_para_no_postularse(usuario, ficha)
     if motivo is not None:
@@ -100,7 +132,7 @@ def postular_transito(usuario, ficha, contacto):
         raise ContactoInvalido(MENSAJE_CONTACTO_LARGO)
     try:
         with transaction.atomic():
-            return Postulacion.objects.create(
+            postulacion = Postulacion.objects.create(
                 ficha=ficha,
                 usuario=usuario,
                 tipo=Postulacion.Tipo.TRANSITO,
@@ -109,6 +141,8 @@ def postular_transito(usuario, ficha, contacto):
     except IntegrityError:
         # Dos pedidos a la vez: la restricción de la base evita la segunda.
         raise PostulacionNoPermitida("ya_postulado", MENSAJE_YA_POSTULADO) from None
+    avisar_de_postulacion(postulacion)
+    return postulacion
 
 
 def retirar_postulacion(postulacion, usuario):
