@@ -78,19 +78,36 @@ def ficha(carla):
 # Quién puede elegir
 
 
-def test_pueden_elegir_el_cuidador_el_responsable_y_el_moderador(carla):
+def test_elige_quien_tiene_la_mascota_a_cargo(carla):
     responsable = crear_usuario("rosa")
-    ficha = crear_ficha(cuidador=carla, responsable=responsable)
     moderador = crear_usuario("mora", rol=Rol.MODERADOR)
+    ficha = crear_ficha(cuidador=carla, responsable=responsable)
 
     assert eleccion.puede_elegir(carla, ficha)
+    assert not eleccion.puede_elegir(responsable, ficha)
+    assert not eleccion.puede_elegir(moderador, ficha)
+
+
+def test_sin_cuidador_elige_el_responsable_y_no_el_moderador():
+    responsable = crear_usuario("rosa")
+    moderador = crear_usuario("mora", rol=Rol.MODERADOR)
+    ficha = crear_ficha(responsable=responsable)
+
     assert eleccion.puede_elegir(responsable, ficha)
-    assert eleccion.puede_elegir(moderador, ficha)
+    assert not eleccion.puede_elegir(moderador, ficha)
 
 
-def test_puede_elegir_el_hogar_que_aloja_al_animal_en_relevo():
-    hogar = crear_hogar("lucia")
+def test_sin_nadie_a_cargo_elige_un_moderador():
+    moderador = crear_usuario("mora", rol=Rol.MODERADOR)
     ficha = crear_ficha()
+
+    assert eleccion.puede_elegir(moderador, ficha)
+    assert not eleccion.puede_elegir(crear_usuario("ana"), ficha)
+
+
+def test_el_hogar_que_aloja_a_la_mascota_la_tiene_a_cargo_y_elige():
+    hogar = crear_hogar("lucia")
+    ficha = crear_ficha(cuidador=hogar)
     Alojamiento.objects.create(
         ficha=ficha, hogar=hogar.perfil_transito, fecha_fin_prevista=timezone.localdate()
     )
@@ -230,11 +247,23 @@ def test_puede_elegir_un_hogar_con_el_cupo_completo(carla, ficha):
     assert eleccion.elegir_hogar(ficha, carla, postulacion).estado == Postulacion.Estado.ELEGIDA
 
 
-def test_un_moderador_tambien_puede_elegir(ficha):
+def test_un_moderador_elige_si_no_hay_nadie_a_cargo():
     moderador = crear_usuario("mora", rol=Rol.MODERADOR)
+    ficha = crear_ficha()
     postulacion = postular(crear_hogar("lucia"), ficha)
 
     assert eleccion.elegir_hogar(ficha, moderador, postulacion).estado == Postulacion.Estado.ELEGIDA
+
+
+def test_un_moderador_no_elige_si_hay_alguien_a_cargo(ficha):
+    moderador = crear_usuario("mora", rol=Rol.MODERADOR)
+    postulacion = postular(crear_hogar("lucia"), ficha)
+
+    with pytest.raises(eleccion.EleccionNoPermitida):
+        eleccion.elegir_hogar(ficha, moderador, postulacion)
+
+    postulacion.refresh_from_db()
+    assert postulacion.estado == Postulacion.Estado.PENDIENTE
 
 
 def test_si_quien_elige_no_puede_no_cambia_nada(ficha):

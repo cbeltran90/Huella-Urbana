@@ -97,12 +97,32 @@ def test_sin_postulantes_no_hay_enlace(client, carla):
     assert enlace(ficha) not in detalle(client, ficha)
 
 
-def test_un_moderador_ve_el_enlace(client):
-    ficha = crear_ficha(cuidador=crear_usuario("carla"))
+def test_un_moderador_ve_el_enlace_si_no_hay_nadie_a_cargo(client):
+    ficha = crear_ficha()
     postular(crear_hogar("lucia"), ficha)
     client.force_login(crear_usuario("mora", rol=Rol.MODERADOR), backend=BACKEND_MODELO)
 
     assert enlace(ficha) in detalle(client, ficha)
+
+
+def test_un_moderador_no_ve_el_enlace_para_elegir_si_hay_alguien_a_cargo(client):
+    ficha = crear_ficha(cuidador=crear_usuario("carla"))
+    postular(crear_hogar("lucia"), ficha)
+    client.force_login(crear_usuario("mora", rol=Rol.MODERADOR), backend=BACKEND_MODELO)
+
+    assert enlace(ficha) not in detalle(client, ficha)
+
+
+def test_un_moderador_ve_el_hogar_elegido_y_los_botones_aunque_haya_alguien_a_cargo(client):
+    ficha = crear_ficha(cuidador=crear_usuario("carla"))
+    postular(crear_hogar("lucia"), ficha, estado="elegida")
+    client.force_login(crear_usuario("mora", rol=Rol.MODERADOR), backend=BACKEND_MODELO)
+
+    html = detalle(client, ficha)
+
+    assert "Hogar de tránsito elegido" in html
+    assert reverse("transito:registrar_ingreso", args=[ficha.pk]) in html
+    assert reverse("transito:cancelar_entrega", args=[ficha.pk]) in html
 
 
 def test_un_hogar_postulante_un_ajeno_y_un_visitante_no_ven_el_enlace(client):

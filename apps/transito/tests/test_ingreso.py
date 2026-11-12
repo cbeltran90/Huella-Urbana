@@ -4,7 +4,7 @@ import pytest
 from django.contrib.gis.geos import Point
 from django.utils import timezone
 
-from apps.cuentas.models import Domicilio, EstadoCuenta, Sancion, Usuario
+from apps.cuentas.models import Domicilio, EstadoCuenta, Rol, Sancion, Usuario
 from apps.fichas.models import FichaAnimal
 from apps.notificaciones.models import Notificacion
 from apps.publicaciones.models import Publicacion
@@ -166,6 +166,18 @@ def test_el_hogar_elegido_tambien_puede_marcar_el_ingreso(ficha, hogar):
     elegir_hogar(ficha, hogar)
 
     ingresar(ficha, hogar)
+
+    ficha.refresh_from_db()
+    assert ficha.estado == Estado.EN_TRANSITO
+
+
+def test_un_moderador_puede_registrar_el_ingreso_aunque_la_mascota_tenga_cuidador(ficha, hogar):
+    elegir_hogar(ficha, hogar)
+    moderador = Usuario.objects.create_user(
+        "mora@example.com", "Mora", CLAVE, estado_cuenta=EstadoCuenta.ACTIVA, rol=Rol.MODERADOR
+    )
+
+    ingresar(ficha, moderador)
 
     ficha.refresh_from_db()
     assert ficha.estado == Estado.EN_TRANSITO

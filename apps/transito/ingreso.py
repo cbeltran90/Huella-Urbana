@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
+from apps.fichas.permisos import es_moderador
 from apps.fichas.servicios import cambiar_estado
 from apps.notificaciones.models import Notificacion
 from apps.notificaciones.servicios import notificar
@@ -45,10 +46,12 @@ def hogar_elegido(ficha):
 
 
 def puede_registrar_ingreso(usuario, ficha):
-    """Quien puede elegir el hogar o el propio hogar elegido, con la ficha en adopción."""
+    """Quien puede elegir el hogar, el propio hogar elegido o un moderador, con la ficha en
+    adopción. Como al concretar una adopción, el moderador siempre puede.
+    """
     if not usuario.is_authenticated or ficha.estado != FichaAnimal.Estado.EN_ADOPCION:
         return False
-    if eleccion.puede_elegir(usuario, ficha):
+    if eleccion.puede_elegir(usuario, ficha) or es_moderador(usuario):
         return True
     elegida = hogar_elegido(ficha)
     return elegida is not None and elegida.usuario_id == usuario.pk
