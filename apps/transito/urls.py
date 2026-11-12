@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, vistas_ingreso
 
 app_name = "transito"
 
@@ -11,4 +11,8 @@ urlpatterns = [
     path("solicitar/<int:ficha_pk>/", views.solicitar, name="solicitar"),
     path("elegir/<int:ficha_pk>/", views.elegir, name="elegir_hogar"),
     path("postulaciones/<int:pk>/retirar/", views.retirar, name="retirar_postulacion"),
+    path("ingreso/<int:ficha_pk>/", vistas_ingreso.registrar_ingreso, name="registrar_ingreso"),
+    path(
+        "cancelar-entrega/<int:ficha_pk>/", vistas_ingreso.cancelar_entrega, name="cancelar_entrega"
+    ),
 ]
