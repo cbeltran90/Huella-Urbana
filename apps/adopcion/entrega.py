@@ -19,6 +19,7 @@ from .postulaciones import ESTADOS_DISPONIBLES
 MENSAJE_NO_PUEDE = "Solo quien entrega la mascota o un moderador puede hacer esto."
 MENSAJE_SIN_ELEGIDO = "Todavía no se eligió quién la adopta."
 MENSAJE_AL_ADOPTANTE = "Gracias por darle un hogar."
+MENSAJE_CANCELADA = "Si seguís con ganas, podés volver a postularte desde la ficha."
 
 
 class EntregaNoPermitida(ValueError):
@@ -95,3 +96,23 @@ def _avisar_adopcion(ficha, adoptante, descartadas):
             MENSAJE_A_LOS_DEMAS,
             ficha=ficha,
         )
+
+
+def cancelar_eleccion(ficha, actor):
+    """La adopción no se concretó (1A): la ficha sigue igual y la elegida queda descartada.
+
+    Se avisa a esa persona, que puede volver a postularse. Las que se descartaron al elegir
+    no vuelven solas. Lanza EntregaNoPermitida si el actor no puede o no hay nadie elegido.
+    """
+    with transaction.atomic():
+        actual, elegida = _validar(ficha, actor)
+        elegida.estado = Postulacion.Estado.DESCARTADA
+        elegida.save(update_fields=["estado"])
+        notificar(
+            elegida.usuario,
+            Notificacion.Tipo.RESULTADO_POSTULACION,
+            f"La adopción de {actual.nombre or 'la mascota'} no se concretó",
+            MENSAJE_CANCELADA,
+            ficha=actual,
+        )
+    return elegida

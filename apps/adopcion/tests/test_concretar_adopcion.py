@@ -2,7 +2,7 @@ import pytest
 from django.utils import timezone
 from model_bakery import baker
 
-from apps.adopcion import entrega
+from apps.adopcion import entrega, postulaciones
 from apps.adopcion.models import Adopcion
 from apps.cuentas.models import Rol
 from apps.fichas.models import FichaAnimal
@@ -10,7 +10,7 @@ from apps.notificaciones.models import Notificacion
 from apps.publicaciones.models import Publicacion
 from apps.transito.models import Alojamiento, PerfilTransito, Postulacion
 
-from .conftest import PUNTO, hacer_ficha
+from .conftest import PUNTO, con_perfil, hacer_ficha
 
 Estado = FichaAnimal.Estado
 Tipo, EstadoPostulacion = Postulacion.Tipo, Postulacion.Estado
@@ -162,3 +162,53 @@ def test_sin_adoptante_elegido_no_se_puede(ana, beto):
 
     ficha.refresh_from_db()
     assert ficha.estado == Estado.EN_ADOPCION
+
+
+def test_al_cancelar_la_mascota_sigue_buscando_familia(ana, beto):
+    ficha = hacer_ficha(cuidador=beto)
+    elegida = elegir(ficha, ana)
+
+    entrega.cancelar_eleccion(ficha, beto)
+
+    elegida.refresh_from_db()
+    ficha.refresh_from_db()
+    assert elegida.estado == EstadoPostulacion.DESCARTADA
+    assert ficha.estado == Estado.EN_ADOPCION
+    assert ficha.cuidador == beto
+    assert not Adopcion.objects.exists()
+
+
+def test_al_cancelar_se_avisa_a_quien_habian_elegido(ana, beto):
+    ficha = hacer_ficha(cuidador=beto, nombre="Firulais")
+    elegir(ficha, ana)
+
+    entrega.cancelar_eleccion(ficha, beto)
+
+    aviso = Notificacion.objects.get(usuario=ana)
+    assert aviso.titulo == "La adopción de Firulais no se concretó"
+    assert aviso.mensaje == "Si seguís con ganas, podés volver a postularte desde la ficha."
+
+
+def test_despues_de_cancelar_se_puede_volver_a_postular(ana, beto):
+    ficha = hacer_ficha(cuidador=beto)
+    elegir(ficha, con_perfil(ana))
+
+    entrega.cancelar_eleccion(ficha, beto)
+
+    assert postulaciones.motivo_para_no_postularse(ana, ficha) is None
+
+
+def test_otra_persona_no_puede_cancelar(ana, beto, carla):
+    ficha = hacer_ficha(cuidador=beto)
+    elegida = elegir(ficha, ana)
+
+    with pytest.raises(entrega.EntregaNoPermitida):
+        entrega.cancelar_eleccion(ficha, carla)
+
+    elegida.refresh_from_db()
+    assert elegida.estado == EstadoPostulacion.ELEGIDA
+
+
+def test_sin_adoptante_elegido_no_hay_nada_que_cancelar(beto):
+    with pytest.raises(entrega.EntregaNoPermitida):
+        entrega.cancelar_eleccion(hacer_ficha(cuidador=beto), beto)
