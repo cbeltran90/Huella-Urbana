@@ -74,6 +74,12 @@ def cambiar_estado(ficha, nuevo_estado, *, actor, cambios=None):
         setattr(ficha, campo, valor)
     ficha.save(update_fields=["estado", *cambios])
 
+    if origen in (FichaAnimal.Estado.EN_ADOPCION, FichaAnimal.Estado.EN_TRANSITO):
+        # La publicación de adopción o de tránsito sigue el estado de la ficha.
+        from apps.publicaciones import servicios as publicaciones  # circular: se importa acá
+
+        publicaciones.resolver_publicaciones_de_estado(ficha)
+
     logger.info(
         "Ficha %s: %s -> %s (%s)",
         ficha.pk,

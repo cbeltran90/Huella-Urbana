@@ -173,21 +173,19 @@ def _punto_para_publicar(ficha, punto, actor):
 
 
 @transaction.atomic
-def _crear_publicacion_de_adopcion(ficha, actor, *, punto, descripcion, telefono_visible):
+def _crear_publicacion_de_estado(ficha, actor, *, tipo, punto, descripcion, telefono_visible):
+    """La publicación de adopción o de tránsito de una ficha que ya existe."""
     lugar, desplazada = _punto_para_publicar(ficha, punto, actor)
-    # Una sola publicación vigente de adopción o tránsito por ficha (ahora vuelve a adopción).
-    ficha.publicaciones.filter(
-        estado=Publicacion.Estado.VIGENTE,
-        tipo__in=[Publicacion.Tipo.ADOPCION, Publicacion.Tipo.TRANSITO],
-    ).update(estado=Publicacion.Estado.RESUELTA)
+    # Una sola publicación vigente de adopción o tránsito por ficha (2.8).
+    resolver_publicaciones_de_estado(ficha)
     # El hallazgo ya cumplió: se cierra y sigue vinculado a la ficha, como parte de su historia.
-    # Su ubicación exacta queda solo en él: no se copia a la publicación de adopción.
+    # Su ubicación exacta queda solo en él: no se copia a la publicación nueva.
     ficha.publicaciones.filter(
         estado=Publicacion.Estado.VIGENTE, tipo=Publicacion.Tipo.HALLAZGO
     ).update(estado=Publicacion.Estado.RESUELTA)
 
     return Publicacion.objects.create(
-        tipo=Publicacion.Tipo.ADOPCION,
+        tipo=tipo,
         autor=ficha.cuidador or actor,
         ficha=ficha,
         ubicacion=lugar,
@@ -199,6 +197,19 @@ def _crear_publicacion_de_adopcion(ficha, actor, *, punto, descripcion, telefono
         raza=ficha.raza,
         color=ficha.color,
     )
+
+
+def resolver_publicaciones_de_estado(ficha):
+    """La publicación vigente de adopción o de tránsito de la ficha pasa a resuelta (2.8).
+
+    Lo usa "cambiar_estado" cuando la ficha deja de estar en adopción o en tránsito. La
+    publicación del estado nuevo la genera quien lo provoca, porque necesita datos que
+    el cambio de estado no tiene. Devuelve cuántas resolvió.
+    """
+    return ficha.publicaciones.filter(
+        estado=Publicacion.Estado.VIGENTE,
+        tipo__in=[Publicacion.Tipo.ADOPCION, Publicacion.Tipo.TRANSITO],
+    ).update(estado=Publicacion.Estado.RESUELTA)
 
 
 def publicar_adopcion_de_ficha(ficha, actor, *, punto=None, descripcion="", telefono_visible=""):
@@ -218,9 +229,10 @@ def publicar_adopcion_de_ficha(ficha, actor, *, punto=None, descripcion="", tele
     """
     if ficha.estado != FichaAnimal.Estado.EN_ADOPCION:
         raise ValueError("La ficha tiene que estar en adopción para publicarla.")
-    publicacion = _crear_publicacion_de_adopcion(
+    publicacion = _crear_publicacion_de_estado(
         ficha,
         actor,
+        tipo=Publicacion.Tipo.ADOPCION,
         punto=punto,
         descripcion=descripcion,
         telefono_visible=telefono_visible,
@@ -230,3 +242,26 @@ def publicar_adopcion_de_ficha(ficha, actor, *, punto=None, descripcion="", tele
     except Exception:
         logger.exception("No se pudo avisar a los hogares compatibles")
     return publicacion
+
+
+def publicar_transito_de_ficha(ficha, actor):
+    """Publica en tránsito una ficha que acaba de pasar a "en tránsito".
+
+    El estado lo cambia antes "cambiar_estado", que resolvió la publicación de adopción. La ficha
+    tiene que tener a su hogar como cuidador. La ubicación es el punto
+    desplazado del domicilio del hogar; la descripción y el teléfono se toman de la publicación
+    de adopción anterior.
+    """
+    if ficha.estado != FichaAnimal.Estado.EN_TRANSITO:
+        raise ValueError("La ficha tiene que estar en tránsito para publicarla.")
+    if ficha.cuidador is None:
+        raise ValueError("Falta el hogar de tránsito: la ficha no tiene cuidador.")
+    anterior = ficha.publicaciones.filter(tipo=Publicacion.Tipo.ADOPCION).order_by("-pk").first()
+    return _crear_publicacion_de_estado(
+        ficha,
+        actor,
+        tipo=Publicacion.Tipo.TRANSITO,
+        punto=None,
+        descripcion=anterior.descripcion if anterior else "",
+        telefono_visible=anterior.telefono_visible if anterior else "",
+    )
