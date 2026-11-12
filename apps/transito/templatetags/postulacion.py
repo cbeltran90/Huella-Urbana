@@ -2,6 +2,7 @@ from django import template
 
 from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
+from apps.fichas.permisos import es_moderador
 from apps.transito import eleccion, postulaciones
 from apps.transito.models import Postulacion
 
@@ -51,18 +52,19 @@ def postulacion_de_transito(context, ficha):
 def elegir_hogar_de_transito(context, ficha):
     """En la ficha: para quien puede elegir, el acceso a los postulantes o el hogar elegido.
 
-    Solo lo ven quien tiene el animal a su cargo, su responsable, el hogar que lo aloja y los
-    moderadores, con la ficha en adopción y sin suspensión. Los datos de cada postulante
-    (contacto, advertencias) están en la pantalla de elegir; acá solo se ve cuántos hay o, si
-    ya se eligió, el hogar elegido con su contacto.
+    Elige quien tiene la mascota a su cargo (ver eleccion.puede_elegir). Los moderadores, que
+    no eligen si hay alguien a cargo, ven igual el hogar elegido para poder registrar el ingreso
+    o cancelar la entrega. Los datos de cada postulante (contacto, advertencias) están en la
+    pantalla de elegir; acá solo se ve cuántos hay o, si ya se eligió, el hogar elegido con su
+    contacto. Una cuenta suspendida no ve nada.
     """
     request = context["request"]
     usuario = request.user
-    if (
-        not usuario.is_authenticated
-        or esta_suspendido(usuario)
-        or not eleccion.puede_elegir(usuario, ficha)
-    ):
+    if not usuario.is_authenticated or esta_suspendido(usuario):
+        return {"mostrar": False}
+    puede = eleccion.puede_elegir(usuario, ficha)
+    modera = es_moderador(usuario) and ficha.estado == FichaAnimal.Estado.EN_ADOPCION
+    if not (puede or modera):
         return {"mostrar": False}
     elegida = (
         Postulacion.objects.filter(
@@ -75,6 +77,6 @@ def elegir_hogar_de_transito(context, ficha):
         "mostrar": True,
         "ficha": ficha,
         "elegida": elegida,
-        "cantidad": 0 if elegida else len(eleccion.postulantes_habilitados(ficha)),
+        "cantidad": len(eleccion.postulantes_habilitados(ficha)) if puede and not elegida else 0,
         "elegido": request.GET.get("elegido") == "1",
     }
