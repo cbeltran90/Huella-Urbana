@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils import timezone
 
+from apps.cuentas.servicios import esta_suspendido
 from apps.fichas.models import FichaAnimal
 from apps.fichas.servicios import cambiar_estado
 from apps.notificaciones.models import Notificacion
@@ -13,7 +14,7 @@ from apps.publicaciones import servicios as publicaciones
 
 from . import eleccion
 from .models import Alojamiento, PerfilTransito, Postulacion
-from .servicios import cupo_libre, hogar_habilitado, marcar_concretada
+from .servicios import marcar_concretada
 
 MENSAJE_NO_PUEDE = (
     "Solo quien entrega la mascota, el hogar elegido o un moderador puede hacer esto."
@@ -22,12 +23,9 @@ MENSAJE_SIN_HOGAR = "Todavía no se eligió un hogar de tránsito."
 MENSAJE_HOGAR_NO_HABILITADO = (
     "Ese hogar ya no está disponible. Podés cancelar la entrega y elegir otro."
 )
-MENSAJE_SIN_LUGAR = "Ese hogar ya no tiene lugar libre. Podés cancelar la entrega y elegir otro."
 MENSAJE_AL_HOGAR = "Se queda con vos hasta el {fin:%d/%m}. ¡Gracias por darle un lugar!"
 MENSAJE_A_QUIEN_ENTREGA = "¡Gracias por todo lo que hiciste!"
-MENSAJE_CANCELADA_AL_HOGAR = (
-    "Gracias por ofrecerte. Hay otras mascotas que necesitan un hogar de tránsito."
-)
+MENSAJE_CANCELADA_AL_HOGAR = "Si seguís con ganas, podés volver a postularte desde la ficha."
 MENSAJE_CANCELADA_A_QUIEN_ENTREGA = "Podés elegir otro hogar desde la ficha."
 
 
@@ -70,20 +68,23 @@ def _validar(ficha, actor):
 def registrar_ingreso(ficha, actor, *, vacunado=False, castrado=False, desparasitado=False):
     """La mascota llegó al hogar elegido: se registra el alojamiento y se devuelve.
 
-    Revalida que el hogar siga habilitado y tenga lugar libre. La ficha pasa a "en tránsito"
-    con el hogar a cargo (la publicación de adopción queda resuelta) y se publica en
-    tránsito. El alojamiento termina, como mucho, a los días de duración máxima del hogar.
-    Lanza IngresoNoPermitido si no se puede; en ese caso no cambia nada.
+    Revalida que el hogar no esté suspendido; el cupo puede quedar en cero o superarse
+    (CU-26). Si venía de otro hogar, ese alojamiento se cierra por relevo. La ficha pasa a
+    "en tránsito" con el hogar a cargo (la publicación de adopción queda resuelta) y se
+    publica en tránsito. El alojamiento termina, como mucho, a los días de duración máxima
+    del hogar. Lanza IngresoNoPermitido si no se puede; en ese caso no cambia nada.
     """
     with transaction.atomic():
         actual, elegida = _validar(ficha, actor)
         perfil = PerfilTransito.objects.filter(usuario_id=elegida.usuario_id, activo=True).first()
-        if perfil is None or not hogar_habilitado(perfil):
+        if perfil is None or esta_suspendido(perfil.usuario):
             raise IngresoNoPermitido(MENSAJE_HOGAR_NO_HABILITADO)
-        if cupo_libre(perfil) < 1:
-            raise IngresoNoPermitido(MENSAJE_SIN_LUGAR)
         entrega = actual.cuidador or actual.responsable
         hoy = timezone.localdate()
+        # Si venía de otro hogar (relevo), ese alojamiento termina hoy y libera su plaza.
+        Alojamiento.objects.filter(ficha=actual, fecha_fin_real__isnull=True).update(
+            fecha_fin_real=hoy, motivo_fin=Alojamiento.MotivoFin.RELEVO
+        )
         alojamiento = Alojamiento.objects.create(
             ficha=actual,
             hogar=perfil,

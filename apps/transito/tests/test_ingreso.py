@@ -4,7 +4,7 @@ import pytest
 from django.contrib.gis.geos import Point
 from django.utils import timezone
 
-from apps.cuentas.models import Domicilio, EstadoCuenta, Usuario
+from apps.cuentas.models import Domicilio, EstadoCuenta, Sancion, Usuario
 from apps.fichas.models import FichaAnimal
 from apps.notificaciones.models import Notificacion
 from apps.publicaciones.models import Publicacion
@@ -47,6 +47,16 @@ def elegir_hogar(ficha, hogar):
         tipo=Postulacion.Tipo.TRANSITO,
         estado=Postulacion.Estado.ELEGIDA,
         contacto="2901-555555",
+    )
+
+
+def suspender(usuario):
+    Sancion.objects.create(
+        usuario=usuario,
+        email_hash=usuario.email_hash,
+        tipo=Sancion.Tipo.TEMPORAL,
+        motivo="Motivo de prueba",
+        fin=timezone.now() + timedelta(days=3),
     )
 
 
@@ -175,7 +185,7 @@ def test_sin_hogar_elegido_no_se_puede(ficha, beto):
         ingresar(ficha, beto)
 
 
-def test_si_el_hogar_ya_no_tiene_lugar_no_ingresa(ficha, beto, hogar):
+def test_el_cupo_completo_no_impide_el_ingreso(ficha, beto, hogar):
     otra = FichaAnimal.objects.create(especie="perro", estado=Estado.EN_TRANSITO, cuidador=hogar)
     Alojamiento.objects.create(
         ficha=otra,
@@ -184,23 +194,39 @@ def test_si_el_hogar_ya_no_tiene_lugar_no_ingresa(ficha, beto, hogar):
     )
     elegir_hogar(ficha, hogar)
 
-    with pytest.raises(ingreso.IngresoNoPermitido, match="lugar libre"):
+    ingresar(ficha, beto)
+
+    ficha.refresh_from_db()
+    assert ficha.estado == Estado.EN_TRANSITO
+    assert cupo_libre(hogar.perfil_transito) == 0
+
+
+def test_si_el_hogar_esta_suspendido_no_ingresa(ficha, beto, hogar):
+    suspender(hogar)
+    elegir_hogar(ficha, hogar)
+
+    with pytest.raises(ingreso.IngresoNoPermitido, match="ya no está disponible"):
         ingresar(ficha, beto)
 
     ficha.refresh_from_db()
     assert ficha.estado == Estado.EN_ADOPCION
 
 
-def test_si_el_hogar_esta_en_pausa_no_ingresa(ficha, beto):
-    en_pausa = crear_hogar(
-        "pausado",
-        disponibilidad=False,
-        pausa_hasta=timezone.localdate() + timedelta(days=5),
+def test_si_venia_de_otro_hogar_se_libera_esa_plaza(ficha, beto, hogar):
+    anterior = crear_hogar("anterior")
+    relevo = Alojamiento.objects.create(
+        ficha=ficha,
+        hogar=anterior.perfil_transito,
+        fecha_fin_prevista=timezone.localdate() + timedelta(days=10),
     )
-    elegir_hogar(ficha, en_pausa)
+    elegir_hogar(ficha, hogar)
 
-    with pytest.raises(ingreso.IngresoNoPermitido, match="ya no está disponible"):
-        ingresar(ficha, beto)
+    ingresar(ficha, beto)
+
+    relevo.refresh_from_db()
+    assert relevo.fecha_fin_real == timezone.localdate()
+    assert relevo.motivo_fin == Alojamiento.MotivoFin.RELEVO
+    assert cupo_libre(anterior.perfil_transito) == 1
 
 
 # Cancelar la entrega (1A)
