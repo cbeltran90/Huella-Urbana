@@ -147,16 +147,16 @@ def test_el_cuidador_recibe_un_aviso(ana, beto):
     assert aviso.tipo == Notificacion.Tipo.POSTULACION_RECIBIDA
     assert aviso.ficha == ficha
     assert aviso.titulo == "¡Firulais tiene una persona interesada!"
-    assert aviso.mensaje == "Alguien se postuló para adoptarlo."
+    assert aviso.mensaje == "Alguien quiere darle un hogar."
 
 
-def test_sin_nombre_el_aviso_habla_del_animal_que_cuida(ana, beto):
+def test_sin_nombre_el_aviso_habla_de_la_mascota_que_cuida(ana, beto):
     ficha = hacer_ficha(cuidador=beto, nombre="")
 
     postulaciones.postular_adopcion(con_perfil(ana), ficha, "2901 444444")
 
     assert (
-        Notificacion.objects.get().titulo == "¡El animal que cuidás tiene una persona interesada!"
+        Notificacion.objects.get().titulo == "¡La mascota que cuidás tiene una persona interesada!"
     )
 
 

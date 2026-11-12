@@ -71,7 +71,7 @@ def test_si_ya_la_eligieron_no_puede_retirarla(client, ana):
 
     html = ver_ficha(client, ficha, ana)
 
-    assert "¡Te eligieron para adoptarlo!" in html
+    assert "¡Te eligieron para darle un hogar!" in html
     assert reverse("transito:retirar_postulacion", args=[propia.pk]) not in html
 
 
