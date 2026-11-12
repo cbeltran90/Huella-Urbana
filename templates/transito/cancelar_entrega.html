@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titulo %}Cancelar la entrega · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+    {% if error %}
+      <h1 class="text-2xl font-bold">Cancelar la entrega</h1>
+      <p role="alert"
+         class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{{ error }}</p>
+    {% else %}
+      <h1 class="text-2xl font-bold">¿Cancelar la entrega de {{ ficha.nombre|default:"la mascota" }}?</h1>
+      <p class="mt-2 text-sm text-stone-600">Después se puede elegir otro hogar de tránsito.</p>
+      <form method="post" class="mt-4">
+        {% csrf_token %}
+        <button type="submit"
+                class="inline-flex min-h-11 items-center rounded border border-red-300 px-4 text-red-800">
+          Sí, cancelar
+        </button>
+      </form>
+    {% endif %}
+    <a href="{% url 'fichas:detalle' ficha.pk %}"
+       class="mt-4 block min-h-11 px-4 py-2 text-center underline">Volver a la ficha</a>
+  </section>
+{% endblock %}

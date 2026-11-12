@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titulo %}Ingreso al hogar de tránsito · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+    {% if error %}
+      <h1 class="text-2xl font-bold">Ingreso al hogar de tránsito</h1>
+      <p role="alert"
+         class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{{ error }}</p>
+      {% if elegida %}
+        <a href="{% url 'transito:cancelar_entrega' ficha.pk %}"
+           class="mt-4 inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar la entrega</a>
+      {% endif %}
+    {% else %}
+      <h1 class="text-2xl font-bold">¿{{ ficha.nombre|default:"La mascota" }} ya está en el hogar de {{ elegida.usuario.nombre_usuario }}?</h1>
+      <form method="post" class="mt-4 space-y-4">
+        {% csrf_token %}
+        <fieldset class="space-y-2">
+          <legend class="text-sm font-medium">Al llegar, ¿cómo estaba?</legend>
+          <label class="flex min-h-11 items-center gap-2">
+            <input type="checkbox"
+                   id="vacunado"
+                   name="vacunado"
+                   {% if ficha.vacunado %} checked{% endif %}>
+            Vacunada
+          </label>
+          <label class="flex min-h-11 items-center gap-2">
+            <input type="checkbox"
+                   id="castrado"
+                   name="castrado"
+                   {% if ficha.castrado %} checked{% endif %}>
+            Castrada
+          </label>
+          <label class="flex min-h-11 items-center gap-2">
+            <input type="checkbox"
+                   id="desparasitado"
+                   name="desparasitado"
+                   {% if ficha.desparasitado %} checked{% endif %}>
+            Desparasitada
+          </label>
+        </fieldset>
+        <button type="submit"
+                class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 font-semibold text-white">
+          Sí, ya está en el hogar
+        </button>
+      </form>
+    {% endif %}
+    <a href="{% url 'fichas:detalle' ficha.pk %}"
+       class="mt-4 block min-h-11 px-4 py-2 text-center underline">Volver a la ficha</a>
+  </section>
+{% endblock %}

@@ -16,6 +16,14 @@
         {% endif %}
       </p>
       <p class="mt-1 text-stone-600">Tu canal de contacto: {{ propia.contacto }}</p>
+      {% if propia.estado == "elegida" %}
+        <div class="mt-2 flex flex-wrap gap-3">
+          <a href="{% url 'transito:registrar_ingreso' ficha.pk %}"
+             class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Ya está en mi casa</a>
+          <a href="{% url 'transito:cancelar_entrega' ficha.pk %}"
+             class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar la entrega</a>
+        </div>
+      {% endif %}
       {% if propia.estado == "pendiente" %}
         <form method="post"
               action="{% url 'transito:retirar_postulacion' propia.pk %}"

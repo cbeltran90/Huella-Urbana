@@ -9,6 +9,12 @@
     <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
       <h2 class="font-semibold">Hogar de tránsito elegido</h2>
       <p class="mt-1">{{ elegida.usuario.nombre_usuario }} · Contacto: {{ elegida.contacto }}</p>
+      <div class="mt-2 flex flex-wrap gap-3">
+        <a href="{% url 'transito:registrar_ingreso' ficha.pk %}"
+           class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Ya está en el hogar</a>
+        <a href="{% url 'transito:cancelar_entrega' ficha.pk %}"
+           class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar la entrega</a>
+      </div>
     </div>
   {% elif cantidad %}
     <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
