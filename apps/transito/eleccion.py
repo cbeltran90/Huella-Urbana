@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from django.db import transaction
 
 from apps.fichas.models import FichaAnimal
-from apps.fichas.permisos import es_cuidador, es_moderador, es_responsable
+from apps.fichas.permisos import es_moderador
 from apps.notificaciones.models import Notificacion
 from apps.notificaciones.servicios import notificar
 
-from .models import Alojamiento, PerfilTransito, Postulacion
+from .models import PerfilTransito, Postulacion
 from .servicios import cupo_libre, hogar_habilitado, incompatibilidades
 
 logger = logging.getLogger(__name__)
@@ -51,24 +51,17 @@ class Postulante:
         return self.postulacion.contacto
 
 
-def _aloja_hoy(usuario, ficha):
-    return Alojamiento.objects.filter(
-        ficha=ficha, hogar_id=usuario.pk, fecha_fin_real__isnull=True
-    ).exists()
-
-
 def puede_elegir(usuario, ficha):
-    """Quien tiene el animal a su cargo, su responsable, el hogar que lo aloja (relevo) o un
-    moderador, con la ficha en "en adopción".
+    """Quien tiene la mascota a su cargo: el cuidador; si no hay, su responsable; si no hay
+    ningún usuario a cargo, un moderador. Es la misma regla que para elegir adoptante
+    (apps.adopcion). La ficha tiene que estar "en adopción".
     """
     if not usuario.is_authenticated or ficha.estado != FichaAnimal.Estado.EN_ADOPCION:
         return False
-    return (
-        es_cuidador(usuario, ficha)
-        or es_responsable(usuario, ficha)
-        or es_moderador(usuario)
-        or _aloja_hoy(usuario, ficha)
-    )
+    a_cargo = ficha.cuidador_id or ficha.responsable_id
+    if a_cargo is not None:
+        return usuario.pk == a_cargo
+    return es_moderador(usuario)
 
 
 def _postulaciones_de_transito(ficha):
