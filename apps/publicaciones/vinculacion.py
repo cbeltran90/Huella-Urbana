@@ -128,7 +128,12 @@ def puede_desvincular(publicacion, usuario):
 
 @transaction.atomic
 def desvincular(publicacion, usuario):
-    """Separa la publicación de su ficha. Queda suelta y el rastro se actualiza."""
+    """Separa la publicación de su ficha. Queda suelta y el rastro se actualiza.
+
+    Limitación conocida: si al confirmar la coincidencia se fusionaron dos fichas, desvincular no
+    las separa (ni devuelve las fotos): la fusión no se deshace. Solo la publicación queda suelta
+    y la coincidencia, descartada.
+    """
     if not puede_desvincular(publicacion, usuario):
         raise PermissionError("No podés desvincular esta publicación.")
     ficha = publicacion.ficha
