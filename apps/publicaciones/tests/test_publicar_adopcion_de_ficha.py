@@ -1,4 +1,7 @@
+import math
+
 import pytest
+from constance import config
 from django.contrib.gis.geos import Point
 from model_bakery import baker
 
@@ -11,6 +14,7 @@ from .conftest import DOMICILIO, hacer_publicacion
 pytestmark = pytest.mark.django_db
 
 PUNTO = Point(-68.31, -54.81, srid=4326)
+DESPLAZADO = Point(-68.3105, -54.8105, srid=4326)
 EXACTO = Point(-68.2999, -54.8011, srid=4326)  # el del hallazgo: no puede salir en la adopción
 
 
@@ -81,13 +85,47 @@ def test_sin_domicilio_ni_punto_se_pide_la_ubicacion(ana, monkeypatch, avisados)
     assert not Publicacion.objects.exists()
 
 
-def test_sin_usuario_a_cargo_el_punto_va_en_la_ubicacion_desplazada(beto, avisados):
+def test_sin_usuario_a_cargo_el_punto_sale_desplazado(beto, avisados, monkeypatch):
+    monkeypatch.setattr(ubicacion, "desplazar_punto", lambda punto: DESPLAZADO)
     moderador = beto
+
     publicacion = servicios.publicar_adopcion_de_ficha(_ficha(), moderador, punto=PUNTO)
 
-    assert publicacion.ubicacion.equals(PUNTO)
-    assert publicacion.ubicacion_desplazada.equals(PUNTO)
+    assert publicacion.ubicacion.equals(DESPLAZADO)
+    assert publicacion.ubicacion_desplazada.equals(DESPLAZADO)
     assert publicacion.autor == moderador
+
+
+def test_un_moderador_no_registra_su_punto_como_domicilio_del_cuidador(
+    ana, beto, avisados, monkeypatch
+):
+    registrados = []
+    monkeypatch.setattr(ubicacion, "punto_de_domicilio", lambda usuario: None)
+    monkeypatch.setattr(
+        ubicacion,
+        "registrar_domicilio",
+        lambda usuario, punto: registrados.append(usuario) or punto,
+    )
+    monkeypatch.setattr(ubicacion, "desplazar_punto", lambda punto: DESPLAZADO)
+
+    publicacion = servicios.publicar_adopcion_de_ficha(_ficha(cuidador=ana), beto, punto=PUNTO)
+
+    assert registrados == []
+    assert publicacion.ubicacion.equals(DESPLAZADO)
+    assert publicacion.autor == ana
+
+
+def _metros(a, b):
+    dx = (b.x - a.x) * 111_320 * math.cos(math.radians(a.y))
+    dy = (b.y - a.y) * 111_320
+    return math.hypot(dx, dy)
+
+
+def test_el_punto_desplazado_queda_dentro_del_radio_y_no_es_el_original():
+    desplazado = ubicacion.desplazar_punto(PUNTO)
+
+    assert desplazado.srid == 4326
+    assert 0 < _metros(PUNTO, desplazado) <= config.RADIO_DOMICILIO_METROS * 1.01
 
 
 def test_sin_usuario_a_cargo_ni_punto_se_pide_la_ubicacion(beto, avisados):

@@ -135,6 +135,26 @@ def test_el_moderador_ve_el_contacto_y_el_mapa_sin_cuidador(client, mora):
     assert 'name="latitud"' in html
 
 
+def test_el_texto_del_mapa_para_el_moderador_sin_cuidador(client, mora):
+    html = client.get(url(crear_ficha(cuidador=None))).content.decode()
+    assert "no se guarda como domicilio de nadie" in html
+    assert "tal cual" not in html
+
+
+def test_el_texto_del_mapa_para_el_cuidador_sin_domicilio(client, dani):
+    html = client.get(url(crear_ficha(cuidador=dani))).content.decode()
+    assert "queda guardado como tu domicilio" in html
+    assert "Quien lo tiene a su cargo" not in html
+
+
+def test_el_texto_del_mapa_para_el_moderador_con_cuidador_sin_domicilio(client, mora):
+    cuidador = crear_usuario("dani")
+    html = client.get(url(crear_ficha(cuidador=cuidador))).content.decode()
+    assert "Quien lo tiene a su cargo no tiene domicilio registrado" in html
+    assert "no se guarda como domicilio de nadie" in html
+    assert "queda guardado" not in html
+
+
 # Confirmar
 
 
@@ -203,3 +223,26 @@ def test_un_contacto_largo_vuelve_con_el_error_y_no_cambia_nada(client, mora):
     ficha.refresh_from_db()
     assert ficha.estado == FichaAnimal.Estado.SIN_RESPONSABLE
     assert not Publicacion.objects.filter(ficha=ficha).exists()
+
+
+def test_el_moderador_por_un_cuidador_sin_domicilio_no_le_guarda_domicilio(client, mora):
+    cuidador = crear_usuario("dani")
+    ficha = crear_ficha(cuidador=cuidador)
+
+    respuesta = client.post(url(ficha), MARCADO)
+
+    assert respuesta.status_code == 302
+    assert not Domicilio.objects.filter(usuario=cuidador).exists()
+    publicacion = Publicacion.objects.get(ficha=ficha)
+    assert publicacion.autor == cuidador
+    assert publicacion.ubicacion != PUNTO
+    assert publicacion.ubicacion.distance(PUNTO) < 0.003
+
+
+def test_el_moderador_sin_cuidador_no_deja_un_domicilio_de_nadie(client, mora):
+    ficha = crear_ficha(cuidador=None)
+
+    client.post(url(ficha), {"contacto": "Vecina", **MARCADO})
+
+    assert not Domicilio.objects.exists()
+    assert Publicacion.objects.get(ficha=ficha).ubicacion != PUNTO
