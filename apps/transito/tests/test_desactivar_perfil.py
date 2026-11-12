@@ -42,7 +42,7 @@ def con_animales(monkeypatch):
 
 
 @pytest.mark.django_db
-def test_por_ahora_nadie_tiene_animales_a_cargo(ana):
+def test_sin_alojamientos_abiertos_no_tiene_animales_a_cargo(ana):
     assert servicios.tiene_animales_a_cargo(ana) is False
 
 

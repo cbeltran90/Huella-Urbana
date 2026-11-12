@@ -44,7 +44,7 @@ def con_alojados(monkeypatch, cantidad):
 
 
 @pytest.mark.django_db
-def test_por_ahora_nadie_tiene_animales_alojados(ana):
+def test_sin_alojamientos_abiertos_no_hay_animales_alojados(ana):
     assert servicios.animales_alojados(ana) == 0
     assert servicios.tiene_animales_a_cargo(ana) is False
 
