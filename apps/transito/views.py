@@ -156,5 +156,6 @@ def solicitar(request, ficha_pk):
         "form": form,
         "pide_contacto": ficha.cuidador_id is None,
         "pide_punto": solicitud.necesita_punto(ficha),
+        "es_el_cuidador": ficha.cuidador_id == request.user.pk,
     }
     return render(request, "transito/solicitar.html", contexto)

@@ -28,13 +28,17 @@
       {% if pide_punto %}
         <div>
           <p class="block text-sm font-medium">¿Dónde está el animal?</p>
-          {% if ficha.cuidador_id %}
+          {% if not ficha.cuidador_id %}
             <p class="text-sm text-stone-600">
-              Quien lo tiene a su cargo no tiene domicilio registrado. Marcá dónde está el animal: se muestra de forma aproximada y queda guardado como su domicilio.
+              Marcá un punto aproximado, no la puerta de la casa. En el mapa público se muestra corrido unos metros y no se guarda como domicilio de nadie.
+            </p>
+          {% elif es_el_cuidador %}
+            <p class="text-sm text-stone-600">
+              Todavía no tenés domicilio registrado. Marcá dónde está el animal: se muestra de forma aproximada y queda guardado como tu domicilio.
             </p>
           {% else %}
             <p class="text-sm text-stone-600">
-              Marcá un punto aproximado, no la puerta de la casa: el punto se muestra tal cual en el mapa público.
+              Quien lo tiene a su cargo no tiene domicilio registrado. Marcá dónde está el animal: se muestra de forma aproximada y no se guarda como domicilio de nadie.
             </p>
           {% endif %}
           <button type="button"
