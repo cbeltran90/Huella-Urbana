@@ -146,30 +146,35 @@ def alta_en_adopcion(usuario, *, animal, archivos, punto=None, descripcion="", t
     return publicacion
 
 
-def _punto_para_publicar(ficha, punto):
+def _punto_para_publicar(ficha, punto, actor):
     """El punto que se muestra en la publicación de adopción de una ficha ya existente.
 
     - A cargo de un usuario con domicilio: su punto desplazado.
-    - A cargo de un usuario sin domicilio: "punto", que se registra como su domicilio.
-    - Sin un usuario a cargo (lo carga un moderador): "punto" tal cual, que además se guarda
-      en "ubicacion_desplazada". Devuelve (ubicacion, ubicacion_desplazada).
+    - A cargo de un usuario sin domicilio, y es él quien publica: "punto", que se registra como
+      su domicilio.
+    - Lo carga un moderador (sin usuario a cargo, o a cargo de alguien sin domicilio que no es
+      quien publica): "punto" se desplaza acá, nunca sale tal cual, y no se guarda como
+      domicilio de nadie. Va también a "ubicacion_desplazada".
+    Devuelve (ubicacion, ubicacion_desplazada).
     """
     cuidador = ficha.cuidador
-    if cuidador is None:
-        if punto is None:
+    if cuidador is not None:
+        lugar = ubicacion.punto_de_domicilio(cuidador)
+        if lugar is not None:
+            return lugar, None
+    if punto is None:
+        if cuidador is None:
             raise ValueError("Falta la ubicación: el animal no está a cargo de un usuario.")
-        return punto, punto
-    lugar = ubicacion.punto_de_domicilio(cuidador)
-    if lugar is None:
-        if punto is None:
-            raise ValueError("Falta la ubicación: quien lo tiene a cargo no tiene domicilio.")
-        lugar = ubicacion.registrar_domicilio(cuidador, punto)
-    return lugar, None
+        raise ValueError("Falta la ubicación: quien lo tiene a cargo no tiene domicilio.")
+    if cuidador is not None and actor == cuidador:
+        return ubicacion.registrar_domicilio(cuidador, punto), None
+    desplazado = ubicacion.desplazar_punto(punto)
+    return desplazado, desplazado
 
 
 @transaction.atomic
 def _crear_publicacion_de_adopcion(ficha, actor, *, punto, descripcion, telefono_visible):
-    lugar, desplazada = _punto_para_publicar(ficha, punto)
+    lugar, desplazada = _punto_para_publicar(ficha, punto, actor)
     # Una sola publicación vigente de adopción o tránsito por ficha (ahora vuelve a adopción).
     ficha.publicaciones.filter(
         estado=Publicacion.Estado.VIGENTE,
@@ -204,7 +209,9 @@ def publicar_adopcion_de_ficha(ficha, actor, *, punto=None, descripcion="", tele
     transacción.
     - 'actor': quien publica; es el autor si el animal no está a cargo de un usuario.
     - 'punto': solo hace falta si no hay un domicilio de quien lo tiene a cargo, o si no lo
-      tiene a cargo un usuario (lo carga un moderador).
+      tiene a cargo un usuario (lo carga un moderador). Si lo marca un moderador, se desplaza
+      acá y no se guarda como domicilio de nadie; solo se registra como domicilio si quien
+      publica es el propio cuidador.
     La publicación sale con una ubicación aproximada, nunca la exacta. Cierra el hallazgo
     vigente de la ficha (sigue vinculado) y la publicación de adopción o tránsito anterior.
     Después de guardar, avisa a los hogares compatibles; si el aviso falla, la publicación queda.
