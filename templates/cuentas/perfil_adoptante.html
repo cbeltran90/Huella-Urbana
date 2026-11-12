@@ -4,7 +4,7 @@
   <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
     <h1 class="text-2xl font-bold">Perfil de hogar y familia</h1>
     <p class="mt-1 text-sm text-stone-600">
-      Para postularte a adoptar necesitamos conocer tu hogar y tu experiencia con animales.
+      Para postularte a adoptar necesitamos conocer tu hogar y tu experiencia con mascotas.
     </p>
     {% if guardado %}
       <p role="status"
@@ -49,7 +49,7 @@
       {% csrf_token %}
       <div>
         <label for="id_experiencia_previa" class="block text-sm font-medium">Experiencia previa con animales</label>
-        <p class="text-sm text-stone-600">Contanos qué animales cuidaste y por cuánto tiempo.</p>
+        <p class="text-sm text-stone-600">Contanos qué mascotas cuidaste y por cuánto tiempo.</p>
         <textarea name="experiencia_previa"
                   id="id_experiencia_previa"
                   rows="5"

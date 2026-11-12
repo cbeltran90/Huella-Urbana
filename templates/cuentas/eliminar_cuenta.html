@@ -13,7 +13,7 @@
               {% for ficha in impedimento.fichas %}
                 <li>
                   <a href="{% url 'fichas:detalle' ficha.pk %}"
-                     class="underline">{{ ficha.nombre|default:"Animal sin nombre" }}</a>
+                     class="underline">{{ ficha.nombre|default:"Mascota sin nombre" }}</a>
                   ({{ ficha.get_estado_display }})
                 </li>
               {% endfor %}

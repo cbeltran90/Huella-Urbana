@@ -15,10 +15,10 @@ from .servicios import cupo_libre, hogar_habilitado, incompatibilidades
 
 logger = logging.getLogger(__name__)
 
-MENSAJE_NO_PUEDE_ELEGIR = "No podés elegir hogar de tránsito para este animal."
+MENSAJE_NO_PUEDE_ELEGIR = "No podés elegir hogar de tránsito para esta mascota."
 MENSAJE_POSTULACION_NO_DISPONIBLE = "Esa postulación ya no está disponible."
 MENSAJE_HOGAR_NO_HABILITADO = "Ese hogar ya no está habilitado. Elegí a otro."
-MENSAJE_YA_HAY_ELEGIDO = "Ya hay un hogar elegido para este animal."
+MENSAJE_YA_HAY_ELEGIDO = "Ya hay un hogar elegido para esta mascota."
 
 
 class EleccionNoPermitida(Exception):
@@ -167,19 +167,19 @@ def _marcar_elegida(ficha, actor, postulacion, hoy):
 
 
 def _avisar_del_resultado(ficha, elegida, descartadas):
-    nombre = ficha.nombre or "este animal"
+    nombre = ficha.nombre or "la mascota"
     avisos = [
         (
             elegida,
             f"¡Te eligieron como hogar de tránsito de {nombre}!",
-            "Quien lo tiene a su cargo se va a comunicar con vos por el contacto que dejaste.",
+            "Quien la tiene a su cargo se va a comunicar con vos por el contacto que dejaste.",
         )
     ]
     avisos += [
         (
             postulacion,
             f"Tu postulación de tránsito para {nombre} no fue elegida",
-            "Se eligió a otro hogar. Gracias por ofrecerte: podés postularte a otros animales.",
+            "Se eligió a otro hogar. Gracias por ofrecerte: podés postularte a otras mascotas.",
         )
         for postulacion in descartadas
     ]

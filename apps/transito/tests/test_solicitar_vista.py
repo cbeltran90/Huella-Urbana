@@ -144,13 +144,13 @@ def test_el_texto_del_mapa_para_el_moderador_sin_cuidador(client, mora):
 def test_el_texto_del_mapa_para_el_cuidador_sin_domicilio(client, dani):
     html = client.get(url(crear_ficha(cuidador=dani))).content.decode()
     assert "queda guardado como tu domicilio" in html
-    assert "Quien lo tiene a su cargo" not in html
+    assert "Quien la tiene a su cargo" not in html
 
 
 def test_el_texto_del_mapa_para_el_moderador_con_cuidador_sin_domicilio(client, mora):
     cuidador = crear_usuario("dani")
     html = client.get(url(crear_ficha(cuidador=cuidador))).content.decode()
-    assert "Quien lo tiene a su cargo no tiene domicilio registrado" in html
+    assert "Quien la tiene a su cargo no tiene domicilio registrado" in html
     assert "no se guarda como domicilio de nadie" in html
     assert "queda guardado" not in html
 

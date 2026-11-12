@@ -21,9 +21,9 @@ ESTADOS_ACTIVOS = (Postulacion.Estado.PENDIENTE, Postulacion.Estado.ELEGIDA)
 MENSAJE_SIN_PERFIL = "Para postularte tenés que completar tu perfil de hogar de tránsito."
 MENSAJE_SUSPENDIDO = "No podés postularte mientras tu cuenta esté suspendida."
 MENSAJE_EN_PAUSA = "No podés postularte mientras tu hogar esté en pausa."
-MENSAJE_NO_EN_ADOPCION = "Este animal ya no está en adopción."
-MENSAJE_TIENE_EL_ANIMAL = "No podés postularte para un animal que tenés a tu cargo."
-MENSAJE_YA_POSTULADO = "Ya tenés una postulación activa para este animal."
+MENSAJE_NO_EN_ADOPCION = "Esta mascota ya no está en adopción."
+MENSAJE_TIENE_EL_ANIMAL = "No podés postularte para una mascota que tenés a tu cargo."
+MENSAJE_YA_POSTULADO = "Ya tenés una postulación activa para esta mascota."
 MENSAJE_CONTACTO_VACIO = "Indicá un canal de contacto."
 MENSAJE_CONTACTO_LARGO = f"El canal de contacto no puede superar los {CONTACTO_MAXIMO} caracteres."
 MENSAJE_NO_ES_SUYA = "Esa postulación no es tuya."
@@ -90,21 +90,20 @@ def advertencias_de_postulacion(usuario, ficha):
 
 
 def avisar_de_postulacion(postulacion):
-    """Avisa de la postulación nueva a quien tiene el animal a su cargo y a su responsable.
+    """Avisa de la postulación nueva a quien tiene la mascota a su cargo y a su responsable.
 
-    Sirve para los dos tipos de postulación. Nunca se avisa al propio postulante (por ejemplo,
-    un cuidador que se postula para quedarse con el animal). Si no queda nadie a quien avisar
-    no se avisa a nadie. Si el aviso falla, la postulación queda igual. No dice quién se
-    postuló: eso lo ve quien elige en la pantalla de la ficha.
+    Sirve para los dos tipos de postulación y es el único aviso de postulación nueva. Nunca se
+    avisa al propio postulante (por ejemplo, un cuidador que se postula para quedársela). Si no
+    queda nadie a quien avisar no se avisa a nadie. Si el aviso falla, la postulación queda
+    igual. No dice quién se postuló: eso lo ve quien elige en la pantalla de la ficha.
     """
     ficha = postulacion.ficha
-    nombre = ficha.nombre or "este animal"
     if postulacion.tipo == Postulacion.Tipo.ADOPCION:
-        titulo = "Nueva postulación para adoptar"
-        mensaje = f"Hay una postulación nueva para adoptar a {nombre}."
+        titulo = f"¡{ficha.nombre or 'La mascota que cuidás'} tiene una persona interesada!"
+        mensaje = "Alguien quiere darle un hogar."
     else:
         titulo = "Nueva postulación de tránsito"
-        mensaje = f"Hay una postulación nueva de tránsito para {nombre}."
+        mensaje = f"Hay una postulación nueva de tránsito para {ficha.nombre or 'la mascota'}."
     destinatarios = {
         usuario.pk: usuario
         for usuario in (ficha.cuidador, ficha.responsable)

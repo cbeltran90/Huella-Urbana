@@ -131,24 +131,6 @@ def test_si_no_puede_postularse_no_se_avisa():
     assert not Postulacion.objects.exists()
 
 
-def test_tambien_sirve_para_una_postulacion_de_adopcion():
-    cuidador = crear_usuario("carla")
-    ficha = crear_ficha(cuidador=cuidador)
-    postulacion = Postulacion.objects.create(
-        ficha=ficha,
-        usuario=crear_usuario("ana"),
-        tipo=Postulacion.Tipo.ADOPCION,
-        contacto="2901-555555",
-    )
-
-    postulaciones.avisar_de_postulacion(postulacion)
-
-    aviso = avisos().get()
-    assert aviso.usuario == cuidador
-    assert aviso.titulo == "Nueva postulación para adoptar"
-    assert "adoptar a Bruno" in aviso.mensaje
-
-
 def test_no_se_avisa_al_propio_postulante():
     cuidador = crear_usuario("carla")
     ficha = crear_ficha(cuidador=cuidador)
@@ -172,3 +154,43 @@ def test_si_el_postulante_es_el_responsable_solo_se_avisa_al_cuidador():
     postulaciones.avisar_de_postulacion(postulacion)
 
     assert [aviso.usuario for aviso in avisos()] == [cuidador]
+
+
+def test_el_aviso_de_adopcion_dice_lo_mismo_que_el_de_adopcion_de_siempre():
+    cuidador = crear_usuario("carla")
+    ficha = crear_ficha(cuidador=cuidador, nombre="Firulais")
+    postulacion = Postulacion.objects.create(
+        ficha=ficha,
+        usuario=crear_usuario("ana"),
+        tipo=Postulacion.Tipo.ADOPCION,
+        contacto="2901-555555",
+    )
+
+    postulaciones.avisar_de_postulacion(postulacion)
+
+    aviso = avisos().get()
+    assert aviso.usuario == cuidador
+    assert aviso.titulo == "¡Firulais tiene una persona interesada!"
+    assert aviso.mensaje == "Alguien quiere darle un hogar."
+
+
+def test_sin_nombre_el_aviso_de_adopcion_habla_de_la_mascota_que_cuida():
+    ficha = crear_ficha(cuidador=crear_usuario("carla"), nombre="")
+    postulacion = Postulacion.objects.create(
+        ficha=ficha,
+        usuario=crear_usuario("ana"),
+        tipo=Postulacion.Tipo.ADOPCION,
+        contacto="2901-555555",
+    )
+
+    postulaciones.avisar_de_postulacion(postulacion)
+
+    assert avisos().get().titulo == "¡La mascota que cuidás tiene una persona interesada!"
+
+
+def test_sin_nombre_el_aviso_de_transito_habla_de_la_mascota():
+    ficha = crear_ficha(cuidador=crear_usuario("carla"), nombre="")
+
+    postulaciones.postular_transito(crear_hogar(), ficha, "2901-555555")
+
+    assert avisos().get().mensaje == "Hay una postulación nueva de tránsito para la mascota."
