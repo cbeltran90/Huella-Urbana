@@ -1,6 +1,6 @@
 from django import template
 
-from apps.adopcion import eleccion, postulaciones
+from apps.adopcion import eleccion, entrega, postulaciones
 from apps.transito.models import Postulacion
 
 register = template.Library()
@@ -45,15 +45,24 @@ def postulacion_de_adopcion(context, ficha):
 
 @register.inclusion_tag("adopcion/_postulantes.html", takes_context=True)
 def postulantes_de_adopcion(context, ficha):
-    """En la ficha, para quien elige: cuántos se postularon o a quién eligió (CU-29)."""
+    """En la ficha: cuántos se postularon, o la adopción en curso para concretarla (CU-29, CU-30).
+
+    Con alguien elegido lo ve quien puede entregar (también un moderador). Si no, solo quien
+    elige.
+    """
     usuario = context["request"].user
-    if ficha.estado not in postulaciones.ESTADOS_DISPONIBLES or not eleccion.puede_elegir(
-        usuario, ficha
-    ):
+    if ficha.estado not in postulaciones.ESTADOS_DISPONIBLES:
         return {"mostrar": False}
-    return {
-        "mostrar": True,
-        "ficha": ficha,
-        "elegida": eleccion.elegida_de(ficha),
-        "cantidad": eleccion.postulantes_de(ficha).count(),
-    }
+    elegida = eleccion.elegida_de(ficha)
+    if elegida is not None and entrega.puede_entregar(usuario, ficha):
+        return {"mostrar": True, "ficha": ficha, "elegida": elegida}
+    if not eleccion.puede_elegir(usuario, ficha):
+        return {"mostrar": False}
+    return {"mostrar": True, "ficha": ficha, "cantidad": eleccion.postulantes_de(ficha).count()}
+
+
+@register.inclusion_tag("adopcion/_adoptada.html", takes_context=True)
+def aviso_de_adopcion(context, ficha):
+    """Al volver de concretar la adopción, lo confirma (CU-30). No dice quién adoptó."""
+    adoptada = context["request"].GET.get("adoptada") == "1"
+    return {"mostrar": adoptada and ficha.adopciones.exists()}
