@@ -74,3 +74,26 @@ def test_campo_no_modificable_se_rechaza_sin_cambiar_el_estado():
 
     ficha.refresh_from_db()
     assert ficha.estado == Estado.EN_ADOPCION
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("origen", [Estado.SIN_RESPONSABLE, Estado.EN_ADOPCION, Estado.EN_TRANSITO])
+def test_al_volver_a_registrado_se_limpia_quien_la_tenia_a_cargo(origen, django_user_model):
+    cuidador = django_user_model.objects.create_user(
+        "cuidador@ejemplo.com", "Cuidador", "clave-de-prueba-1"
+    )
+    ficha = baker.make(
+        FichaAnimal,
+        estado=origen,
+        cuidador=cuidador,
+        cuidador_contacto="2901-555555",
+        sin_responsable_desde="2026-11-01",
+        es_privada=True,
+    )
+
+    cambiar_estado(ficha, Estado.REGISTRADO, actor=None)
+
+    ficha.refresh_from_db()
+    assert ficha.cuidador is None and ficha.cuidador_contacto == ""
+    assert ficha.sin_responsable_desde is None
+    assert ficha.es_privada is True  # no se toca

@@ -22,6 +22,22 @@ CAMPOS_MODIFICABLES = frozenset(
     }
 )
 
+# Al volver a "registrado" la ficha vuelve a tener responsable: nadie la tiene "a cargo" y deja
+# de correr el plazo de ausencia. Lo que pida quien llama manda; "es_privada" no se toca.
+LIMPIEZA_AL_REGISTRAR = {
+    "cuidador": None,
+    "cuidador_contacto": "",
+    "sin_responsable_desde": None,
+}
+
+# Al volver a "registrado" la ficha vuelve a tener responsable: nadie la tiene "a cargo" y deja
+# de correr el plazo de ausencia. Lo que pida quien llama manda; "es_privada" no se toca.
+LIMPIEZA_AL_REGISTRAR = {
+    "cuidador": None,
+    "cuidador_contacto": "",
+    "sin_responsable_desde": None,
+}
+
 
 @transaction.atomic
 def cambiar_estado(ficha, nuevo_estado, *, actor, cambios=None):
@@ -46,6 +62,12 @@ def cambiar_estado(ficha, nuevo_estado, *, actor, cambios=None):
     origen = FichaAnimal.objects.select_for_update().only("estado").get(pk=ficha.pk).estado
     if not transicion_permitida(origen, nuevo_estado):
         raise TransicionInvalida(f"No se puede pasar una ficha de {origen} a {nuevo_estado}.")
+
+    if nuevo_estado == FichaAnimal.Estado.REGISTRADO:
+        cambios = {**LIMPIEZA_AL_REGISTRAR, **cambios}
+
+    if nuevo_estado == FichaAnimal.Estado.REGISTRADO:
+        cambios = {**LIMPIEZA_AL_REGISTRAR, **cambios}
 
     ficha.estado = nuevo_estado
     for campo, valor in cambios.items():
