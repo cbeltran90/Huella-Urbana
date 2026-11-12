@@ -10,7 +10,7 @@ from apps.publicaciones.models import Publicacion
 from apps.transito.forms import PostulacionForm
 from apps.transito.models import Postulacion
 
-from . import eleccion, postulaciones
+from . import eleccion, entrega, postulaciones
 from .forms import ElegirForm
 
 
@@ -95,3 +95,52 @@ def elegir(request, postulacion_pk):
             return redirect("adopcion:postulantes", ficha_pk=ficha.pk)
     contexto = {"postulacion": postulacion, "ficha": ficha, "form": form, "error": error}
     return render(request, "adopcion/elegir.html", contexto)
+
+
+def _ficha_para_entregar(request, ficha_pk):
+    """La ficha, si quien entra puede concretar o cancelar su adopción (CU-30)."""
+    ficha = get_object_or_404(FichaAnimal, pk=ficha_pk)
+    if not permisos.puede_ver(request.user, ficha):
+        raise Http404
+    if not entrega.puede_entregar(request.user, ficha):
+        raise PermissionDenied
+    return ficha
+
+
+@cuenta_habilitada
+def concretar(request, ficha_pk):
+    """Confirmar que la mascota ya está con quien la adopta: GET pregunta, POST concreta."""
+    ficha = _ficha_para_entregar(request, ficha_pk)
+    elegida = eleccion.elegida_de(ficha)
+    error = None if elegida else entrega.MENSAJE_SIN_ELEGIDO
+    if request.method == "POST" and error is None:
+        try:
+            entrega.concretar_adopcion(ficha, request.user)
+        except entrega.EntregaNoPermitida as motivo:
+            error = str(motivo)
+        else:
+            # Quien la entregó deja de tenerla a cargo: si la ficha es privada, ya no la ve.
+            if permisos.puede_ver(request.user, ficha):
+                return redirect(f"{reverse('fichas:detalle', args=[ficha.pk])}?adoptada=1")
+            return redirect("publicaciones:disponibles")
+    contexto = {"ficha": ficha, "elegida": elegida, "error": error}
+    return render(request, "adopcion/concretar.html", contexto)
+
+
+@cuenta_habilitada
+def cancelar(request, ficha_pk):
+    """Cancelar la adopción elegida (1A): GET pregunta, POST cancela."""
+    ficha = _ficha_para_entregar(request, ficha_pk)
+    elegida = eleccion.elegida_de(ficha)
+    error = None if elegida else entrega.MENSAJE_SIN_ELEGIDO
+    if request.method == "POST" and error is None:
+        try:
+            entrega.cancelar_eleccion(ficha, request.user)
+        except entrega.EntregaNoPermitida as motivo:
+            error = str(motivo)
+        else:
+            if eleccion.puede_elegir(request.user, ficha):
+                return redirect("adopcion:postulantes", ficha_pk=ficha.pk)
+            return redirect("fichas:detalle", pk=ficha.pk)
+    contexto = {"ficha": ficha, "elegida": elegida, "error": error}
+    return render(request, "adopcion/cancelar.html", contexto)

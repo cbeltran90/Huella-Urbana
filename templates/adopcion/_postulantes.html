@@ -2,9 +2,13 @@
   <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
     <h2 class="font-semibold">Postulantes para adoptar</h2>
     {% if elegida %}
-      <p class="mt-1">Elegiste a {{ elegida.usuario.nombre_usuario }} para adoptar.</p>
-      <a href="{% url 'adopcion:postulantes' ficha.pk %}"
-         class="mt-1 inline-flex min-h-11 items-center underline">Ver postulantes</a>
+      <p class="mt-1">Adopción en curso con {{ elegida.usuario.nombre_usuario }}.</p>
+      <div class="mt-2 flex flex-wrap gap-3">
+        <a href="{% url 'adopcion:concretar' ficha.pk %}"
+           class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Ya está con {{ elegida.usuario.nombre_usuario }}</a>
+        <a href="{% url 'adopcion:cancelar' ficha.pk %}"
+           class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar la adopción</a>
+      </div>
     {% elif cantidad %}
       <p class="mt-1">
         Se postul{{ cantidad|pluralize:"ó,aron" }} {{ cantidad }} persona{{ cantidad|pluralize }} para adoptar.

@@ -97,7 +97,7 @@ def test_avisa_al_elegido_y_a_los_demas(ana, beto, carla):
     al_otro = Notificacion.objects.get(usuario=carla)
     assert al_elegido.tipo == al_otro.tipo == Notificacion.Tipo.RESULTADO_POSTULACION
     assert al_elegido.titulo == "¡Te eligieron para adoptar a Firulais!"
-    assert al_otro.titulo == "Firulais ya encontró un hogar"
+    assert al_otro.titulo == "Eligieron a otra persona para adoptar a Firulais"
     assert al_elegido.ficha == al_otro.ficha == ficha
 
 
