@@ -5,14 +5,14 @@
   <section class="mx-auto max-w-2xl">
     <h1 class="text-2xl font-bold">Coincidencias por revisar</h1>
     <p class="mt-1 text-sm text-stone-600">
-      Alguien cree haber encontrado a uno de tus animales (o del que tenés a cargo). Confirmá si es el mismo.
+      Alguien cree haber encontrado a una de tus mascotas (o a la que tenés a cargo). Confirmá si es la misma.
     </p>
     {% for c in coincidencias %}
       <article class="mt-4 rounded-lg border bg-white p-4">
         <p class="text-sm">
           <strong>{{ c.publicacion.autor.nombre_usuario }}</strong> publicó
           un {{ c.publicacion.get_tipo_display|lower }} que parece ser
-          <strong>{{ c.ficha.nombre|default:"tu animal" }}</strong>
+          <strong>{{ c.ficha.nombre|default:"tu mascota" }}</strong>
           ({{ c.atributos_coincidentes }} atributos en común{% if c.similitud_visual is not None %}, parecido visual {{ c.similitud_visual|floatformat:2 }}{% endif %}).
         </p>
         <div class="mt-3 grid grid-cols-2 gap-3">

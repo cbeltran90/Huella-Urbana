@@ -63,3 +63,31 @@ def test_la_foto_marcada_para_revision_no_se_muestra_a_los_visitantes(client):
     html = client.get(reverse("fichas:detalle", args=[ficha.pk])).content.decode()
 
     assert "fichas/ok.jpg" in html and "fichas/marcada.jpg" not in html
+
+
+def test_volver_lleva_a_la_pagina_anterior(entrar, ana):
+    ficha = baker.make(FichaAnimal, responsable=ana, especie="gato")
+
+    respuesta = entrar(ana).get(
+        reverse("fichas:detalle", args=[ficha.pk]), HTTP_REFERER="http://testserver/mapa/"
+    )
+
+    assert respuesta.context["volver"] == "http://testserver/mapa/"
+
+
+def test_volver_sin_pagina_anterior_lleva_a_mis_fichas(entrar, ana):
+    ficha = baker.make(FichaAnimal, responsable=ana, especie="gato")
+
+    respuesta = entrar(ana).get(reverse("fichas:detalle", args=[ficha.pk]))
+
+    assert respuesta.context["volver"] == reverse("fichas:mis_fichas")
+
+
+def test_volver_ignora_una_pagina_anterior_de_otro_sitio(entrar, ana):
+    ficha = baker.make(FichaAnimal, responsable=ana, especie="gato")
+
+    respuesta = entrar(ana).get(
+        reverse("fichas:detalle", args=[ficha.pk]), HTTP_REFERER="https://otro-sitio.com/x"
+    )
+
+    assert respuesta.context["volver"] == reverse("fichas:mis_fichas")
