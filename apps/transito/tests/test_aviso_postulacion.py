@@ -42,7 +42,7 @@ def crear_ficha(**campos):
 
 
 def avisos():
-    return Notificacion.objects.filter(tipo=Notificacion.Tipo.NOVEDAD)
+    return Notificacion.objects.filter(tipo=Notificacion.Tipo.POSTULACION_RECIBIDA)
 
 
 def test_se_avisa_a_quien_tiene_el_animal_a_su_cargo():
@@ -147,3 +147,28 @@ def test_tambien_sirve_para_una_postulacion_de_adopcion():
     assert aviso.usuario == cuidador
     assert aviso.titulo == "Nueva postulación para adoptar"
     assert "adoptar a Bruno" in aviso.mensaje
+
+
+def test_no_se_avisa_al_propio_postulante():
+    cuidador = crear_usuario("carla")
+    ficha = crear_ficha(cuidador=cuidador)
+    postulacion = Postulacion.objects.create(
+        ficha=ficha, usuario=cuidador, tipo=Postulacion.Tipo.ADOPCION, contacto="2901-555555"
+    )
+
+    postulaciones.avisar_de_postulacion(postulacion)
+
+    assert avisos().count() == 0
+
+
+def test_si_el_postulante_es_el_responsable_solo_se_avisa_al_cuidador():
+    cuidador = crear_usuario("carla")
+    responsable = crear_usuario("rosa")
+    ficha = crear_ficha(cuidador=cuidador, responsable=responsable)
+    postulacion = Postulacion.objects.create(
+        ficha=ficha, usuario=responsable, tipo=Postulacion.Tipo.ADOPCION, contacto="2901-555555"
+    )
+
+    postulaciones.avisar_de_postulacion(postulacion)
+
+    assert [aviso.usuario for aviso in avisos()] == [cuidador]

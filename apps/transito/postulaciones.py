@@ -92,9 +92,10 @@ def advertencias_de_postulacion(usuario, ficha):
 def avisar_de_postulacion(postulacion):
     """Avisa de la postulación nueva a quien tiene el animal a su cargo y a su responsable.
 
-    Sirve para los dos tipos de postulación. Si no hay ninguno que sea usuario no se avisa a
-    nadie. Si el aviso falla, la postulación queda igual. No dice quién se postuló: eso lo ve
-    quien elige en la pantalla de la ficha.
+    Sirve para los dos tipos de postulación. Nunca se avisa al propio postulante (por ejemplo,
+    un cuidador que se postula para quedarse con el animal). Si no queda nadie a quien avisar
+    no se avisa a nadie. Si el aviso falla, la postulación queda igual. No dice quién se
+    postuló: eso lo ve quien elige en la pantalla de la ficha.
     """
     ficha = postulacion.ficha
     nombre = ficha.nombre or "este animal"
@@ -105,11 +106,13 @@ def avisar_de_postulacion(postulacion):
         titulo = "Nueva postulación de tránsito"
         mensaje = f"Hay una postulación nueva de tránsito para {nombre}."
     destinatarios = {
-        usuario.pk: usuario for usuario in (ficha.cuidador, ficha.responsable) if usuario
+        usuario.pk: usuario
+        for usuario in (ficha.cuidador, ficha.responsable)
+        if usuario and usuario.pk != postulacion.usuario_id
     }
     for usuario in destinatarios.values():
         try:
-            notificar(usuario, Notificacion.Tipo.NOVEDAD, titulo, mensaje, ficha=ficha)
+            notificar(usuario, Notificacion.Tipo.POSTULACION_RECIBIDA, titulo, mensaje, ficha=ficha)
         except Exception:
             logger.exception("No se pudo avisar de la postulación %s", postulacion.pk)
 
