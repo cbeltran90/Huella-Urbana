@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -57,8 +59,8 @@ def test_pide_confirmar_con_la_sanidad_de_la_ficha(entrar, ficha, beto):
     html = entrar(beto).get(url_ingreso(ficha)).content.decode()
 
     assert "¿Firulais ya está en el hogar de Hogar?" in html
-    assert 'name="vacunado" checked' in html
-    assert 'name="castrado" checked' not in html
+    assert re.search(r'name="vacunado"\s+checked', html)
+    assert not re.search(r'name="castrado"\s+checked', html)
     assert not Alojamiento.objects.exists()
 
 
