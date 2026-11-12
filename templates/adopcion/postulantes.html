@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Postulantes · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-2xl rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Postulantes para adoptar</h1>
+    <p class="mt-1 text-sm text-stone-600">
+      {{ ficha.nombre|default:"Sin nombre" }} · {{ ficha.get_especie_display }}
+      {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
+    </p>
+    {% if elegida %}
+      <div role="status"
+           class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+        <p class="font-semibold">Elegiste a {{ elegida.usuario.nombre_usuario }}</p>
+        <p class="mt-1">Contacto: {{ elegida.contacto }}</p>
+      </div>
+    {% else %}
+      {% for postulacion, dudas in postulantes %}
+        {% with hogar=postulacion.usuario.domicilio %}
+          <article class="mt-4 rounded border border-stone-300 p-4 text-sm">
+            <h2 class="font-semibold">{{ postulacion.usuario.nombre_usuario }}</h2>
+            <p class="text-stone-600">Se postuló el {{ postulacion.fecha|date:"j/n/Y" }}</p>
+            <p class="mt-2">Contacto: {{ postulacion.contacto }}</p>
+            <ul class="mt-2 list-inside list-disc text-stone-700">
+              <li>{{ hogar.get_tipo_vivienda_display }}, {{ hogar.tiene_patio|yesno:"con patio,sin patio" }}</li>
+              <li>Convive con {{ hogar.convivientes }} persona{{ hogar.convivientes|pluralize }}</li>
+              <li>{{ hogar.hay_ninos|yesno:"Hay niños,No hay niños" }}</li>
+              <li>Mascotas propias: {{ hogar.mascotas_propias }}</li>
+            </ul>
+            <p class="mt-2">{{ postulacion.usuario.perfil_adoptante.experiencia_previa }}</p>
+            {% for duda in dudas %}
+              <p class="mt-2 rounded border border-amber-300 bg-amber-50 p-2 text-amber-900">{{ duda }}</p>
+            {% endfor %}
+          </article>
+        {% endwith %}
+      {% empty %}
+        <p class="mt-4 text-sm text-stone-600">
+          Todavía no se postuló nadie. Te avisamos cuando alguien quiera darle un hogar.
+        </p>
+      {% endfor %}
+    {% endif %}
+    <a href="{% url 'fichas:detalle' ficha.pk %}"
+       class="mt-4 block min-h-11 px-4 py-2 text-center underline">Volver a la ficha</a>
+  </section>
+{% endblock %}

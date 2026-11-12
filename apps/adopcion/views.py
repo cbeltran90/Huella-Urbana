@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -7,7 +8,7 @@ from apps.fichas import permisos
 from apps.fichas.models import FichaAnimal
 from apps.transito.forms import PostulacionForm
 
-from . import postulaciones
+from . import eleccion, postulaciones
 
 
 @cuenta_habilitada
@@ -35,3 +36,24 @@ def postular(request, ficha_pk):
         "advertencias": postulaciones.advertencias_de_postulacion(request.user, ficha),
     }
     return render(request, "adopcion/postular.html", contexto)
+
+
+@cuenta_habilitada
+def postulantes(request, ficha_pk):
+    """Quienes se postularon para adoptar, para que quien elige decida (CU-29)."""
+    ficha = get_object_or_404(FichaAnimal, pk=ficha_pk)
+    if not permisos.puede_ver(request.user, ficha):
+        raise Http404
+    if not eleccion.puede_elegir(request.user, ficha):
+        raise PermissionDenied
+    pendientes = eleccion.postulantes_de(ficha).select_related(
+        "usuario__domicilio", "usuario__perfil_adoptante"
+    )
+    contexto = {
+        "ficha": ficha,
+        "elegida": eleccion.elegida_de(ficha),
+        "postulantes": [
+            (postulacion, eleccion.dudas_de(postulacion)) for postulacion in pendientes
+        ],
+    }
+    return render(request, "adopcion/postulantes.html", contexto)
