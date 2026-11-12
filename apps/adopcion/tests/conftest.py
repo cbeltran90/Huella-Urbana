@@ -29,6 +29,11 @@ def beto(django_user_model):
     return _crear(django_user_model, "Beto")
 
 
+@pytest.fixture
+def carla(django_user_model):
+    return _crear(django_user_model, "Carla")
+
+
 PUNTO = Point(-68.3030, -54.8019, srid=4326)
 HOGAR = {
     "tipo_vivienda": "casa",
