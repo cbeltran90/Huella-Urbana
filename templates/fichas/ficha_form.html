@@ -4,7 +4,10 @@
   <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
     <h1 class="text-2xl font-bold">{% if ficha %}Editar ficha{% else %}Nueva ficha{% endif %}</h1>
     <p class="mt-1 text-sm text-stone-600">Solo la especie es obligatoria. La ficha queda privada: solo la ves vos.</p>
-    <form method="post" novalidate class="mt-4 space-y-4">
+    <form method="post"
+          enctype="multipart/form-data"
+          novalidate
+          class="mt-4 space-y-4">
       {% csrf_token %}
       {% for error in form.non_field_errors %}
         <p role="alert"
@@ -17,6 +20,17 @@
           {% include "cuentas/_errores.html" with errores=campo.errors %}
         </div>
       {% endfor %}
+      <div>
+        <label for="{{ form.fotos.id_for_label }}" class="block text-sm font-medium">{{ form.fotos.label }}</label>
+        <input type="file"
+               name="{{ form.fotos.html_name }}"
+               id="{{ form.fotos.id_for_label }}"
+               accept="image/jpeg,image/png,image/webp"
+               multiple
+               class="mt-1 w-full text-sm">
+        <p class="mt-1 text-xs text-stone-600">JPEG, PNG o WEBP, hasta 10 MB cada una.</p>
+        {% include "cuentas/_errores.html" with errores=form.fotos.errors %}
+      </div>
       <fieldset class="space-y-1">
         <legend class="text-sm font-medium">Salud y carácter</legend>
         {% for campo in form.campos_si_no %}

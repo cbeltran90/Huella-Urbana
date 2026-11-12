@@ -19,7 +19,7 @@
             {% endif %}
           {% endwith %}
           <p class="mt-2 text-sm">
-            {{ c.ficha.especie }}{% if c.ficha.color %} · {{ c.ficha.color }}{% endif %}
+            {{ c.ficha.get_especie_display }}{% if c.ficha.color %} · {{ c.ficha.color }}{% endif %}
             · {{ c.atributos_coincidentes }} atributos en común
             {% if c.similitud_visual is not None %}· parecido visual {{ c.similitud_visual|floatformat:2 }}{% endif %}
           </p>

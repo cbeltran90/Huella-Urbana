@@ -7,7 +7,7 @@
     {% if ficha_publica and publicacion.ficha.nombre %}· {{ publicacion.ficha.nombre }}{% endif %}
   </h2>
   <p class="text-sm text-stone-600">
-    {{ publicacion.especie|default:"Especie sin dato" }}
+    {{ publicacion.get_especie_display|default:"Especie sin dato" }}
     {% if publicacion.tamano %}· {{ publicacion.get_tamano_display }}{% endif %}
     {% if publicacion.color %}· {{ publicacion.color }}{% endif %}
     · {{ publicacion.fecha|date:"j/n/Y" }}

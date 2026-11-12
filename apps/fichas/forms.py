@@ -1,6 +1,7 @@
 from django import forms
 
 from apps.core.filtros import NoOfensivo
+from apps.imagenes.forms import MAX_FOTOS, TIPOS_DE_IMAGEN, CampoVariosArchivos
 
 from .models import FichaAnimal
 from .servicios import CAMPOS_EDITABLES
@@ -70,3 +71,25 @@ class FichaForm(forms.ModelForm):
 
     def campos_si_no(self):
         return [self[nombre] for nombre in CAMPOS_SI_NO]
+
+
+MENSAJE_MUCHAS_FOTOS = f"Podés subir hasta {MAX_FOTOS} fotos por vez"
+
+
+class FichaConFotosForm(FichaForm):
+    """La ficha de «Nueva ficha» y «Editar»: los datos del animal y, si querés, fotos."""
+
+    fotos = CampoVariosArchivos(label="Fotos (opcional)", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["fotos"].widget.attrs["accept"] = TIPOS_DE_IMAGEN
+
+    def clean_fotos(self):
+        fotos = self.cleaned_data["fotos"]
+        if len(fotos) > MAX_FOTOS:
+            raise forms.ValidationError(MENSAJE_MUCHAS_FOTOS)
+        return fotos
+
+    def campos_datos(self):
+        return [campo for campo in super().campos_datos() if campo.name != "fotos"]

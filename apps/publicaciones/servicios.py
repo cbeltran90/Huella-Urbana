@@ -77,7 +77,8 @@ def publicar_hallazgo(
 
     - 'punto': la ubicación EXACTA donde se encontró (a diferencia del extravío, no se desplaza).
     - 'tiene_consigo': si es True el animal queda a cargo del usuario; si no, de nadie.
-    La comparación con fichas existentes y el vínculo a una candidata llegan.
+    Después la vista ofrece las fichas candidatas (comparación) y deja vincular una
+    (apps/publicaciones/vinculacion.py).
     Lanza 'ImagenInvalida' si la foto no sirve; no queda nada a medias (transacción).
     """
     ficha = crear_ficha_sin_responsable(animal, cuidador=usuario if tiene_consigo else None)

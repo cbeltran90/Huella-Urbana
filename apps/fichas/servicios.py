@@ -3,6 +3,8 @@ import logging
 from django.db import transaction
 from django.utils import timezone
 
+from apps.imagenes.servicios import registrar_fotografia
+
 from .models import FichaAnimal
 from .transiciones import TransicionInvalida, transicion_permitida
 
@@ -98,6 +100,11 @@ def editar_ficha(ficha, datos):
         setattr(ficha, campo, datos[campo])
     ficha.save(update_fields=campos)
     return ficha
+
+
+def agregar_fotografias(ficha, autor, archivos):
+    """Guarda las fotos de la ficha. 'ImagenInvalida' si alguna no sirve (la vista decide)."""
+    return [registrar_fotografia(archivo=archivo, autor=autor, ficha=ficha) for archivo in archivos]
 
 
 def dar_de_baja(ficha):
