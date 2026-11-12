@@ -1,0 +1,18 @@
+{% if mostrar %}
+  <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
+    <h2 class="font-semibold">Postulantes para adoptar</h2>
+    {% if elegida %}
+      <p class="mt-1">Elegiste a {{ elegida.usuario.nombre_usuario }} para adoptar.</p>
+      <a href="{% url 'adopcion:postulantes' ficha.pk %}"
+         class="mt-1 inline-flex min-h-11 items-center underline">Ver postulantes</a>
+    {% elif cantidad %}
+      <p class="mt-1">
+        Se postul{{ cantidad|pluralize:"ó,aron" }} {{ cantidad }} persona{{ cantidad|pluralize }} para adoptar.
+      </p>
+      <a href="{% url 'adopcion:postulantes' ficha.pk %}"
+         class="mt-2 inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Ver postulantes</a>
+    {% else %}
+      <p class="mt-1 text-stone-600">Todavía no se postuló nadie para adoptar.</p>
+    {% endif %}
+  </div>
+{% endif %}

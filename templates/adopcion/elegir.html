@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Elegir adoptante · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">
+      ¿Elegir a {{ postulacion.usuario.nombre_usuario }} para adoptar a {{ ficha.nombre|default:"la mascota" }}?
+    </h1>
+    <p class="mt-2 text-sm text-stone-600">
+      Le avisamos a {{ postulacion.usuario.nombre_usuario }} y a las demás personas que se postularon.
+    </p>
+    <p class="mt-2 text-sm">Su contacto: {{ postulacion.contacto }}</p>
+    {% if error %}
+      <p role="alert"
+         class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{{ error }}</p>
+    {% endif %}
+    <form method="post" class="mt-4">
+      {% csrf_token %}
+      <label for="{{ form.telefono.id_for_label }}"
+             class="block text-sm font-medium">{{ form.telefono.label }}</label>
+      {{ form.telefono }}
+      <p class="mt-1 text-xs text-stone-600">{{ form.telefono.help_text }}</p>
+      {% for mensaje in form.telefono.errors %}<p class="mt-1 text-sm text-red-700">{{ mensaje }}</p>{% endfor %}
+      <div class="mt-4 flex flex-wrap gap-3">
+        <button type="submit"
+                class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 font-semibold text-white">
+          Sí, elegir a {{ postulacion.usuario.nombre_usuario }}
+        </button>
+        <a href="{% url 'adopcion:postulantes' ficha.pk %}"
+           class="inline-flex min-h-11 items-center rounded border px-4">Cancelar</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

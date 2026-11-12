@@ -71,16 +71,16 @@ def test_sin_contacto_lo_pide_y_no_crea_nada(entrar, ana):
 def test_muestra_el_aviso_de_incompatibilidad(entrar, ana):
     html = entrar(con_perfil(ana, hay_ninos=True)).get(url(hacer_ficha())).content.decode()
 
-    assert "no sabemos si este animal se lleva bien con ellos" in html
+    assert "no sabemos si esta mascota se lleva bien con ellos" in html
     assert 'name="contacto"' in html
 
 
-def test_si_el_animal_ya_no_busca_familia_lo_informa(entrar, ana):
+def test_si_la_mascota_ya_no_busca_familia_lo_informa(entrar, ana):
     ficha = hacer_ficha(FichaAnimal.Estado.REGISTRADO)
 
     html = entrar(con_perfil(ana)).get(url(ficha)).content.decode()
 
-    assert "Este animal ya no busca familia." in html
+    assert "Esta mascota ya no busca familia." in html
     assert 'name="contacto"' not in html
 
 

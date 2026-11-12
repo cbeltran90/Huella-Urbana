@@ -71,7 +71,7 @@ def test_si_ya_la_eligieron_no_puede_retirarla(client, ana):
 
     html = ver_ficha(client, ficha, ana)
 
-    assert "¡Te eligieron para adoptarlo!" in html
+    assert "¡Te eligieron para darle un hogar!" in html
     assert reverse("transito:retirar_postulacion", args=[propia.pk]) not in html
 
 
@@ -92,3 +92,13 @@ def test_al_volver_de_postularse_agradece(client, ana):
     assert "¡Gracias! Ya enviamos tu postulación." in ver_ficha(
         client, ficha, ana, "?postulado_adopcion=1"
     )
+
+
+def test_su_postulacion_de_adopcion_no_aparece_en_el_panel_de_transito(client, ana):
+    ficha = hacer_ficha()
+    postulacion(ficha, con_perfil(ana))
+
+    html = ver_ficha(client, ficha, ana)
+
+    assert "Tu postulación para adoptar" in html
+    assert "Tu postulación como hogar de tránsito" not in html

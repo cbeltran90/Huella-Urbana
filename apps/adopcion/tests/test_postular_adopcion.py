@@ -83,6 +83,20 @@ def test_una_postulacion_retirada_no_impide_volver_a_postularse(ana):
     assert postulaciones.motivo_para_no_postularse(ana, ficha) is None
 
 
+def test_si_ya_eligieron_adoptante_no_se_aceptan_postulaciones(ana, carla):
+    ficha = hacer_ficha()
+    baker.make(
+        Postulacion,
+        ficha=ficha,
+        usuario=carla,
+        tipo=Postulacion.Tipo.ADOPCION,
+        estado=Postulacion.Estado.ELEGIDA,
+        contacto="2901 444444",
+    )
+
+    assert codigo(con_perfil(ana), ficha) == "ya_hay_adoptante"
+
+
 def test_queda_una_postulacion_de_adopcion_pendiente(ana):
     ficha = hacer_ficha()
 
@@ -147,16 +161,16 @@ def test_el_cuidador_recibe_un_aviso(ana, beto):
     assert aviso.tipo == Notificacion.Tipo.POSTULACION_RECIBIDA
     assert aviso.ficha == ficha
     assert aviso.titulo == "¡Firulais tiene una persona interesada!"
-    assert aviso.mensaje == "Alguien se postuló para adoptarlo."
+    assert aviso.mensaje == "Alguien quiere darle un hogar."
 
 
-def test_sin_nombre_el_aviso_habla_del_animal_que_cuida(ana, beto):
+def test_sin_nombre_el_aviso_habla_de_la_mascota_que_cuida(ana, beto):
     ficha = hacer_ficha(cuidador=beto, nombre="")
 
     postulaciones.postular_adopcion(con_perfil(ana), ficha, "2901 444444")
 
     assert (
-        Notificacion.objects.get().titulo == "¡El animal que cuidás tiene una persona interesada!"
+        Notificacion.objects.get().titulo == "¡La mascota que cuidás tiene una persona interesada!"
     )
 
 
