@@ -8,17 +8,16 @@ from apps.notificaciones.models import Notificacion
 from apps.notificaciones.servicios import notificar
 from apps.transito.models import Postulacion
 
-from .postulaciones import ESTADOS_DISPONIBLES
+from .postulaciones import ESTADOS_DISPONIBLES, advertencias_de_postulacion
 
 MENSAJE_NO_PUEDE_ELEGIR = "Solo quien tiene la mascota a su cargo puede elegir a quién darla."
 MENSAJE_NO_DISPONIBLE = "Esta mascota ya no busca familia."
 MENSAJE_NO_PENDIENTE = "Esa postulación ya no está pendiente."
 MENSAJE_YA_HAY_ELEGIDO = "Ya elegiste a quién darla en adopción."
-
 MENSAJE_AL_ELEGIDO = "Pronto se van a comunicar con vos para coordinar la entrega."
-MENSAJE_A_LOS_DEMAS = (
-    "Gracias por querer darle un hogar. Hay otros animales que te están esperando."
-)
+MENSAJE_A_LOS_DEMAS = "Gracias por tu interés. Hay otras mascotas que te están esperando."
+DUDA_NINOS = "En el hogar viven niños y no sabemos si esta mascota se lleva bien con ellos."
+DUDA_ANIMALES = "El hogar ya tiene mascotas y no sabemos si esta se lleva bien con otros animales."
 
 
 class EleccionNoPermitida(ValueError):
@@ -54,6 +53,13 @@ def elegida_de(ficha):
         )
         .select_related("usuario")
         .first()
+    )
+
+
+def dudas_de(postulacion):
+    """Por qué el hogar de quien se postuló podría no ser compatible, contado a quien elige."""
+    return advertencias_de_postulacion(
+        postulacion.usuario, postulacion.ficha, (DUDA_NINOS, DUDA_ANIMALES)
     )
 
 

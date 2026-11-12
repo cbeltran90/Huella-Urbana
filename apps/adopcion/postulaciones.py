@@ -51,20 +51,22 @@ def motivo_para_no_postularse(usuario, ficha):
     return None
 
 
-def advertencias_de_postulacion(usuario, ficha):
+def advertencias_de_postulacion(usuario, ficha, motivos=(MOTIVO_NINOS, MOTIVO_ANIMALES)):
     """Por qué el hogar podría no ser compatible con la mascota (lista vacía si no hay dudas).
 
-    Es un aviso: no impide postularse. Quien elige lo ve junto a la postulación (CU-28 2B).
+    Es un aviso: no impide postularse. "motivos" son los textos para niños y para otras
+    mascotas; por defecto, los de quien se postula.
     """
     domicilio = Domicilio.objects.filter(usuario=usuario).first()
     if domicilio is None:
         return []
-    motivos = []
+    motivo_ninos, motivo_animales = motivos
+    dudas = []
     if domicilio.hay_ninos and not ficha.compatible_ninos:
-        motivos.append(MOTIVO_NINOS)
+        dudas.append(motivo_ninos)
     if domicilio.mascotas_propias and not ficha.compatible_animales:
-        motivos.append(MOTIVO_ANIMALES)
-    return motivos
+        dudas.append(motivo_animales)
+    return dudas
 
 
 def postular_adopcion(usuario, ficha, contacto):

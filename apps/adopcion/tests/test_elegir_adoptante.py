@@ -7,7 +7,7 @@ from apps.fichas.models import FichaAnimal
 from apps.notificaciones.models import Notificacion
 from apps.transito.models import Postulacion
 
-from .conftest import hacer_ficha
+from .conftest import con_perfil, hacer_ficha
 
 Estado = FichaAnimal.Estado
 Tipo, EstadoPostulacion = Postulacion.Tipo, Postulacion.Estado
@@ -160,3 +160,19 @@ def test_si_la_mascota_ya_no_esta_disponible_no_se_elige(ana, beto):
 
     with pytest.raises(eleccion.EleccionNoPermitida):
         eleccion.elegir_adoptante(elegida, beto)
+
+
+# Dudas de compatibilidad, contadas a quien elige
+
+
+def test_las_dudas_se_cuentan_a_quien_elige(ana):
+    postulacion = postular(hacer_ficha(), con_perfil(ana, hay_ninos=True, mascotas_propias=1))
+
+    assert eleccion.dudas_de(postulacion) == [eleccion.DUDA_NINOS, eleccion.DUDA_ANIMALES]
+
+
+def test_sin_dudas_si_la_ficha_dice_que_se_lleva_bien(ana):
+    ficha = hacer_ficha(compatible_ninos=True, compatible_animales=True)
+    postulacion = postular(ficha, con_perfil(ana, hay_ninos=True, mascotas_propias=1))
+
+    assert eleccion.dudas_de(postulacion) == []
