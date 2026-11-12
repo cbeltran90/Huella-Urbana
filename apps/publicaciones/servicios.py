@@ -146,43 +146,46 @@ def alta_en_adopcion(usuario, *, animal, archivos, punto=None, descripcion="", t
     return publicacion
 
 
-def _punto_para_publicar(ficha, punto):
+def _punto_para_publicar(ficha, punto, actor):
     """El punto que se muestra en la publicación de adopción de una ficha ya existente.
 
     - A cargo de un usuario con domicilio: su punto desplazado.
-    - A cargo de un usuario sin domicilio: "punto", que se registra como su domicilio.
-    - Sin un usuario a cargo (lo carga un moderador): "punto" tal cual, que además se guarda
-      en "ubicacion_desplazada". Devuelve (ubicacion, ubicacion_desplazada).
+    - A cargo de un usuario sin domicilio, y es él quien publica: "punto", que se registra como
+      su domicilio.
+    - Lo carga un moderador (sin usuario a cargo, o a cargo de alguien sin domicilio que no es
+      quien publica): "punto" se desplaza acá, nunca sale tal cual, y no se guarda como
+      domicilio de nadie. Va también a "ubicacion_desplazada".
+    Devuelve (ubicacion, ubicacion_desplazada).
     """
     cuidador = ficha.cuidador
-    if cuidador is None:
-        if punto is None:
+    if cuidador is not None:
+        lugar = ubicacion.punto_de_domicilio(cuidador)
+        if lugar is not None:
+            return lugar, None
+    if punto is None:
+        if cuidador is None:
             raise ValueError("Falta la ubicación: el animal no está a cargo de un usuario.")
-        return punto, punto
-    lugar = ubicacion.punto_de_domicilio(cuidador)
-    if lugar is None:
-        if punto is None:
-            raise ValueError("Falta la ubicación: quien lo tiene a cargo no tiene domicilio.")
-        lugar = ubicacion.registrar_domicilio(cuidador, punto)
-    return lugar, None
+        raise ValueError("Falta la ubicación: quien lo tiene a cargo no tiene domicilio.")
+    if cuidador is not None and actor == cuidador:
+        return ubicacion.registrar_domicilio(cuidador, punto), None
+    desplazado = ubicacion.desplazar_punto(punto)
+    return desplazado, desplazado
 
 
 @transaction.atomic
-def _crear_publicacion_de_adopcion(ficha, actor, *, punto, descripcion, telefono_visible):
-    lugar, desplazada = _punto_para_publicar(ficha, punto)
-    # Una sola publicación vigente de adopción o tránsito por ficha (ahora vuelve a adopción).
-    ficha.publicaciones.filter(
-        estado=Publicacion.Estado.VIGENTE,
-        tipo__in=[Publicacion.Tipo.ADOPCION, Publicacion.Tipo.TRANSITO],
-    ).update(estado=Publicacion.Estado.RESUELTA)
+def _crear_publicacion_de_estado(ficha, actor, *, tipo, punto, descripcion, telefono_visible):
+    """La publicación de adopción o de tránsito de una ficha que ya existe."""
+    lugar, desplazada = _punto_para_publicar(ficha, punto, actor)
+    # Una sola publicación vigente de adopción o tránsito por ficha (2.8).
+    resolver_publicaciones_de_estado(ficha)
     # El hallazgo ya cumplió: se cierra y sigue vinculado a la ficha, como parte de su historia.
-    # Su ubicación exacta queda solo en él: no se copia a la publicación de adopción.
+    # Su ubicación exacta queda solo en él: no se copia a la publicación nueva.
     ficha.publicaciones.filter(
         estado=Publicacion.Estado.VIGENTE, tipo=Publicacion.Tipo.HALLAZGO
     ).update(estado=Publicacion.Estado.RESUELTA)
 
     return Publicacion.objects.create(
-        tipo=Publicacion.Tipo.ADOPCION,
+        tipo=tipo,
         autor=ficha.cuidador or actor,
         ficha=ficha,
         ubicacion=lugar,
@@ -196,6 +199,19 @@ def _crear_publicacion_de_adopcion(ficha, actor, *, punto, descripcion, telefono
     )
 
 
+def resolver_publicaciones_de_estado(ficha):
+    """La publicación vigente de adopción o de tránsito de la ficha pasa a resuelta (2.8).
+
+    Lo usa "cambiar_estado" cuando la ficha deja de estar en adopción o en tránsito. La
+    publicación del estado nuevo la genera quien lo provoca, porque necesita datos que
+    el cambio de estado no tiene. Devuelve cuántas resolvió.
+    """
+    return ficha.publicaciones.filter(
+        estado=Publicacion.Estado.VIGENTE,
+        tipo__in=[Publicacion.Tipo.ADOPCION, Publicacion.Tipo.TRANSITO],
+    ).update(estado=Publicacion.Estado.RESUELTA)
+
+
 def publicar_adopcion_de_ficha(ficha, actor, *, punto=None, descripcion="", telefono_visible=""):
     """Publica en adopción una ficha que ya existe.
 
@@ -204,16 +220,19 @@ def publicar_adopcion_de_ficha(ficha, actor, *, punto=None, descripcion="", tele
     transacción.
     - 'actor': quien publica; es el autor si el animal no está a cargo de un usuario.
     - 'punto': solo hace falta si no hay un domicilio de quien lo tiene a cargo, o si no lo
-      tiene a cargo un usuario (lo carga un moderador).
+      tiene a cargo un usuario (lo carga un moderador). Si lo marca un moderador, se desplaza
+      acá y no se guarda como domicilio de nadie; solo se registra como domicilio si quien
+      publica es el propio cuidador.
     La publicación sale con una ubicación aproximada, nunca la exacta. Cierra el hallazgo
     vigente de la ficha (sigue vinculado) y la publicación de adopción o tránsito anterior.
     Después de guardar, avisa a los hogares compatibles; si el aviso falla, la publicación queda.
     """
     if ficha.estado != FichaAnimal.Estado.EN_ADOPCION:
         raise ValueError("La ficha tiene que estar en adopción para publicarla.")
-    publicacion = _crear_publicacion_de_adopcion(
+    publicacion = _crear_publicacion_de_estado(
         ficha,
         actor,
+        tipo=Publicacion.Tipo.ADOPCION,
         punto=punto,
         descripcion=descripcion,
         telefono_visible=telefono_visible,
@@ -223,3 +242,26 @@ def publicar_adopcion_de_ficha(ficha, actor, *, punto=None, descripcion="", tele
     except Exception:
         logger.exception("No se pudo avisar a los hogares compatibles")
     return publicacion
+
+
+def publicar_transito_de_ficha(ficha, actor):
+    """Publica en tránsito una ficha que acaba de pasar a "en tránsito".
+
+    El estado lo cambia antes "cambiar_estado", que resolvió la publicación de adopción. La ficha
+    tiene que tener a su hogar como cuidador. La ubicación es el punto
+    desplazado del domicilio del hogar; la descripción y el teléfono se toman de la publicación
+    de adopción anterior.
+    """
+    if ficha.estado != FichaAnimal.Estado.EN_TRANSITO:
+        raise ValueError("La ficha tiene que estar en tránsito para publicarla.")
+    if ficha.cuidador is None:
+        raise ValueError("Falta el hogar de tránsito: la ficha no tiene cuidador.")
+    anterior = ficha.publicaciones.filter(tipo=Publicacion.Tipo.ADOPCION).order_by("-pk").first()
+    return _crear_publicacion_de_estado(
+        ficha,
+        actor,
+        tipo=Publicacion.Tipo.TRANSITO,
+        punto=None,
+        descripcion=anterior.descripcion if anterior else "",
+        telefono_visible=anterior.telefono_visible if anterior else "",
+    )

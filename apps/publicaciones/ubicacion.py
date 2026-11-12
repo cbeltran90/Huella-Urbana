@@ -4,6 +4,10 @@ El domicilio y su punto desplazado los calcula y guarda "apps.cuentas". Solo se
 usa el punto DESPLAZADO: el exacto ("Domicilio.ubicacion") nunca se lee ni se publica.
 """
 
+from constance import config
+from django.contrib.gis.geos import Point
+
+from apps.cuentas import geo
 from apps.cuentas.models import Domicilio
 from apps.cuentas.servicios import guardar_domicilio
 
@@ -20,3 +24,12 @@ def registrar_domicilio(usuario, punto):
     Lanza "DomicilioInvalido" (de cuentas) si el punto está fuera de la zona.
     """
     return guardar_domicilio(usuario, punto).ubicacion_desplazada
+
+
+def desplazar_punto(punto):
+    """Un punto al azar a menos de RADIO_DOMICILIO_METROS del dado.
+
+    Es para el punto que carga un moderador (no es el domicilio de nadie): nunca sale tal cual.
+    """
+    lon, lat = geo.desplazar(punto.x, punto.y, config.RADIO_DOMICILIO_METROS)
+    return Point(lon, lat, srid=4326)

@@ -205,14 +205,16 @@ def test_si_falla_la_publicacion_la_ficha_no_cambia(cuidador, monkeypatch):
 # Solicitar: sin cuidador (extensión 1A)
 
 
-def test_el_moderador_publica_con_el_punto_que_marca(moderador):
+def test_el_moderador_publica_un_punto_aproximado_al_que_marca(moderador):
     ficha = crear_ficha(cuidador=None)
     solicitud.solicitar_transito(ficha, moderador, punto=PUNTO)
     ficha.refresh_from_db()
     publicacion = Publicacion.objects.get(ficha=ficha)
     assert ficha.estado == FichaAnimal.Estado.EN_ADOPCION
     assert publicacion.autor == moderador
-    assert publicacion.ubicacion_desplazada.equals(PUNTO)
+    # Sale desplazado (a menos de 150 m, unos 0,003 grados): nunca el punto exacto.
+    assert not publicacion.ubicacion_desplazada.equals(PUNTO)
+    assert publicacion.ubicacion_desplazada.distance(PUNTO) < 0.003
 
 
 def test_el_moderador_sin_punto_no_cambia_nada(moderador):
