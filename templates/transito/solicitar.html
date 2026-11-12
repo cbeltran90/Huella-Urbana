@@ -8,13 +8,13 @@
       {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
     </p>
     <p class="mt-4 text-sm text-stone-600">
-      La ficha pasa a «en adopción», queda visible para todos y se avisa a los hogares de tránsito que encajan con el animal.
+      La ficha pasa a «en adopción», queda visible para todos y se avisa a los hogares de tránsito que encajan con la mascota.
     </p>
     <form method="post" novalidate class="mt-6 space-y-4">
       {% csrf_token %}
       {% if pide_contacto %}
         <div>
-          <label for="id_contacto" class="block text-sm font-medium">Contacto de quien lo tiene (opcional)</label>
+          <label for="id_contacto" class="block text-sm font-medium">Contacto de quien la tiene (opcional)</label>
           <p class="text-sm text-stone-600">Cargalo solo si esa persona lo autoriza. Teléfono, correo u otro medio.</p>
           <input type="text"
                  name="contacto"
@@ -27,18 +27,18 @@
       {% endif %}
       {% if pide_punto %}
         <div>
-          <p class="block text-sm font-medium">¿Dónde está el animal?</p>
+          <p class="block text-sm font-medium">¿Dónde está la mascota?</p>
           {% if not ficha.cuidador_id %}
             <p class="text-sm text-stone-600">
               Marcá un punto aproximado, no la puerta de la casa. En el mapa público se muestra corrido unos metros y no se guarda como domicilio de nadie.
             </p>
           {% elif es_el_cuidador %}
             <p class="text-sm text-stone-600">
-              Todavía no tenés domicilio registrado. Marcá dónde está el animal: se muestra de forma aproximada y queda guardado como tu domicilio.
+              Todavía no tenés domicilio registrado. Marcá dónde está la mascota: se muestra de forma aproximada y queda guardado como tu domicilio.
             </p>
           {% else %}
             <p class="text-sm text-stone-600">
-              Quien lo tiene a su cargo no tiene domicilio registrado. Marcá dónde está el animal: se muestra de forma aproximada y no se guarda como domicilio de nadie.
+              Quien la tiene a su cargo no tiene domicilio registrado. Marcá dónde está la mascota: se muestra de forma aproximada y no se guarda como domicilio de nadie.
             </p>
           {% endif %}
           <button type="button"

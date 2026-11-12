@@ -12,7 +12,7 @@
          class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{{ error }}</p>
     {% endif %}
     {% if hay_elegido %}
-      <p class="mt-4 rounded border border-stone-300 p-3 text-sm">Ya hay un hogar elegido para este animal.</p>
+      <p class="mt-4 rounded border border-stone-300 p-3 text-sm">Ya hay un hogar elegido para esta mascota.</p>
     {% elif postulantes %}
       <p class="mt-4 text-sm text-stone-600">
         Al elegir un hogar, avisamos a los demás postulantes que no fueron elegidos. Si ninguno te resulta conveniente, no elijas a nadie: la ficha sigue en adopción.
@@ -26,7 +26,7 @@
             {% if postulante.advertencias %}
               <div role="status"
                    class="mt-2 rounded border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900">
-                <p class="font-medium">Este hogar puede no ser compatible con el animal:</p>
+                <p class="font-medium">Este hogar puede no ser compatible con la mascota:</p>
                 <ul class="mt-1 list-disc pl-5">
                   {% for aviso in postulante.advertencias %}<li>{{ aviso }}</li>{% endfor %}
                 </ul>

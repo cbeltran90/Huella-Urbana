@@ -41,23 +41,23 @@ MENSAJE_CUPO_EXCEDE = "Podría exceder la capacidad de su vivienda"
 
 
 def mensaje_cupo_menor_a_alojados(alojados):
-    return f"El cupo no puede ser menor a los animales que ya alojás ({alojados})."
+    return f"El cupo no puede ser menor a las mascotas que ya alojás ({alojados})."
 
 
 MOTIVO_ESPECIE = "El hogar no acepta esa especie."
-MOTIVO_TAMANO = "El animal es más grande que el tamaño máximo que acepta el hogar."
-MOTIVO_MEDICACION = "El animal requiere medicación y el hogar no la acepta."
-MOTIVO_CONDUCTA = "El animal tiene problemas de conducta y el hogar no los acepta."
+MOTIVO_TAMANO = "La mascota es más grande que el tamaño máximo que acepta el hogar."
+MOTIVO_MEDICACION = "La mascota requiere medicación y el hogar no la acepta."
+MOTIVO_CONDUCTA = "La mascota tiene problemas de conducta y el hogar no los acepta."
 
 
 MENSAJE_ANIMALES_A_CARGO = (
-    "No se puede desactivar el perfil porque tenés animales a cargo. Podés pausarlo."
+    "No se puede desactivar el perfil porque tenés mascotas a cargo. Podés pausarlo."
 )
 MENSAJE_RETIRO_SIN_PERMISO = (
     "Solo un moderador o un administrador puede retirar el rol de hogar de tránsito."
 )
 MENSAJE_RETIRO_CON_ANIMALES = (
-    "No se puede retirar el rol de hogar de tránsito: el usuario tiene animales a su cargo."
+    "No se puede retirar el rol de hogar de tránsito: el usuario tiene mascotas a su cargo."
 )
 REGISTRO_RETIRO = "Rol de hogar de tránsito retirado: perfil de tránsito desactivado."
 

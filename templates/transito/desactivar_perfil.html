@@ -6,10 +6,10 @@
     {% if no_permitido %}
       <p role="alert"
          class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
-        No se puede desactivar el perfil porque tenés animales a cargo.
+        No se puede desactivar el perfil porque tenés mascotas a cargo.
       </p>
       <p class="mt-4 text-sm text-stone-700">
-        Mientras tanto podés pausarlo: no vas a recibir animales nuevos hasta la fecha de reanudación que elijas.
+        Mientras tanto podés pausarlo: no vas a recibir mascotas nuevos hasta la fecha de reanudación que elijas.
       </p>
       <div class="mt-6 space-y-3">
         <a href="{% url 'transito:perfil_transito' %}"
@@ -19,7 +19,7 @@
       </div>
     {% else %}
       <p class="mt-4 text-sm text-stone-700">
-        Si lo desactivás, dejás de ser hogar de tránsito y no vas a recibir animales. Tus datos quedan guardados: podés volver a activarlo completando el perfil de nuevo.
+        Si lo desactivás, dejás de ser hogar de tránsito y no vas a recibir mascotas. Tus datos quedan guardados: podés volver a activarlo completando el perfil de nuevo.
       </p>
       <form method="post" class="mt-6 space-y-3">
         {% csrf_token %}

@@ -13,9 +13,9 @@ from apps.publicaciones import ubicacion
 # Largo de FichaAnimal.cuidador_contacto.
 CONTACTO_MAXIMO = 100
 
-MENSAJE_NO_PUEDE = "No podés solicitar tránsito para este animal."
+MENSAJE_NO_PUEDE = "No podés solicitar tránsito para esta mascota."
 MENSAJE_CONTACTO_LARGO = f"El contacto no puede superar los {CONTACTO_MAXIMO} caracteres."
-MENSAJE_FALTA_PUNTO = "Marcá en el mapa dónde está el animal."
+MENSAJE_FALTA_PUNTO = "Marcá en el mapa dónde está la mascota."
 MENSAJE_FUERA_DE_ZONA = "El punto tiene que estar en Ushuaia y alrededores."
 
 

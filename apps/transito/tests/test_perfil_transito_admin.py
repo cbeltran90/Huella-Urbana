@@ -216,7 +216,7 @@ def test_con_animales_a_cargo_no_se_retira_y_el_panel_lo_avisa(client, moderador
     respuesta = confirmar_accion(client, perfil, follow=True)
 
     mensajes = [str(mensaje) for mensaje in respuesta.context["messages"]]
-    assert any("tiene animales a su cargo" in mensaje for mensaje in mensajes)
+    assert any("tiene mascotas a su cargo" in mensaje for mensaje in mensajes)
     perfil.refresh_from_db()
     assert perfil.activo is True
     assert not registros_de(perfil.usuario).exists()

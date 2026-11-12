@@ -3,7 +3,7 @@
 {% block contenido %}
   <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
     <h1 class="text-2xl font-bold">Mi hogar de tránsito</h1>
-    <p class="mt-1 text-sm text-stone-600">Contanos qué animales podés alojar y cuándo.</p>
+    <p class="mt-1 text-sm text-stone-600">Contanos qué mascotas podés alojar y cuándo.</p>
     {% if guardado %}
       <p role="status"
          class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">Guardamos tus cambios.</p>
@@ -75,7 +75,7 @@
       </div>
       <div>
         <label for="id_duracion_maxima_dias" class="block text-sm font-medium">Duración máxima (días)</label>
-        <p class="text-sm text-stone-600">Cuánto tiempo podés alojar a un animal.</p>
+        <p class="text-sm text-stone-600">Cuánto tiempo podés alojar a una mascota.</p>
         <input type="number"
                name="duracion_maxima_dias"
                id="id_duracion_maxima_dias"
@@ -137,7 +137,7 @@
       </div>
       <h2 class="text-lg font-semibold">Cupo</h2>
       <div>
-        <label for="id_cupo_declarado" class="block text-sm font-medium">Animales que podés alojar a la vez</label>
+        <label for="id_cupo_declarado" class="block text-sm font-medium">Mascotas que podés alojar a la vez</label>
         <p class="text-sm text-stone-600">Tu cupo vale desde que lo guardás.</p>
         {% if cupo_estimado %}
           <p class="mt-1 text-sm text-stone-700">
