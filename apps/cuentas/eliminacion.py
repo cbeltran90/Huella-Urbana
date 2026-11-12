@@ -14,7 +14,7 @@ from .servicios import sancion_vigente
 
 MENSAJE_SUSPENSION_TEMPORAL = "No podés eliminar tu cuenta mientras dure la suspensión."
 MENSAJE_FICHAS_EN_CIRCUITO = (
-    "No podés eliminar tu cuenta mientras tengas animales en el circuito de adopción o "
+    "No podés eliminar tu cuenta mientras tengas mascotas en el circuito de adopción o "
     "tránsito. Primero resolvé esos casos."
 )
 MENSAJE_ELECCION_PENDIENTE = (
