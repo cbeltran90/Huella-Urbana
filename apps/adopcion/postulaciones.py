@@ -25,6 +25,7 @@ MENSAJE_NO_DISPONIBLE = "Esta mascota ya no busca familia."
 MENSAJE_PERFIL_INCOMPLETO = "Para postularte, primero completá tu perfil de hogar y familia."
 MENSAJE_ES_RESPONSABLE = "No podés postularte para adoptar a tu propia mascota."
 MENSAJE_YA_POSTULADO = "Ya te postulaste para esta mascota."
+MENSAJE_YA_HAY_ADOPTANTE = "Esta mascota ya tiene quien la adopte."
 MOTIVO_NINOS = "En tu hogar hay niños y no sabemos si esta mascota se lleva bien con ellos."
 MOTIVO_ANIMALES = "Tenés mascotas y no sabemos si esta mascota se lleva bien con otros animales."
 MENSAJE_AVISO = "Alguien quiere darle un hogar."
@@ -40,6 +41,10 @@ def motivo_para_no_postularse(usuario, ficha):
         return "suspendido", MENSAJE_SUSPENDIDO
     if ficha.estado not in ESTADOS_DISPONIBLES:
         return "ficha_no_disponible", MENSAJE_NO_DISPONIBLE
+    if ficha.postulaciones.filter(
+        tipo=Postulacion.Tipo.ADOPCION, estado=Postulacion.Estado.ELEGIDA
+    ).exists():
+        return "ya_hay_adoptante", MENSAJE_YA_HAY_ADOPTANTE
     if not puede_postularse_a_adoptar(usuario):
         return "perfil_incompleto", MENSAJE_PERFIL_INCOMPLETO
     # Quien lo cuida (lo encontró o lo aloja en tránsito) sí puede postularse para quedárselo.

@@ -83,6 +83,20 @@ def test_una_postulacion_retirada_no_impide_volver_a_postularse(ana):
     assert postulaciones.motivo_para_no_postularse(ana, ficha) is None
 
 
+def test_si_ya_eligieron_adoptante_no_se_aceptan_postulaciones(ana, carla):
+    ficha = hacer_ficha()
+    baker.make(
+        Postulacion,
+        ficha=ficha,
+        usuario=carla,
+        tipo=Postulacion.Tipo.ADOPCION,
+        estado=Postulacion.Estado.ELEGIDA,
+        contacto="2901 444444",
+    )
+
+    assert codigo(con_perfil(ana), ficha) == "ya_hay_adoptante"
+
+
 def test_queda_una_postulacion_de_adopcion_pendiente(ana):
     ficha = hacer_ficha()
 
