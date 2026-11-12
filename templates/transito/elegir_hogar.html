@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block titulo %}Elegir hogar de tránsito · Huella Urbana{% endblock %}
+{% block contenido %}
+  <section class="mx-auto max-w-xl rounded-lg border bg-white p-6">
+    <h1 class="text-2xl font-bold">Elegir hogar de tránsito</h1>
+    <p class="mt-1 text-sm text-stone-600">
+      {{ ficha.nombre|default:"Sin nombre" }} · {{ ficha.get_especie_display }}
+      {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
+    </p>
+    {% if error %}
+      <p role="alert"
+         class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{{ error }}</p>
+    {% endif %}
+    {% if hay_elegido %}
+      <p class="mt-4 rounded border border-stone-300 p-3 text-sm">Ya hay un hogar elegido para este animal.</p>
+    {% elif postulantes %}
+      <p class="mt-4 text-sm text-stone-600">
+        Al elegir un hogar, avisamos a los demás postulantes que no fueron elegidos. Si ninguno te resulta conveniente, no elijas a nadie: la ficha sigue en adopción.
+      </p>
+      <ul class="mt-4 space-y-4">
+        {% for postulante in postulantes %}
+          <li class="rounded border border-stone-300 p-3">
+            <p class="font-semibold">{{ postulante.postulacion.usuario.nombre_usuario }}</p>
+            <p class="mt-1 text-sm text-stone-600">Contacto: {{ postulante.contacto }}</p>
+            <p class="text-sm text-stone-600">Plazas libres: {{ postulante.cupo_libre }}</p>
+            {% if postulante.advertencias %}
+              <div role="status"
+                   class="mt-2 rounded border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900">
+                <p class="font-medium">Este hogar puede no ser compatible con el animal:</p>
+                <ul class="mt-1 list-disc pl-5">
+                  {% for aviso in postulante.advertencias %}<li>{{ aviso }}</li>{% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+            <form method="post"
+                  class="mt-3"
+                  x-data="{}"
+                  @submit="if (!confirm('¿Elegir a este hogar? Avisamos a los demás postulantes que no fueron elegidos.')) $event.preventDefault()">
+              {% csrf_token %}
+              <input type="hidden"
+                     name="postulacion"
+                     value="{{ postulante.postulacion.pk }}">
+              <button type="submit"
+                      class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
+                Elegir este hogar
+              </button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="mt-4 text-sm text-stone-600">No hay postulaciones de hogares habilitados por ahora.</p>
+    {% endif %}
+    <a href="{% url 'fichas:detalle' ficha.pk %}"
+       class="mt-4 block min-h-11 px-4 py-2 text-center underline">Volver a la ficha</a>
+  </section>
+{% endblock %}

@@ -9,7 +9,7 @@ from apps.cuentas.models import Domicilio
 from apps.fichas import permisos
 from apps.fichas.models import FichaAnimal
 
-from . import postulaciones, servicios, solicitud
+from . import eleccion, postulaciones, servicios, solicitud
 from .forms import PerfilTransitoForm, PostulacionForm, SolicitudTransitoForm
 from .models import PerfilTransito, Postulacion
 
@@ -159,3 +159,43 @@ def solicitar(request, ficha_pk):
         "es_el_cuidador": ficha.cuidador_id == request.user.pk,
     }
     return render(request, "transito/solicitar.html", contexto)
+
+
+@cuenta_habilitada
+def elegir(request, ficha_pk):
+    """Quien tiene al animal elige entre los hogares de tránsito que se postularon.
+
+    Sin POST no se cambia nada. No elegir a nadie es simplemente volver a la ficha.
+    """
+    ficha = get_object_or_404(FichaAnimal, pk=ficha_pk)
+    if not permisos.puede_ver(request.user, ficha):
+        raise Http404
+    if not eleccion.puede_elegir(request.user, ficha):
+        raise PermissionDenied
+    error = None
+    if request.method == "POST":
+        pk = request.POST.get("postulacion", "")
+        postulacion = (
+            Postulacion.objects.filter(pk=pk, ficha=ficha).first() if pk.isdigit() else None
+        )
+        try:
+            if postulacion is None:
+                raise eleccion.PostulacionNoDisponible(eleccion.MENSAJE_POSTULACION_NO_DISPONIBLE)
+            eleccion.elegir_hogar(ficha, request.user, postulacion)
+        except eleccion.EleccionNoPermitida:
+            raise PermissionDenied from None
+        except (
+            eleccion.PostulacionNoDisponible,
+            eleccion.HogarNoHabilitado,
+            eleccion.HogarYaElegido,
+        ) as motivo:
+            error = str(motivo)  # 4A: vuelve a la lista para elegir a otro
+        else:
+            return redirect(f"{reverse('fichas:detalle', args=[ficha.pk])}?elegido=1")
+    contexto = {
+        "ficha": ficha,
+        "postulantes": eleccion.postulantes_habilitados(ficha),
+        "hay_elegido": eleccion.hay_hogar_elegido(ficha),
+        "error": error,
+    }
+    return render(request, "transito/elegir_hogar.html", contexto)
