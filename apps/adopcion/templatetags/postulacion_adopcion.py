@@ -1,6 +1,6 @@
 from django import template
 
-from apps.adopcion import postulaciones
+from apps.adopcion import eleccion, postulaciones
 from apps.transito.models import Postulacion
 
 register = template.Library()
@@ -41,3 +41,19 @@ def postulacion_de_adopcion(context, ficha):
     if motivo[0] == "suspendido":
         return {**contexto, "motivo": motivo[1]}
     return vacio
+
+
+@register.inclusion_tag("adopcion/_postulantes.html", takes_context=True)
+def postulantes_de_adopcion(context, ficha):
+    """En la ficha, para quien elige: cuántos se postularon o a quién eligió (CU-29)."""
+    usuario = context["request"].user
+    if ficha.estado not in postulaciones.ESTADOS_DISPONIBLES or not eleccion.puede_elegir(
+        usuario, ficha
+    ):
+        return {"mostrar": False}
+    return {
+        "mostrar": True,
+        "ficha": ficha,
+        "elegida": eleccion.elegida_de(ficha),
+        "cantidad": eleccion.postulantes_de(ficha).count(),
+    }
