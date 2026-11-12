@@ -18,7 +18,7 @@ TRANSICIONES = {
     (E.EN_ADOPCION, E.REGISTRADO): (9, 12, 15),  # adopción / aparece el dueño / retiro
     (E.EN_ADOPCION, E.EN_TRANSITO): (7, 14),  # concreción del tránsito / extensión de plazo
     (E.EN_TRANSITO, E.EN_ADOPCION): (8,),  # relevo o vencimiento del plazo
-    (E.EN_TRANSITO, E.REGISTRADO): (13,),  # aparece el dueño
+    (E.EN_TRANSITO, E.REGISTRADO): (9, 13),  # adopción / aparece el dueño
 }
 
 

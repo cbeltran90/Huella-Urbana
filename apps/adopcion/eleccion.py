@@ -113,7 +113,7 @@ def _avisar(ficha, elegida, descartadas, telefono):
         notificar(
             postulacion.usuario,
             Notificacion.Tipo.RESULTADO_POSTULACION,
-            f"{ficha.nombre or 'La mascota'} ya encontró un hogar",
+            f"Eligieron a otra persona para adoptar a {nombre}",
             MENSAJE_A_LOS_DEMAS,
             ficha=ficha,
         )

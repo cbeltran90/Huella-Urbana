@@ -12,6 +12,12 @@
            class="mt-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
         <p class="font-semibold">Elegiste a {{ elegida.usuario.nombre_usuario }}</p>
         <p class="mt-1">Contacto: {{ elegida.contacto }}</p>
+        <div class="mt-3 flex flex-wrap gap-3">
+          <a href="{% url 'adopcion:concretar' ficha.pk %}"
+             class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Ya está con {{ elegida.usuario.nombre_usuario }}</a>
+          <a href="{% url 'adopcion:cancelar' ficha.pk %}"
+             class="inline-flex min-h-11 items-center rounded border border-stone-300 bg-white px-4 py-2 text-stone-800">Cancelar la adopción</a>
+        </div>
       </div>
     {% else %}
       {% for postulacion, dudas in postulantes %}
