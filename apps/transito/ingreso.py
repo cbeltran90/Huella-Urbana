@@ -25,6 +25,10 @@ MENSAJE_HOGAR_NO_HABILITADO = (
 MENSAJE_SIN_LUGAR = "Ese hogar ya no tiene lugar libre. Podés cancelar la entrega y elegir otro."
 MENSAJE_AL_HOGAR = "Se queda con vos hasta el {fin:%d/%m}. ¡Gracias por darle un lugar!"
 MENSAJE_A_QUIEN_ENTREGA = "¡Gracias por todo lo que hiciste!"
+MENSAJE_CANCELADA_AL_HOGAR = (
+    "Gracias por ofrecerte. Hay otras mascotas que necesitan un hogar de tránsito."
+)
+MENSAJE_CANCELADA_A_QUIEN_ENTREGA = "Podés elegir otro hogar desde la ficha."
 
 
 class IngresoNoPermitido(ValueError):
@@ -119,3 +123,35 @@ def _avisar_ingreso(ficha, alojamiento, hogar, entrega):
             MENSAJE_A_QUIEN_ENTREGA,
             ficha=ficha,
         )
+
+
+def cancelar_entrega(ficha, actor):
+    """La entrega al hogar elegido no se hizo (1A): la ficha sigue en adopción.
+
+    La postulación del hogar queda descartada, así que se puede elegir otro. Si cancela el
+    hogar, se avisa a quien entrega; si no, se avisa al hogar.
+    """
+    with transaction.atomic():
+        actual, elegida = _validar(ficha, actor)
+        entrega = actual.cuidador or actual.responsable
+        elegida.estado = Postulacion.Estado.DESCARTADA
+        elegida.save(update_fields=["estado"])
+        nombre = actual.nombre or "la mascota"
+        if actor.pk == elegida.usuario_id:
+            if entrega is not None:
+                notificar(
+                    entrega,
+                    Notificacion.Tipo.RESULTADO_POSTULACION,
+                    f"El hogar de tránsito canceló la entrega de {nombre}",
+                    MENSAJE_CANCELADA_A_QUIEN_ENTREGA,
+                    ficha=actual,
+                )
+        else:
+            notificar(
+                elegida.usuario,
+                Notificacion.Tipo.RESULTADO_POSTULACION,
+                f"La entrega de {nombre} no se concretó",
+                MENSAJE_CANCELADA_AL_HOGAR,
+                ficha=actual,
+            )
+    return elegida

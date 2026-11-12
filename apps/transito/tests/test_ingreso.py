@@ -8,7 +8,7 @@ from apps.cuentas.models import Domicilio, EstadoCuenta, Usuario
 from apps.fichas.models import FichaAnimal
 from apps.notificaciones.models import Notificacion
 from apps.publicaciones.models import Publicacion
-from apps.transito import ingreso
+from apps.transito import eleccion, ingreso
 from apps.transito.models import Alojamiento, PerfilTransito, Postulacion
 from apps.transito.servicios import cupo_libre
 
@@ -201,3 +201,57 @@ def test_si_el_hogar_esta_en_pausa_no_ingresa(ficha, beto):
 
     with pytest.raises(ingreso.IngresoNoPermitido, match="ya no está disponible"):
         ingresar(ficha, beto)
+
+
+# Cancelar la entrega (1A)
+
+
+def test_al_cancelar_la_mascota_sigue_en_adopcion(ficha, beto, hogar):
+    elegida = elegir_hogar(ficha, hogar)
+
+    ingreso.cancelar_entrega(ficha, beto)
+
+    elegida.refresh_from_db()
+    ficha.refresh_from_db()
+    assert elegida.estado == Postulacion.Estado.DESCARTADA
+    assert ficha.estado == Estado.EN_ADOPCION
+    assert ficha.cuidador == beto
+    assert not Alojamiento.objects.exists()
+
+
+def test_despues_de_cancelar_se_puede_elegir_otro_hogar(ficha, beto, hogar):
+    elegir_hogar(ficha, hogar)
+
+    ingreso.cancelar_entrega(ficha, beto)
+
+    assert not eleccion.hay_hogar_elegido(ficha)
+
+
+def test_si_cancela_quien_entrega_se_avisa_al_hogar(ficha, beto, hogar):
+    elegir_hogar(ficha, hogar)
+
+    ingreso.cancelar_entrega(ficha, beto)
+
+    aviso = Notificacion.objects.get()
+    assert aviso.usuario == hogar
+    assert aviso.titulo == "La entrega de Firulais no se concretó"
+
+
+def test_si_cancela_el_hogar_se_avisa_a_quien_entrega(ficha, beto, hogar):
+    elegir_hogar(ficha, hogar)
+
+    ingreso.cancelar_entrega(ficha, hogar)
+
+    aviso = Notificacion.objects.get()
+    assert aviso.usuario == beto
+    assert aviso.titulo == "El hogar de tránsito canceló la entrega de Firulais"
+
+
+def test_otra_persona_no_puede_cancelar(ficha, hogar):
+    elegida = elegir_hogar(ficha, hogar)
+
+    with pytest.raises(ingreso.IngresoNoPermitido):
+        ingreso.cancelar_entrega(ficha, crear_usuario("dario"))
+
+    elegida.refresh_from_db()
+    assert elegida.estado == Postulacion.Estado.ELEGIDA
