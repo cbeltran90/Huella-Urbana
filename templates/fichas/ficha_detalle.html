@@ -7,7 +7,7 @@
     {% if unida %}
       <p role="status"
          class="mb-4 rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900">
-        Esa ficha se unió a esta: es el mismo animal.
+        Esa ficha se unió a esta: es la misma mascota.
       </p>
     {% endif %}
     <h1 class="text-2xl font-bold">{{ ficha.nombre|default:"Sin nombre" }}</h1>
@@ -20,7 +20,7 @@
         {% for foto in fotos %}
           <li>
             <img src="{% get_media_prefix %}{{ foto.archivo }}"
-                 alt="Foto de {{ ficha.nombre|default:'un animal' }}"
+                 alt="Foto de {{ ficha.nombre|default:'una mascota' }}"
                  loading="lazy"
                  class="aspect-square w-full rounded object-cover">
           </li>
@@ -121,8 +121,8 @@
         </a>
       {% endif %}
       {% boton_resolver_caso ficha %}
-      {% if user.is_authenticated %}
-        <a href="{% url 'fichas:mis_fichas' %}"
+      {% if volver %}
+        <a href="{{ volver }}"
            class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Volver</a>
       {% endif %}
     </div>

@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -5,6 +7,7 @@ from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from apps.cuentas.decoradores import cuenta_habilitada
 from apps.cuentas.servicios import esta_suspendido
@@ -59,6 +62,18 @@ def ficha_nueva(request):
     return render(request, "fichas/ficha_form.html", {"form": form, "ficha": None})
 
 
+def _volver(request, ficha):
+    """A dónde lleva «Volver»: a la página de la que venía; si no se sabe, a "Mis fichas"."""
+    anterior = request.META.get("HTTP_REFERER", "")
+    propia = reverse("fichas:detalle", args=[ficha.pk])
+    es_segura = url_has_allowed_host_and_scheme(
+        anterior, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    )
+    if anterior and es_segura and urlsplit(anterior).path != propia:
+        return anterior
+    return reverse("fichas:mis_fichas") if request.user.is_authenticated else ""
+
+
 def ficha_detalle(request, pk):
     # Es una consulta pública: puede_ver oculta las fichas privadas a quien no corresponde.
     ficha = _ficha_visible(request, pk)
@@ -75,6 +90,7 @@ def ficha_detalle(request, pk):
         "ficha": ficha,
         "fotos": fotos,
         "unida": "unida" in request.GET,
+        "volver": _volver(request, ficha),
         "puede_editar": puede_editar,
         "puede_baja": permisos.puede_dar_de_baja(request.user, ficha) and not suspendido,
     }
