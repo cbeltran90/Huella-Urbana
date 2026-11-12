@@ -15,6 +15,7 @@ MENSAJE_NO_DISPONIBLE = "Esta mascota ya no busca familia."
 MENSAJE_NO_PENDIENTE = "Esa postulación ya no está pendiente."
 MENSAJE_YA_HAY_ELEGIDO = "Ya elegiste a quién darla en adopción."
 MENSAJE_AL_ELEGIDO = "Pronto se van a comunicar con vos para coordinar la entrega."
+MENSAJE_AL_ELEGIDO_CON_TELEFONO = "Para coordinar la entrega, escribile al {telefono}."
 MENSAJE_A_LOS_DEMAS = "Gracias por tu interés. Hay otras mascotas que te están esperando."
 DUDA_NINOS = "En el hogar viven niños y no sabemos si esta mascota se lleva bien con ellos."
 DUDA_ANIMALES = "El hogar ya tiene mascotas y no sabemos si esta se lleva bien con otros animales."
@@ -63,13 +64,14 @@ def dudas_de(postulacion):
     )
 
 
-def elegir_adoptante(postulacion, actor):
+def elegir_adoptante(postulacion, actor, telefono=""):
     """Elige esa postulación: queda elegida, las demás de adopción descartadas, y se avisa a todos.
 
     Las de tránsito no se tocan (se resuelven al concretar la adopción, C8). Lanza
     EleccionNoPermitida si el actor no elige para ese animal, si el animal ya no está
     disponible, si la postulación no es de adopción o no está pendiente, o si ya hay un
     elegido. En esos casos no cambia nada.
+    Si llega un teléfono, va en el aviso a la persona elegida y no se guarda en otro lado.
     """
     with transaction.atomic():
         # Bloquear la ficha evita que dos elecciones a la vez terminen con dos elegidos.
@@ -89,18 +91,22 @@ def elegir_adoptante(postulacion, actor):
         Postulacion.objects.filter(pk__in=[p.pk for p in descartadas]).update(
             estado=Postulacion.Estado.DESCARTADA
         )
-        _avisar(ficha, elegida, descartadas)
+        _avisar(ficha, elegida, descartadas, (telefono or "").strip())
     postulacion.estado = elegida.estado
     return postulacion
 
 
-def _avisar(ficha, elegida, descartadas):
+def _avisar(ficha, elegida, descartadas, telefono):
     nombre = ficha.nombre or "la mascota"
+    if telefono:
+        mensaje = MENSAJE_AL_ELEGIDO_CON_TELEFONO.format(telefono=telefono)
+    else:
+        mensaje = MENSAJE_AL_ELEGIDO
     notificar(
         elegida.usuario,
         Notificacion.Tipo.RESULTADO_POSTULACION,
         f"¡Te eligieron para adoptar a {nombre}!",
-        MENSAJE_AL_ELEGIDO,
+        mensaje,
         ficha=ficha,
     )
     for postulacion in descartadas:

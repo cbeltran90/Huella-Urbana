@@ -101,6 +101,25 @@ def test_avisa_al_elegido_y_a_los_demas(ana, beto, carla):
     assert al_elegido.ficha == al_otro.ficha == ficha
 
 
+def test_sin_telefono_al_elegido_le_dicen_que_lo_van_a_contactar(ana, beto):
+    eleccion.elegir_adoptante(postular(hacer_ficha(cuidador=beto), ana), beto)
+
+    assert Notificacion.objects.get().mensaje == eleccion.MENSAJE_AL_ELEGIDO
+
+
+def test_con_telefono_solo_el_elegido_lo_recibe(ana, beto, carla):
+    ficha = hacer_ficha(cuidador=beto)
+    elegida = postular(ficha, ana)
+    postular(ficha, carla)
+
+    eleccion.elegir_adoptante(elegida, beto, telefono="  2901 444444  ")
+
+    al_elegido = Notificacion.objects.get(usuario=ana)
+    al_otro = Notificacion.objects.get(usuario=carla)
+    assert al_elegido.mensaje == "Para coordinar la entrega, escribile al 2901 444444."
+    assert "2901 444444" not in al_otro.mensaje
+
+
 def test_sin_nombre_el_aviso_habla_del_animal(ana, beto):
     ficha = hacer_ficha(cuidador=beto, nombre="")
 
