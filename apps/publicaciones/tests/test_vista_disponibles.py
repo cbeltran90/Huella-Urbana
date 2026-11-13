@@ -24,6 +24,7 @@ def test_un_visitante_ve_las_adopciones_y_los_transitos(client, ana):
     assert respuesta.status_code == 200
     assert "negro" in html and "blanco" in html
     assert "marrón" not in html
+    assert "Mascotas disponibles" in html
 
 
 def test_los_filtros_se_aplican_y_quedan_elegidos(client, ana):
