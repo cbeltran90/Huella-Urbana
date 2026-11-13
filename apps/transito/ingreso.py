@@ -68,6 +68,34 @@ def _validar(ficha, actor):
     return actual, elegida
 
 
+def alojar_en_hogar(ficha, hogar, *, vacunado=False, castrado=False, desparasitado=False):
+    """Registra que la mascota pasa a vivir en el hogar de tránsito de este usuario.
+
+    Revalida que el hogar tenga su perfil activo y no esté suspendido; el cupo puede quedar en
+    cero o superarse. Si la mascota venía de otro hogar, ese alojamiento se cierra hoy
+    por relevo y libera su plaza. El alojamiento termina, como mucho, a los días de duración
+    máxima del hogar. No cambia el estado de la ficha ni su publicación: eso lo hace quien la
+    llama. Lanza IngresoNoPermitido si el hogar no está disponible.
+    """
+    perfil = PerfilTransito.objects.filter(usuario=hogar, activo=True).first()
+    if perfil is None or esta_suspendido(hogar):
+        raise IngresoNoPermitido(MENSAJE_HOGAR_NO_HABILITADO)
+    hoy = timezone.localdate()
+    with transaction.atomic():
+        Alojamiento.objects.filter(ficha=ficha, fecha_fin_real__isnull=True).update(
+            fecha_fin_real=hoy, motivo_fin=Alojamiento.MotivoFin.RELEVO
+        )
+        return Alojamiento.objects.create(
+            ficha=ficha,
+            hogar=perfil,
+            fecha_ingreso=hoy,
+            fecha_fin_prevista=hoy + timedelta(days=perfil.duracion_maxima_dias),
+            vacunado_al_ingreso=vacunado,
+            castrado_al_ingreso=castrado,
+            desparasitado_al_ingreso=desparasitado,
+        )
+
+
 def registrar_ingreso(ficha, actor, *, vacunado=False, castrado=False, desparasitado=False):
     """La mascota llegó al hogar elegido: se registra el alojamiento y se devuelve.
 
@@ -79,23 +107,13 @@ def registrar_ingreso(ficha, actor, *, vacunado=False, castrado=False, desparasi
     """
     with transaction.atomic():
         actual, elegida = _validar(ficha, actor)
-        perfil = PerfilTransito.objects.filter(usuario_id=elegida.usuario_id, activo=True).first()
-        if perfil is None or esta_suspendido(perfil.usuario):
-            raise IngresoNoPermitido(MENSAJE_HOGAR_NO_HABILITADO)
         entrega = actual.cuidador or actual.responsable
-        hoy = timezone.localdate()
-        # Si venía de otro hogar (relevo), ese alojamiento termina hoy y libera su plaza.
-        Alojamiento.objects.filter(ficha=actual, fecha_fin_real__isnull=True).update(
-            fecha_fin_real=hoy, motivo_fin=Alojamiento.MotivoFin.RELEVO
-        )
-        alojamiento = Alojamiento.objects.create(
-            ficha=actual,
-            hogar=perfil,
-            fecha_ingreso=hoy,
-            fecha_fin_prevista=hoy + timedelta(days=perfil.duracion_maxima_dias),
-            vacunado_al_ingreso=vacunado,
-            castrado_al_ingreso=castrado,
-            desparasitado_al_ingreso=desparasitado,
+        alojamiento = alojar_en_hogar(
+            actual,
+            elegida.usuario,
+            vacunado=vacunado,
+            castrado=castrado,
+            desparasitado=desparasitado,
         )
         marcar_concretada(elegida)
         cambiar_estado(
