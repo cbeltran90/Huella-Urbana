@@ -11,7 +11,7 @@ from django.urls import reverse
 from apps.fichas.models import FichaAnimal
 from apps.imagenes.models import Fotografia
 from apps.imagenes.procesamiento import ImagenInvalida
-from apps.publicaciones import avisos, servicios, ubicacion
+from apps.publicaciones import servicios, ubicacion
 from apps.publicaciones.forms import MAX_FOTOS
 from apps.publicaciones.models import Publicacion
 
@@ -159,15 +159,6 @@ def test_si_avisar_falla_el_alta_queda_igual(ana, beto, con_domicilio, modulos_d
     publicacion = servicios.alta_en_adopcion(ana, animal=ANIMAL, archivos=[crear_imagen()])
 
     assert publicacion.pk is not None
-
-
-def test_si_faltan_los_modulos_de_otros_no_se_avisa_a_nadie(ana, con_domicilio, monkeypatch):
-    monkeypatch.setitem(sys.modules, "apps.transito.servicios", None)
-    monkeypatch.setitem(sys.modules, "apps.notificaciones.servicios", None)
-
-    publicacion = servicios.alta_en_adopcion(ana, animal=ANIMAL, archivos=[crear_imagen()])
-
-    assert avisos.avisar_hogares_compatibles(publicacion) == 0
 
 
 # --- vista ---

@@ -7,16 +7,13 @@ from apps.fichas.comparacion import buscar_candidatas
 from apps.fichas.models import Coincidencia
 from apps.fichas.permisos import es_moderador
 from apps.imagenes.models import Fotografia
+from apps.notificaciones.servicios import notificar
 
 from .models import Publicacion
 
 
 def _notificar(usuario, titulo, mensaje, publicacion):
-    """Avisa por el módulo de notificaciones si ya existe; si no, no hace nada."""
-    try:
-        from apps.notificaciones.servicios import notificar
-    except ImportError:
-        return
+    """Avisa al usuario de una vinculación."""
     notificar(
         usuario, "vinculacion", titulo, mensaje, ficha=publicacion.ficha, publicacion=publicacion
     )

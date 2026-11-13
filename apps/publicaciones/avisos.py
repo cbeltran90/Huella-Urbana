@@ -9,11 +9,9 @@ TIPO_AVISO = "coincidencia_transito"
 
 def avisar_hogares_compatibles(publicacion):
     """Notifica a los hogares compatibles con la ficha de la publicación. Devuelve cuántos."""
-    try:
-        from apps.notificaciones.servicios import notificar
-        from apps.transito.servicios import hogares_compatibles
-    except ImportError:
-        return 0
+    # Se importan acá y no arriba para evitar ciclos entre las apps.
+    from apps.notificaciones.servicios import notificar
+    from apps.transito.servicios import hogares_compatibles
 
     ficha = publicacion.ficha
     try:

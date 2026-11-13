@@ -200,3 +200,13 @@ def test_sin_tamano_en_la_ficha_no_hay_incompatibilidad_de_tamano():
     perfil = hogar("ana", tamano_maximo="pequeno")
 
     assert servicios.incompatibilidades(perfil, ficha(tamano="")) == []
+
+
+@pytest.mark.django_db
+def test_devuelve_perfiles_con_su_usuario():
+    perfil = hogar("ana")
+
+    resultado = servicios.hogares_compatibles(ficha())
+
+    assert resultado == [perfil]
+    assert resultado[0].usuario.email == "ana@example.com"
