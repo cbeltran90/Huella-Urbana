@@ -22,6 +22,7 @@ def test_un_visitante_ve_el_listado(client, ana):
 
     assert respuesta.status_code == 200
     assert "Extravío" in respuesta.content.decode()
+    assert "Mascotas perdidas" in respuesta.content.decode()
 
 
 def test_los_filtros_se_aplican_y_quedan_elegidos(client, ana):

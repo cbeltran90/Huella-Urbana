@@ -46,6 +46,6 @@ def resumen(request, pk):
     contexto = {
         "publicacion": publicacion,
         "ficha_publica": ficha is not None and not ficha.es_privada,
-        "foto": ficha.fotografias.first() if ficha else None,
+        "foto": ficha.fotografias.filter(motivo_revision="").first() if ficha else None,
     }
     return render(request, "mapa/_resumen.html", contexto)

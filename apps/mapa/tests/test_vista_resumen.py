@@ -3,6 +3,7 @@ from django.urls import reverse
 from model_bakery import baker
 
 from apps.fichas.models import FichaAnimal
+from apps.imagenes.models import Fotografia
 from apps.publicaciones.models import Publicacion
 
 from .conftest import hacer_publicacion
@@ -65,3 +66,19 @@ def test_muestra_el_telefono_para_escribir_por_whatsapp(client, ana):
 
     assert "Para consultar, escribile al" in html
     assert 'href="https://wa.me/5492901444444"' in html
+
+
+def test_no_muestra_las_fotos_marcadas_para_revision(client, ana):
+    ficha = baker.make(FichaAnimal, especie="perro", es_privada=False)
+    baker.make(
+        Fotografia,
+        ficha=ficha,
+        archivo="fichas/marcada.jpg",
+        motivo_revision=Fotografia.MotivoRevision.SIN_ANIMAL,
+    )
+    baker.make(Fotografia, ficha=ficha, archivo="fichas/buena.jpg")
+
+    html = _resumen(client, hacer_publicacion(ana, ficha=ficha)).content.decode()
+
+    assert "fichas/buena.jpg" in html
+    assert "fichas/marcada.jpg" not in html
