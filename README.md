@@ -24,3 +24,11 @@ La app queda en http://localhost:8080
 - Pull Request chico, con al menos una aprobación de otra persona.
 - Commits en formato Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`).
 - Antes de pushear: `pre-commit run --all-files`.
+
+## Datos de demostración
+
+Para cargar todas las cuentas y los recorridos de la demo (hogares de tránsito, adopción y extravío):
+
+    docker compose exec web python manage.py cargar_demo
+
+Se puede correr las veces que haga falta sin duplicar datos. La contraseña de todas las cuentas demo es `demo-huella-2026` (se cambia con `--password`) y se entra con el correo, por ejemplo `moderador@demo.huella.test`. Para Nina y Pipo se pueden pasar fotos propias con `--foto-nina` y `--foto-pipo`.
