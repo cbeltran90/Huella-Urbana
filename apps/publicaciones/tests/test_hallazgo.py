@@ -152,7 +152,7 @@ def test_hacen_falta_foto_especie_y_ubicacion(entrar, ana):
 
     html = respuesta.content.decode()
     assert respuesta.status_code == 200
-    assert "Subí una foto del animal" in html
+    assert "Subí una foto de la mascota" in html
     assert "Elegí la especie" in html
     assert "Indicá dónde lo encontraste" in html
     assert not Publicacion.objects.exists()

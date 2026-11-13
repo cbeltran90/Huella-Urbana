@@ -56,7 +56,7 @@
         {% include "cuentas/_errores.html" with errores=form.longitud.errors %}
       </div>
       <div x-show="paso === 3" class="space-y-4">
-        <h2 class="font-semibold">Datos del animal</h2>
+        <h2 class="font-semibold">Datos de la mascota</h2>
         {% for campo in form.visible_fields %}
           {% if campo.name == "especie" or campo.name == "tamano" or campo.name == "raza" or campo.name == "color" or campo.name == "estado_aparente" or campo.name == "descripcion" %}
             <div>

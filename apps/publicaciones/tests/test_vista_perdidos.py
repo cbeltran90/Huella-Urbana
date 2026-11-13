@@ -49,7 +49,7 @@ def test_un_punto_invalido_no_rompe_la_pagina(client, ana):
 
 def test_sin_resultados_lo_dice(client):
     html = client.get(PERDIDOS, {"especie": "gato"}).content.decode()
-    assert "No encontramos animales con esos datos." in html
+    assert "No encontramos mascotas con esos datos." in html
 
 
 def test_una_ficha_privada_no_muestra_el_nombre(client, ana):

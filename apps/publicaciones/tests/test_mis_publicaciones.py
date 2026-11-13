@@ -75,5 +75,5 @@ def test_explica_por_que_no_se_puede_retirar(entrar, ana):
     html = entrar(ana).get(MIS_PUBLICACIONES).content.decode()
 
     assert "Este caso lo cierra un moderador." in html
-    assert "Se cierra sola cuando el animal consiga un hogar." in html
+    assert "Se cierra sola cuando la mascota consiga un hogar." in html
     assert reverse("publicaciones:resolver_caso", args=[sin_responsable.pk]) not in html

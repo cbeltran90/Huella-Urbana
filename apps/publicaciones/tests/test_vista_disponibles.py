@@ -47,4 +47,4 @@ def test_no_tiene_mapa_ni_distancia_aunque_vengan_coordenadas(client, ana):
 
 def test_sin_resultados_lo_dice(client):
     html = client.get(DISPONIBLES).content.decode()
-    assert "No encontramos animales con esos datos." in html
+    assert "No encontramos mascotas con esos datos." in html

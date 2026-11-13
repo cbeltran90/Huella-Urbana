@@ -61,7 +61,7 @@ def vincular(publicacion, ficha, usuario):
         _notificar(
             persona,
             "Posible coincidencia",
-            "Alguien cree que es el mismo animal. Revisá la publicación.",
+            "Alguien cree que es la misma mascota. Revisá la publicación.",
             publicacion,
         )
     return coincidencia
@@ -109,7 +109,7 @@ def responder(coincidencia, usuario, *, confirmar):
         _notificar(
             publicacion.autor,
             "Coincidencia confirmada",
-            "Se confirmó que es el mismo animal.",
+            "Se confirmó que es la misma mascota.",
             publicacion,
         )
     return coincidencia

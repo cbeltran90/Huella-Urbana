@@ -77,7 +77,7 @@ def test_un_animal_nuevo_necesita_especie_y_foto(entrar, ana, con_domicilio):
     html = respuesta.content.decode()
     assert respuesta.status_code == 200
     assert "Elegí la especie" in html
-    assert "Subí una foto del animal" in html
+    assert "Subí una foto de la mascota" in html
 
 
 def test_sin_domicilio_hay_que_indicar_la_ubicacion(entrar, ana):

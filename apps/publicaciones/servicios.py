@@ -164,7 +164,7 @@ def _punto_para_publicar(ficha, punto, actor):
             return lugar, None
     if punto is None:
         if cuidador is None:
-            raise ValueError("Falta la ubicación: el animal no está a cargo de un usuario.")
+            raise ValueError("Falta la ubicación: la mascota no está a cargo de un usuario.")
         raise ValueError("Falta la ubicación: quien lo tiene a cargo no tiene domicilio.")
     if cuidador is not None and actor == cuidador:
         return ubicacion.registrar_domicilio(cuidador, punto), None
