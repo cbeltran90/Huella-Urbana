@@ -32,7 +32,7 @@ def avisar_hogares_compatibles(publicacion):
             notificar(
                 usuario,
                 TIPO_AVISO,
-                "Un animal necesita un hogar",
+                "Una mascota necesita un hogar",
                 f"Hay un {especie} en adopción que encaja con tu hogar.",
                 ficha=ficha,
                 publicacion=publicacion,

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block titulo %}Dar de alta un animal · Huella Urbana{% endblock %}
+{% block titulo %}Dar de alta una mascota · Huella Urbana{% endblock %}
 {% block contenido %}
   <section class="mx-auto max-w-lg rounded-lg border bg-white p-6"
            x-data="{ paso: {{ paso_inicial }}, sinConexion: !navigator.onLine }"
            @online.window="sinConexion = false"
            @offline.window="sinConexion = true"
            x-init="$watch('paso', valor => { if (valor === 3 && window.mapaUbicacion) setTimeout(() => window.mapaUbicacion.invalidateSize(), 50) })">
-    <h1 class="text-2xl font-bold">Dar de alta un animal en adopción</h1>
+    <h1 class="text-2xl font-bold">Dar de alta una mascota en adopción</h1>
     <p class="mt-1 text-sm text-stone-600">Paso <span x-text="paso"></span> de 4</p>
     <p x-show="sinConexion"
        x-cloak
@@ -24,7 +24,7 @@
            class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
       {% endfor %}
       <div x-show="paso === 1" class="space-y-4">
-        <h2 class="font-semibold">Datos del animal</h2>
+        <h2 class="font-semibold">Datos de la mascota</h2>
         {% for campo in form.campos_datos %}
           <div>
             <label for="{{ campo.id_for_label }}" class="block text-sm font-medium">{{ campo.label }}</label>
@@ -91,7 +91,7 @@
           {{ form.telefono_visible }}
           {% include "cuentas/_errores.html" with errores=form.telefono_visible.errors %}
         </div>
-        <p class="text-sm text-stone-600">Al publicar, el animal queda a tu cargo y le avisamos a los hogares compatibles.</p>
+        <p class="text-sm text-stone-600">Al publicar, la mascota queda a tu cargo y le avisamos a los hogares compatibles.</p>
       </div>
       <div class="flex gap-3">
         <button type="button"

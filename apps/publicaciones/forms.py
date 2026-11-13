@@ -10,7 +10,7 @@ from apps.imagenes.forms import MAX_FOTOS, CampoVariosArchivos
 from .models import Publicacion
 
 MENSAJE_ESPECIE = "Elegí la especie"
-MENSAJE_FOTO = "Subí una foto del animal"
+MENSAJE_FOTO = "Subí una foto de la mascota"
 MENSAJE_UBICACION = "Indicá tu ubicación en el mapa o con el GPS"
 
 CAMPOS_ANIMAL = ("nombre", "especie", "tamano", "raza", "color")
@@ -33,10 +33,10 @@ class ExtravioForm(forms.Form):
     """Los datos Publicar extravío, en una sola página por pasos."""
 
     ficha = forms.ModelChoiceField(
-        label="Tu animal",
+        label="Tu mascota",
         queryset=FichaAnimal.objects.none(),
         required=False,
-        empty_label="Cargar un animal nuevo",
+        empty_label="Cargar una mascota nueva",
     )
     foto = forms.FileField(label="Foto", required=False)
     latitud = forms.FloatField(required=False, min_value=-90, max_value=90)
@@ -136,7 +136,7 @@ class HallazgoForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={"rows": 3}),
     )
-    tiene_consigo = forms.BooleanField(label="Tengo al animal conmigo", required=False)
+    tiene_consigo = forms.BooleanField(label="Tengo a la mascota conmigo", required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -167,7 +167,7 @@ class HallazgoForm(forms.Form):
         return min(pasos, default=4)
 
 
-MENSAJE_FOTOS = "Subí al menos una foto del animal"
+MENSAJE_FOTOS = "Subí al menos una foto de la mascota"
 MENSAJE_MUCHAS_FOTOS = f"Podés subir hasta {MAX_FOTOS} fotos"
 MENSAJE_TELEFONO = "Ingresá un teléfono válido"
 VALIDAR_TELEFONO = RegexValidator(r"^[0-9+\-() ]{6,30}$", MENSAJE_TELEFONO)
