@@ -39,10 +39,51 @@
       {% endif %}
     </dl>
     {% if publicacion.descripcion %}<p class="mt-4 text-sm">{{ publicacion.descripcion }}</p>{% endif %}
+    <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+      <dt class="text-stone-600">Publicó</dt>
+      <dd>
+        {% if publicacion.autor %}{{ publicacion.autor.nombre_usuario }}{% else %}Usuario eliminado{% endif %}
+      </dd>
+      {% if publicacion.ficha %}
+        <dt class="text-stone-600">Ficha</dt>
+        <dd>
+          {% if ficha_visible %}
+            <a href="{% url 'fichas:detalle' publicacion.ficha.pk %}"
+               class="underline">Ver la ficha</a>
+          {% else %}
+            Vinculada a una ficha privada
+          {% endif %}
+        </dd>
+      {% endif %}
+    </dl>
+    <div id="mapa-publicacion"
+         class="mt-4 h-56 w-full rounded border"
+         role="img"
+         aria-label="Ubicación aproximada de la publicación"></div>
     {% telefono_de_contacto publicacion %}
+    {% if puede_crear_ficha %}
+      <form method="post"
+            action="{% url 'publicaciones:crear_ficha' publicacion.pk %}"
+            class="mt-4">
+        {% csrf_token %}
+        <p class="text-sm text-stone-600">Esta publicación no está vinculada a ninguna ficha.</p>
+        <button type="submit" class="mt-2 rounded border px-3 py-1 text-sm">Crear una ficha nueva</button>
+      </form>
+    {% endif %}
     {% if puede_desvincular %}
       <a href="{% url 'publicaciones:desvincular' publicacion.pk %}"
          class="mt-4 inline-block rounded border px-3 py-1 text-sm">Desvincular de la ficha</a>
     {% endif %}
   </section>
+{% endblock %}
+{% block extra_js %}
+  {{ mapa_config|json_script:"mapa-config" }}
+  {{ punto|json_script:"mapa-punto" }}
+  <script>
+    const config = JSON.parse(document.getElementById("mapa-config").textContent);
+    const punto = JSON.parse(document.getElementById("mapa-punto").textContent);
+    const mapa = L.map("mapa-publicacion").setView([punto.lat, punto.lng], 15);
+    L.tileLayer(config.tiles_url, { maxZoom: 19, attribution: config.atribucion }).addTo(mapa);
+    L.marker([punto.lat, punto.lng]).addTo(mapa);
+  </script>
 {% endblock %}
