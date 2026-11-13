@@ -1,0 +1,5 @@
+{% load static %}
+{{ mapa_config|json_script:"mapa-config" }}
+{% if centro %}{{ centro|json_script:"mapa-centro" }}{% endif %}
+<script src="{% static 'js/selector_ubicacion.js' %}"></script>
+<script>SelectorUbicacion.iniciar("{{ mapa_id }}");</script>

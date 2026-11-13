@@ -1,0 +1,14 @@
+<button type="button"
+        id="boton-gps"
+        class="min-h-11 rounded border border-stone-300 px-4 py-2 text-sm">Usar mi ubicación (GPS)</button>
+<div id="{{ mapa_id }}" class="mt-2 h-64 w-full rounded"></div>
+<input type="hidden"
+       name="latitud"
+       id="id_latitud"
+       value="{{ form.latitud.value|default_if_none:'' }}">
+<input type="hidden"
+       name="longitud"
+       id="id_longitud"
+       value="{{ form.longitud.value|default_if_none:'' }}">
+{% include "cuentas/_errores.html" with errores=form.latitud.errors %}
+{% include "cuentas/_errores.html" with errores=form.longitud.errors %}
