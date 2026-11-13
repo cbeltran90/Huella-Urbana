@@ -37,6 +37,20 @@
            class="inline-block min-h-11 px-2 py-2 underline">Dar en adopción</a>
       </li>
       <li>
+        <a href="{% url 'cuentas:perfil_adoptante' %}"
+           class="inline-block min-h-11 px-2 py-2 underline">Hogar y familia</a>
+      </li>
+      <li>
+        <a href="{% url 'transito:perfil_transito' %}"
+           class="inline-block min-h-11 px-2 py-2 underline">Mi hogar de tránsito</a>
+      </li>
+      {% if user.is_staff %}
+        <li>
+          <a href="{% url 'admin:index' %}"
+             class="inline-block min-h-11 px-2 py-2 underline">Moderación</a>
+        </li>
+      {% endif %}
+      <li>
         <a href="{% url 'publicaciones:coincidencias' %}"
            class="inline-block min-h-11 px-2 py-2 underline">
           Coincidencias
