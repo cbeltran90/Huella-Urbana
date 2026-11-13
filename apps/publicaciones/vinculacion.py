@@ -168,3 +168,38 @@ def pendientes_para(usuario):
         .select_related("ficha", "publicacion__autor", "publicacion__ficha")
         .order_by("-id")
     )
+
+
+TIPOS_CON_FICHA_PROPIA = (Publicacion.Tipo.EXTRAVIO, Publicacion.Tipo.HALLAZGO)
+
+
+def puede_crear_ficha(publicacion, usuario):
+    """Una publicación suelta de extravío o hallazgo: la crea el autor o un moderador."""
+    if publicacion.ficha_id is not None or not usuario.is_authenticated:
+        return False
+    if publicacion.tipo not in TIPOS_CON_FICHA_PROPIA:
+        return False
+    return publicacion.autor_id == usuario.pk or es_moderador(usuario)
+
+
+@transaction.atomic
+def crear_ficha_desde_publicacion(publicacion, usuario):
+    """ "Ninguna corresponde" sobre una publicación suelta: se crea su ficha nueva.
+
+    Extravío: ficha registrada con el autor como responsable. Hallazgo: ficha sin responsable
+    (a cargo del autor si no hay otro). Se copian los datos de la publicación.
+    """
+    from apps.fichas import servicios as fichas
+
+    if not puede_crear_ficha(publicacion, usuario):
+        raise PermissionError("No se puede crear una ficha para esta publicación.")
+    datos = {campo: getattr(publicacion, campo) for campo in ("especie", "tamano", "raza", "color")}
+    if publicacion.tipo == Publicacion.Tipo.EXTRAVIO:
+        if publicacion.autor is None:
+            raise ValueError("El autor ya no existe: no hay a quién dejar como responsable.")
+        ficha = fichas.crear_ficha(publicacion.autor, datos)
+    else:
+        ficha = fichas.crear_ficha_sin_responsable(datos)
+    publicacion.ficha = ficha
+    publicacion.save(update_fields=["ficha"])
+    return ficha

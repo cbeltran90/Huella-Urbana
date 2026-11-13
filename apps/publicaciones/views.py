@@ -76,6 +76,9 @@ def detalle(request, pk):
         "publicacion": publicacion,
         "fotos": fotos,
         "puede_desvincular": vinculacion.puede_desvincular(publicacion, request.user),
+        "punto": {"lat": publicacion.ubicacion.y, "lng": publicacion.ubicacion.x},
+        "puede_crear_ficha": vinculacion.puede_crear_ficha(publicacion, request.user),
+        "ficha_visible": bool(publicacion.ficha and puede_ver(request.user, publicacion.ficha)),
     }
     return render(request, "publicaciones/detalle.html", contexto)
 
@@ -321,3 +324,18 @@ def editar_publicacion(request, pk):
         form = EditarPublicacionForm(instance=publicacion)
     contexto = {"form": form, "publicacion": publicacion}
     return render(request, "publicaciones/editar_publicacion.html", contexto)
+
+
+@login_required
+@cuenta_habilitada
+@require_POST
+def crear_ficha(request, pk):
+    """ "Ninguna corresponde" en una publicación suelta: se crea su ficha."""
+    publicacion = get_object_or_404(
+        Publicacion.objects.exclude(estado=Publicacion.Estado.ELIMINADA), pk=pk
+    )
+    try:
+        ficha = vinculacion.crear_ficha_desde_publicacion(publicacion, request.user)
+    except PermissionError:
+        raise PermissionDenied from None
+    return redirect("fichas:detalle", pk=ficha.pk)
