@@ -49,22 +49,7 @@
           <p class="mt-1 text-sm">Usamos tu domicilio registrado. Siempre se muestra de forma aproximada.</p>
         {% else %}
           <p class="mt-1 text-sm">No tenés domicilio registrado. Indicá dónde vivís (se muestra de forma aproximada y queda guardado como tu domicilio).</p>
-          <button type="button"
-                  id="boton-gps"
-                  class="mt-2 min-h-11 rounded border border-stone-300 px-4 py-2 text-sm">
-            Usar mi ubicación (GPS)
-          </button>
-          <div id="mapa-ubicacion" class="mt-2 h-64 w-full rounded"></div>
-          <input type="hidden"
-                 name="latitud"
-                 id="id_latitud"
-                 value="{{ form.latitud.value|default_if_none:'' }}">
-          <input type="hidden"
-                 name="longitud"
-                 id="id_longitud"
-                 value="{{ form.longitud.value|default_if_none:'' }}">
-          {% include "cuentas/_errores.html" with errores=form.latitud.errors %}
-          {% include "cuentas/_errores.html" with errores=form.longitud.errors %}
+          {% include "componentes/_selector_ubicacion.html" with mapa_id="mapa-ubicacion" %}
         {% endif %}
       </div>
       <div x-show="paso === 4" class="space-y-4">
@@ -113,32 +98,6 @@
 {% endblock %}
 {% block extra_js %}
   {% if not tiene_domicilio %}
-    {{ mapa_config|json_script:"mapa-config" }}
-    <script>
-      const config = JSON.parse(document.getElementById("mapa-config").textContent);
-      const campoLat = document.getElementById("id_latitud");
-      const campoLng = document.getElementById("id_longitud");
-      const mapa = L.map("mapa-ubicacion").setView([-54.8019, -68.3030], 13);
-      L.tileLayer(config.tiles_url, { maxZoom: 19, attribution: config.atribucion }).addTo(mapa);
-      window.mapaUbicacion = mapa;
-      let marcador = null;
-      function marcar(lat, lng) {
-        campoLat.value = lat;
-        campoLng.value = lng;
-        if (marcador) { marcador.setLatLng([lat, lng]); } else { marcador = L.marker([lat, lng]).addTo(mapa); }
-      }
-      if (campoLat.value && campoLng.value) {
-        marcar(parseFloat(campoLat.value), parseFloat(campoLng.value));
-        mapa.setView([campoLat.value, campoLng.value], 15);
-      }
-      mapa.on("click", (e) => marcar(e.latlng.lat, e.latlng.lng));
-      document.getElementById("boton-gps").addEventListener("click", () => {
-        if (!navigator.geolocation) { return; }
-        navigator.geolocation.getCurrentPosition((pos) => {
-          marcar(pos.coords.latitude, pos.coords.longitude);
-          mapa.setView([pos.coords.latitude, pos.coords.longitude], 16);
-        });
-      });
-    </script>
+    {% include "componentes/_selector_ubicacion_js.html" with mapa_id="mapa-ubicacion" %}
   {% endif %}
 {% endblock %}
