@@ -75,12 +75,12 @@ def test_de_la_calle_a_una_familia_pasando_por_un_hogar_de_transito():
     for adoptante in (ana, carla):
         guardar_perfil_adoptante(adoptante, "Tuve perros toda la vida.")
 
-    # 1. Ema la encuentra y la tiene consigo: ficha privada, sin responsable.
+    # 1. Ema la encuentra y la tiene consigo: ficha pública, sin responsable.
     lola = crear_ficha_sin_responsable(
         {"nombre": "Lola", "especie": "perro", "tamano": "mediano", "color": "negro"},
         cuidador=ema,
     )
-    assert (lola.estado, lola.es_privada) == (Estado.SIN_RESPONSABLE, True)
+    assert (lola.estado, lola.es_privada) == (Estado.SIN_RESPONSABLE, False)
 
     # 2. Ema pide un hogar de tránsito: la ficha se hace pública y se publica en adopción.
     solicitud.solicitar_transito(lola, ema)

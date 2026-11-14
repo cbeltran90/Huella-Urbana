@@ -9,12 +9,12 @@ pytestmark = pytest.mark.django_db
 DATOS = {"especie": "perro", "tamano": "mediano", "color": "marrón"}
 
 
-def test_el_hallazgo_crea_una_ficha_sin_responsable_y_privada():
+def test_el_hallazgo_crea_una_ficha_sin_responsable_y_publica():
     ficha = servicios.crear_ficha_sin_responsable(DATOS)
 
     assert ficha.estado == FichaAnimal.Estado.SIN_RESPONSABLE
     assert ficha.responsable is None
-    assert ficha.es_privada is True
+    assert ficha.es_privada is False
     assert ficha.especie == "perro"
 
 

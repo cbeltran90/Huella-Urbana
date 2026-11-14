@@ -130,7 +130,7 @@ def dar_de_baja(ficha):
 
 
 def crear_ficha_sin_responsable(datos, *, cuidador=None):
-    """Hallazgo: ficha nueva en "sin responsable", privada.
+    """Hallazgo: ficha nueva en "sin responsable", pública.
 
     Si alguien tiene al animal consigo, queda a su cargo y empieza a correr el plazo de
     ausencia. Si no, nadie lo tiene a cargo y el plazo no corre.
@@ -141,7 +141,9 @@ def crear_ficha_sin_responsable(datos, *, cuidador=None):
         responsable=None,
         cuidador=cuidador,
         sin_responsable_desde=timezone.localdate() if cuidador else None,
-        es_privada=True,
+        # Pública: un hallazgo no tiene datos personales y es la ficha que su dueño necesita
+        # encontrar. La privada es la ficha preventiva de un dueño.
+        es_privada=False,
         **datos,
     )
 
