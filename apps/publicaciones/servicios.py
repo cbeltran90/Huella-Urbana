@@ -53,6 +53,7 @@ def publicar_extravio(
         autor=usuario,
         ficha=ficha,
         ubicacion=lugar,
+        domicilio=ubicacion.domicilio_de(usuario),
         descripcion=descripcion,
         estado_aparente=estado_aparente,
         especie=ficha.especie,
@@ -114,6 +115,7 @@ def _crear_alta_en_adopcion(usuario, *, animal, archivos, descripcion, telefono_
         autor=usuario,
         ficha=ficha,
         ubicacion=lugar,
+        domicilio=ubicacion.domicilio_de(usuario),
         descripcion=descripcion,
         telefono_visible=telefono_visible,
         especie=ficha.especie,
@@ -155,27 +157,29 @@ def _punto_para_publicar(ficha, punto, actor):
     - Lo carga un moderador (sin usuario a cargo, o a cargo de alguien sin domicilio que no es
       quien publica): "punto" se desplaza acá, nunca sale tal cual, y no se guarda como
       domicilio de nadie. Va también a "ubicacion_desplazada".
-    Devuelve (ubicacion, ubicacion_desplazada).
+    Devuelve (ubicacion, ubicacion_desplazada, domicilio): el domicilio es de donde salió
+    el punto, o None si lo marcó un moderador.
     """
     cuidador = ficha.cuidador
     if cuidador is not None:
         lugar = ubicacion.punto_de_domicilio(cuidador)
         if lugar is not None:
-            return lugar, None
+            return lugar, None, ubicacion.domicilio_de(cuidador)
     if punto is None:
         if cuidador is None:
             raise ValueError("Falta la ubicación: la mascota no está a cargo de un usuario.")
         raise ValueError("Falta la ubicación: quien lo tiene a cargo no tiene domicilio.")
     if cuidador is not None and actor == cuidador:
-        return ubicacion.registrar_domicilio(cuidador, punto), None
+        lugar = ubicacion.registrar_domicilio(cuidador, punto)
+        return lugar, None, ubicacion.domicilio_de(cuidador)
     desplazado = ubicacion.desplazar_punto(punto)
-    return desplazado, desplazado
+    return desplazado, desplazado, None
 
 
 @transaction.atomic
 def _crear_publicacion_de_estado(ficha, actor, *, tipo, punto, descripcion, telefono_visible):
     """La publicación de adopción o de tránsito de una ficha que ya existe."""
-    lugar, desplazada = _punto_para_publicar(ficha, punto, actor)
+    lugar, desplazada, domicilio = _punto_para_publicar(ficha, punto, actor)
     # Una sola publicación vigente de adopción o tránsito por ficha (2.8).
     resolver_publicaciones_de_estado(ficha)
     # El hallazgo ya cumplió: se cierra y sigue vinculado a la ficha, como parte de su historia.
@@ -190,6 +194,7 @@ def _crear_publicacion_de_estado(ficha, actor, *, tipo, punto, descripcion, tele
         ficha=ficha,
         ubicacion=lugar,
         ubicacion_desplazada=desplazada,
+        domicilio=domicilio,
         descripcion=descripcion,
         telefono_visible=telefono_visible,
         especie=ficha.especie,
