@@ -18,6 +18,11 @@ def punto_de_domicilio(usuario):
     return domicilio.ubicacion_desplazada if domicilio else None
 
 
+def domicilio_de(usuario):
+    """El domicilio del usuario, o None si no tiene (para vincularlo a la publicación)."""
+    return Domicilio.objects.filter(usuario=usuario).first()
+
+
 def registrar_domicilio(usuario, punto):
     """Guarda "punto" como domicilio del usuario y devuelve el punto desplazado.
 

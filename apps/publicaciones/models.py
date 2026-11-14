@@ -46,6 +46,15 @@ class Publicacion(models.Model):
     telefono_visible = models.CharField(max_length=30, blank=True)
     # Solo si el cuidador no tiene cuenta (lo carga un moderador).
     ubicacion_desplazada = models.PointField(srid=4326, null=True, blank=True)
+    # El domicilio del que sale el punto, si sale de uno. Si el domicilio o la cuenta se
+    # eliminan, la publicación conserva su punto desplazado y queda sin esta referencia.
+    domicilio = models.ForeignKey(
+        "cuentas.Domicilio",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="publicaciones",
+    )
     especie = models.CharField(max_length=20, choices=FichaAnimal.Especie.choices, blank=True)
     tamano = models.CharField(
         "tamaño", max_length=20, choices=FichaAnimal.Tamano.choices, blank=True
