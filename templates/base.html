@@ -14,6 +14,14 @@
     <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
     <script src="{% static 'vendor/alpine/alpine.min.js' %}" defer></script>
     <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+    <script>
+      L.Icon.Default.imagePath = "";
+      L.Icon.Default.mergeOptions({
+        iconUrl: "{% static 'vendor/leaflet/images/marker-icon.png' %}",
+        iconRetinaUrl: "{% static 'vendor/leaflet/images/marker-icon-2x.png' %}",
+        shadowUrl: "{% static 'vendor/leaflet/images/marker-shadow.png' %}",
+      });
+    </script>
     <script src="{% static 'vendor/markercluster/leaflet.markercluster.js' %}"></script>
     <script src="{% static 'vendor/leaflet-heat/leaflet-heat.js' %}"></script>
     {% block extra_head %}{% endblock %}
