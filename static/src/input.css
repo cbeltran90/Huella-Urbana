@@ -4,7 +4,6 @@
 @source "../../templates";
 @source "../../apps";
 
-
 /* Fuente: Atkinson Hyperlegible (Braille Institute, licencia OFL), servida desde el sitio */
 @font-face {
   font-family: "Atkinson Hyperlegible";
@@ -40,8 +39,10 @@
   --color-primario-hover: var(--hu-primario-hover);
   --color-sobre-primario: var(--hu-sobre-primario);
   --color-acento: var(--hu-acento);
+  --color-sobre-acento: var(--hu-sobre-acento);
   --color-peligro: var(--hu-peligro);
   --color-peligro-hover: var(--hu-peligro-hover);
+  --color-sobre-peligro: var(--hu-sobre-peligro);
   --color-ok-fondo: var(--hu-ok-fondo);
   --color-ok-texto: var(--hu-ok-texto);
   --color-alerta-fondo: var(--hu-alerta-fondo);
@@ -62,8 +63,10 @@
   --hu-primario-hover: #24563e;
   --hu-sobre-primario: #ffffff;
   --hu-acento: #b4471f;
+  --hu-sobre-acento: #ffffff;
   --hu-peligro: #a32020;
   --hu-peligro-hover: #8f1d1d;
+  --hu-sobre-peligro: #ffffff;
   --hu-ok-fondo: #e6f2ea;
   --hu-ok-texto: #1f5c3a;
   --hu-alerta-fondo: #fdf1dc;
@@ -72,8 +75,59 @@
   --hu-error-texto: #8f1d1d;
 }
 
+/* Los `border` sin color usan el gris del borde, no el color del texto */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--hu-borde);
+  }
+}
 
 /* Alpine: oculta elementos hasta que se inicializa */
 [x-cloak] {
   display: none !important;
+}
+
+/* Componentes. Sin márgenes: esos van en cada plantilla (class="aviso-alerta mt-4"). */
+@layer components {
+  .panel {
+    @apply rounded-lg border border-borde bg-superficie p-6;
+  }
+  .boton-primario {
+    @apply inline-flex min-h-11 items-center justify-center rounded border border-primario
+      bg-primario px-4 py-2 font-semibold text-sobre-primario hover:bg-primario-hover;
+  }
+  .boton-secundario {
+    @apply inline-flex min-h-11 items-center justify-center rounded border border-borde
+      bg-superficie px-4 py-2 text-texto hover:bg-fondo;
+  }
+  .boton-peligro {
+    @apply inline-flex min-h-11 items-center justify-center rounded border border-peligro
+      bg-peligro px-4 py-2 font-semibold text-sobre-peligro hover:bg-peligro-hover;
+  }
+  .titulo-campo {
+    @apply block text-sm font-semibold;
+  }
+  .campo {
+    @apply min-h-11 w-full rounded border border-borde bg-superficie px-3 py-2 text-texto;
+  }
+  .error-campo {
+    @apply text-sm text-error-texto;
+  }
+  .aviso-ok {
+    @apply rounded border border-current bg-ok-fondo p-3 text-sm text-ok-texto;
+  }
+  .aviso-alerta {
+    @apply rounded border border-current bg-alerta-fondo p-3 text-sm text-alerta-texto;
+  }
+  .aviso-error {
+    @apply rounded border border-current bg-error-fondo p-3 text-sm text-error-texto;
+  }
+  .enlace-volver {
+    @apply block min-h-11 px-4 py-2 text-center underline;
+  }
+  .insignia {
+    @apply rounded-full bg-acento px-2 text-xs font-semibold text-sobre-acento;
+  }
 }
