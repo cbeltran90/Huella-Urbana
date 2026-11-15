@@ -4,6 +4,75 @@
 @source "../../templates";
 @source "../../apps";
 
+
+/* Fuente: Atkinson Hyperlegible (Braille Institute, licencia OFL), servida desde el sitio */
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../vendor/fuentes/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../vendor/fuentes/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../vendor/fuentes/atkinson-hyperlegible-latin-400-italic.woff2") format("woff2");
+}
+
+/* Tokens por función: las plantillas usan bg-primario, text-suave, border-borde, etc.
+   Los valores los pone cada skin con las variables --hu-*. */
+@theme inline {
+  --color-fondo: var(--hu-fondo);
+  --color-superficie: var(--hu-superficie);
+  --color-texto: var(--hu-texto);
+  --color-suave: var(--hu-suave);
+  --color-borde: var(--hu-borde);
+  --color-primario: var(--hu-primario);
+  --color-primario-hover: var(--hu-primario-hover);
+  --color-sobre-primario: var(--hu-sobre-primario);
+  --color-acento: var(--hu-acento);
+  --color-peligro: var(--hu-peligro);
+  --color-peligro-hover: var(--hu-peligro-hover);
+  --color-ok-fondo: var(--hu-ok-fondo);
+  --color-ok-texto: var(--hu-ok-texto);
+  --color-alerta-fondo: var(--hu-alerta-fondo);
+  --color-alerta-texto: var(--hu-alerta-texto);
+  --color-error-fondo: var(--hu-error-fondo);
+  --color-error-texto: var(--hu-error-texto);
+  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+}
+
+/* Skin oficial: colores del paisaje de Ushuaia. Todos los pares pasan AA (4,5:1). */
+:root {
+  --hu-fondo: #f3f5f4;
+  --hu-superficie: #ffffff;
+  --hu-texto: #1c2621;
+  --hu-suave: #56615b;
+  --hu-borde: #d5dbd8;
+  --hu-primario: #2e6b4e;
+  --hu-primario-hover: #24563e;
+  --hu-sobre-primario: #ffffff;
+  --hu-acento: #b4471f;
+  --hu-peligro: #a32020;
+  --hu-peligro-hover: #8f1d1d;
+  --hu-ok-fondo: #e6f2ea;
+  --hu-ok-texto: #1f5c3a;
+  --hu-alerta-fondo: #fdf1dc;
+  --hu-alerta-texto: #7a4a0b;
+  --hu-error-fondo: #fbe9e7;
+  --hu-error-texto: #8f1d1d;
+}
+
+
 /* Alpine: oculta elementos hasta que se inicializa */
 [x-cloak] {
   display: none !important;
