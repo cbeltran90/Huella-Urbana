@@ -18,15 +18,13 @@
         </label>
       {% endfor %}
     </fieldset>
-    <p id="mapa-estado"
-       class="mt-2 text-sm text-stone-600"
-       aria-live="polite"></p>
+    <p id="mapa-estado" class="mt-2 text-sm text-suave" aria-live="polite"></p>
     <div id="mapa"
          class="mt-2 h-[70vh] w-full rounded"
          role="region"
          aria-label="Mapa de publicaciones de Ushuaia"></div>
     <div id="mapa-detalle" class="mt-4">
-      <p class="text-sm text-stone-600">Tocá un punto para ver a la mascota.</p>
+      <p class="text-sm text-suave">Tocá un punto para ver a la mascota.</p>
     </div>
   </section>
   {{ mapa_config|json_script:"mapa-config" }}
@@ -68,7 +66,7 @@
 
     // Si la publicación dejó de estar vigente desde que se cargó el mapa.
     detalle.addEventListener("htmx:responseError", () => {
-      detalle.innerHTML = '<p class="text-sm text-stone-600">Esta publicación ya no está.</p>';
+      detalle.innerHTML = '<p class="text-sm text-suave">Esta publicación ya no está.</p>';
     });
 
     function mostrarCapasElegidas() {
