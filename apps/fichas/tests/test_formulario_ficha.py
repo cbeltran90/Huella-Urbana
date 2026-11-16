@@ -60,3 +60,9 @@ def test_la_edad_tiene_que_ser_un_numero_de_anios_razonable(edad):
 
     assert not form.is_valid()
     assert form.errors["edad_estimada"] == [MENSAJE_EDAD]
+
+
+def test_los_campos_usan_los_componentes_del_sitio():
+    form = FichaForm()
+    assert "campo" in form["nombre"].field.widget.attrs["class"].split()
+    assert "accent-primario" in form["castrado"].field.widget.attrs["class"].split()

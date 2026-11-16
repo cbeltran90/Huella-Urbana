@@ -20,8 +20,8 @@ CAMPOS_SI_NO = (
 )
 CAMPOS_CON_TEXTO_LIBRE = ("nombre", "color", "raza", "temperamento")
 
-CLASE_CAMPO = "mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2"
-CLASE_CASILLA = "size-5"
+CLASE_CAMPO = "campo mt-1"
+CLASE_CASILLA = "size-5 accent-primario"
 
 
 class FichaForm(forms.ModelForm):
