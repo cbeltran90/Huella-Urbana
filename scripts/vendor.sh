@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 V=static/vendor
 CDN=https://cdn.jsdelivr.net/npm
 
-mkdir -p $V/htmx $V/alpine $V/leaflet/images $V/markercluster $V/leaflet-heat
+mkdir -p $V/htmx $V/alpine $V/fuentes $V/leaflet/images $V/markercluster $V/leaflet-heat
 
 get() {
   curl -fsSL "$1" -o "$2"
@@ -29,3 +29,9 @@ get $CDN/leaflet.markercluster@1.5.3/dist/MarkerCluster.css          $V/markercl
 get $CDN/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css  $V/markercluster/MarkerCluster.Default.css
 
 get $CDN/leaflet.heat@0.2.0/dist/leaflet-heat.js               $V/leaflet-heat/leaflet-heat.js
+
+for f in 400-normal 700-normal 400-italic; do
+  get $CDN/@fontsource/atkinson-hyperlegible@5.2.8/files/atkinson-hyperlegible-latin-$f.woff2 \
+      $V/fuentes/atkinson-hyperlegible-latin-$f.woff2
+done
+get $CDN/@fontsource/atkinson-hyperlegible@5.2.8/LICENSE       $V/fuentes/LICENSE

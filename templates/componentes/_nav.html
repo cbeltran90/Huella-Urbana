@@ -55,8 +55,7 @@
            class="inline-block min-h-11 px-2 py-2 underline">
           Coincidencias
           {% if pendientes %}
-            <span id="coincidencias-pendientes"
-                  class="ml-1 rounded-full bg-stone-800 px-2 text-xs text-white">{{ pendientes }}</span>
+            <span id="coincidencias-pendientes" class="insignia ml-1">{{ pendientes }}</span>
           {% endif %}
         </a>
       </li>
@@ -65,8 +64,7 @@
            class="inline-block min-h-11 px-2 py-2 underline">
           Avisos
           {% if sin_leer %}
-            <span id="avisos-sin-leer"
-                  class="ml-1 rounded-full bg-stone-800 px-2 text-xs text-white">{{ sin_leer }}</span>
+            <span id="avisos-sin-leer" class="insignia ml-1">{{ sin_leer }}</span>
           {% endif %}
         </a>
       </li>

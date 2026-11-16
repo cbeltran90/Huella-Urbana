@@ -26,11 +26,12 @@
     <script src="{% static 'vendor/leaflet-heat/leaflet-heat.js' %}"></script>
     {% block extra_head %}{% endblock %}
   </head>
-  <body class="min-h-screen bg-stone-50 text-stone-900"
+  <body class="min-h-screen bg-fondo text-texto"
         hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-    <header class="border-b bg-white">
+    <header class="border-b bg-superficie">
       <nav class="mx-auto flex max-w-5xl items-center justify-between p-4">
-        <a href="{% url 'core:inicio' %}" class="text-lg font-semibold">Huella Urbana</a>
+        <a href="{% url 'core:inicio' %}"
+           class="text-lg font-semibold text-primario">Huella Urbana</a>
         {% block nav %}
           {% include "componentes/_nav.html" %}
         {% endblock %}

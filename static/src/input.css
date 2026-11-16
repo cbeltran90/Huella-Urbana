@@ -4,7 +4,160 @@
 @source "../../templates";
 @source "../../apps";
 
+/* Fuente: Atkinson Hyperlegible (Braille Institute, licencia OFL), servida desde el sitio */
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../vendor/fuentes/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../vendor/fuentes/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../vendor/fuentes/atkinson-hyperlegible-latin-400-italic.woff2") format("woff2");
+}
+
+/* Tokens por función: las plantillas usan bg-primario, text-suave, border-borde, etc.
+   Los valores los pone cada skin con las variables --hu-*. */
+@theme inline {
+  --color-fondo: var(--hu-fondo);
+  --color-superficie: var(--hu-superficie);
+  --color-texto: var(--hu-texto);
+  --color-suave: var(--hu-suave);
+  --color-borde: var(--hu-borde);
+  --color-primario: var(--hu-primario);
+  --color-primario-hover: var(--hu-primario-hover);
+  --color-sobre-primario: var(--hu-sobre-primario);
+  --color-acento: var(--hu-acento);
+  --color-sobre-acento: var(--hu-sobre-acento);
+  --color-peligro: var(--hu-peligro);
+  --color-peligro-hover: var(--hu-peligro-hover);
+  --color-sobre-peligro: var(--hu-sobre-peligro);
+  --color-ok-fondo: var(--hu-ok-fondo);
+  --color-ok-texto: var(--hu-ok-texto);
+  --color-alerta-fondo: var(--hu-alerta-fondo);
+  --color-alerta-texto: var(--hu-alerta-texto);
+  --color-error-fondo: var(--hu-error-fondo);
+  --color-error-texto: var(--hu-error-texto);
+  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+}
+
+/* Skin oficial: colores del paisaje de Ushuaia. Todos los pares pasan AA (4,5:1). */
+:root {
+  --hu-fondo: #f3f5f4;
+  --hu-superficie: #ffffff;
+  --hu-texto: #1c2621;
+  --hu-suave: #56615b;
+  --hu-borde: #d5dbd8;
+  --hu-primario: #2e6b4e;
+  --hu-primario-hover: #24563e;
+  --hu-sobre-primario: #ffffff;
+  --hu-acento: #b4471f;
+  --hu-sobre-acento: #ffffff;
+  --hu-peligro: #a32020;
+  --hu-peligro-hover: #8f1d1d;
+  --hu-sobre-peligro: #ffffff;
+  --hu-ok-fondo: #e6f2ea;
+  --hu-ok-texto: #1f5c3a;
+  --hu-alerta-fondo: #fdf1dc;
+  --hu-alerta-texto: #7a4a0b;
+  --hu-error-fondo: #fbe9e7;
+  --hu-error-texto: #8f1d1d;
+  /* Fondo de huellas, verde lenga casi transparente para que decore sin competir */
+  --hu-huella: rgb(46 107 78 / 0.06);
+  --hu-huella-tamano: 240px;
+}
+
+/* En el celular el mosaico es más chico */
+@media (max-width: 640px) {
+  :root {
+    --hu-huella-tamano: 180px;
+  }
+}
+
+@layer base {
+  /* Los `border` sin color usan el gris del borde, no el color del texto */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--hu-borde);
+  }
+
+  /* NUEVO: fondo de huellas. El SVG es una máscara (solo da la forma); el color sale de
+     --hu-huella. Capa fija detrás del contenido, sin clics, repetida en mosaico. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--hu-huella);
+    -webkit-mask: url("../img/fondo-huellas.svg") 0 0 / var(--hu-huella-tamano) repeat;
+    mask: url("../img/fondo-huellas.svg") 0 0 / var(--hu-huella-tamano) repeat;
+  }
+}
+
+/* NUEVO: el fondo no se imprime */
+@media print {
+  body::before {
+    display: none;
+  }
+}
+
 /* Alpine: oculta elementos hasta que se inicializa */
 [x-cloak] {
   display: none !important;
+}
+
+/* Componentes. Sin márgenes: esos van en cada plantilla (class="aviso-alerta mt-4"). */
+@layer components {
+  .panel {
+    @apply rounded-lg border border-borde bg-superficie p-6;
+  }
+  .boton-primario {
+    @apply inline-flex min-h-11 items-center justify-center rounded border border-primario
+      bg-primario px-4 py-2 font-semibold text-sobre-primario hover:bg-primario-hover;
+  }
+  .boton-secundario {
+    @apply inline-flex min-h-11 items-center justify-center rounded border border-borde
+      bg-superficie px-4 py-2 text-texto hover:bg-fondo;
+  }
+  .boton-peligro {
+    @apply inline-flex min-h-11 items-center justify-center rounded border border-peligro
+      bg-peligro px-4 py-2 font-semibold text-sobre-peligro hover:bg-peligro-hover;
+  }
+  .titulo-campo {
+    @apply block text-sm font-semibold;
+  }
+  .campo {
+    @apply min-h-11 w-full rounded border border-borde bg-superficie px-3 py-2 text-texto;
+  }
+  .error-campo {
+    @apply text-sm text-error-texto;
+  }
+  .aviso-ok {
+    @apply rounded border border-current bg-ok-fondo p-3 text-sm text-ok-texto;
+  }
+  .aviso-alerta {
+    @apply rounded border border-current bg-alerta-fondo p-3 text-sm text-alerta-texto;
+  }
+  .aviso-error {
+    @apply rounded border border-current bg-error-fondo p-3 text-sm text-error-texto;
+  }
+  .enlace-volver {
+    @apply block min-h-11 px-4 py-2 text-center underline;
+  }
+  .insignia {
+    @apply rounded-full bg-acento px-2 text-xs font-semibold text-sobre-acento;
+  }
 }
