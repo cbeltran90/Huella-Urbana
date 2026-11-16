@@ -1,23 +1,21 @@
 {% extends "base.html" %}
 {% block titulo %}Postularme como hogar de tránsito · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-md">
     <h1 class="text-2xl font-bold">Postularme como hogar de tránsito</h1>
-    <p class="mt-1 text-sm text-stone-600">
+    <p class="mt-1 text-sm text-suave">
       {{ ficha.nombre|default:"Sin nombre" }} · {{ ficha.get_especie_display }}
       {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
     </p>
     {% if motivo %}
-      <p role="alert"
-         class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{{ motivo.1 }}</p>
+      <p role="alert" class="aviso-alerta mt-4">{{ motivo.1 }}</p>
       {% if motivo.0 == "sin_perfil" or motivo.0 == "en_pausa" %}
         <a href="{% url 'transito:perfil_transito' %}"
-           class="mt-4 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">Ir a mi hogar de tránsito</a>
+           class="boton-secundario mt-4 block text-center">Ir a mi hogar de tránsito</a>
       {% endif %}
     {% else %}
       {% if advertencias %}
-        <div role="status"
-             class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        <div role="status" class="aviso-alerta mt-4">
           <p class="font-medium">Esta mascota puede no ser compatible con tu hogar:</p>
           <ul class="mt-1 list-disc pl-5">
             {% for aviso in advertencias %}<li>{{ aviso }}</li>{% endfor %}
@@ -28,8 +26,8 @@
       <form method="post" novalidate class="mt-6 space-y-4">
         {% csrf_token %}
         <div>
-          <label for="id_contacto" class="block text-sm font-medium">Canal de contacto</label>
-          <p class="text-sm text-stone-600">
+          <label for="id_contacto" class="titulo-campo">Canal de contacto</label>
+          <p class="text-sm text-suave">
             Teléfono, correo u otro medio por el que quien tiene a la mascota pueda comunicarse con vos.
           </p>
           <input type="text"
@@ -37,16 +35,12 @@
                  id="id_contacto"
                  autocomplete="off"
                  value="{{ form.contacto.value|default_if_none:'' }}"
-                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+                 class="campo mt-1">
           {% include "cuentas/_errores.html" with errores=form.contacto.errors %}
         </div>
-        <button type="submit"
-                class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
-          Enviar postulación
-        </button>
+        <button type="submit" class="boton-primario w-full">Enviar postulación</button>
       </form>
     {% endif %}
-    <a href="{% url 'fichas:detalle' ficha.pk %}"
-       class="mt-4 block min-h-11 px-4 py-2 text-center underline">Volver a la ficha</a>
+    <a href="{% url 'fichas:detalle' ficha.pk %}" class="enlace-volver mt-4">Volver a la ficha</a>
   </section>
 {% endblock %}

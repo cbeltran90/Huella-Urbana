@@ -1,12 +1,9 @@
 {% if mostrar %}
   {% if postulado %}
-    <p role="status"
-       class="mt-6 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
-      Enviamos tu postulación. Quien tiene a la mascota a su cargo la va a ver.
-    </p>
+    <p role="status" class="aviso-ok mt-6">Enviamos tu postulación. Quien tiene a la mascota a su cargo la va a ver.</p>
   {% endif %}
   {% if propia %}
-    <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
+    <div class="mt-6 rounded border border-borde p-3 text-sm">
       <h2 class="font-semibold">Tu postulación como hogar de tránsito</h2>
       <p class="mt-1">
         {% if propia.estado == "elegida" %}
@@ -15,13 +12,13 @@
           Está pendiente: quien tiene a la mascota a su cargo la va a ver y elegir.
         {% endif %}
       </p>
-      <p class="mt-1 text-stone-600">Tu canal de contacto: {{ propia.contacto }}</p>
+      <p class="mt-1 text-suave">Tu canal de contacto: {{ propia.contacto }}</p>
       {% if propia.estado == "elegida" %}
         <div class="mt-2 flex flex-wrap gap-3">
           <a href="{% url 'transito:registrar_ingreso' ficha.pk %}"
-             class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Ya está en mi casa</a>
+             class="boton-primario">Ya está en mi casa</a>
           <a href="{% url 'transito:cancelar_entrega' ficha.pk %}"
-             class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar la entrega</a>
+             class="boton-secundario">Cancelar la entrega</a>
         </div>
       {% endif %}
       {% if propia.estado == "pendiente" %}
@@ -29,18 +26,15 @@
               action="{% url 'transito:retirar_postulacion' propia.pk %}"
               class="mt-2">
           {% csrf_token %}
-          <button type="submit"
-                  class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">
-            Retirar postulación
-          </button>
+          <button type="submit" class="boton-secundario">Retirar postulación</button>
         </form>
       {% endif %}
     </div>
   {% elif puede %}
     <a href="{% url 'transito:postular' ficha.pk %}"
-       class="mt-6 inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Postularme como hogar de tránsito</a>
+       class="boton-primario mt-6">Postularme como hogar de tránsito</a>
   {% elif motivo %}
-    <p class="mt-6 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+    <p class="aviso-alerta mt-6">
       {{ motivo }}
       {% if en_pausa %}
         <a href="{% url 'transito:perfil_transito' %}" class="underline">Ir a mi hogar de tránsito</a>

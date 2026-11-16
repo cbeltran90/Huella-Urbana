@@ -1,26 +1,22 @@
 {% extends "base.html" %}
 {% block titulo %}Ingresar · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-md rounded-lg border bg-white p-6"
+  <section class="panel mx-auto max-w-md"
            x-data="{ sinConexion: !navigator.onLine }"
            @online.window="sinConexion = false"
            @offline.window="sinConexion = true">
     <h1 class="text-2xl font-bold">Ingresar</h1>
-    <p x-show="sinConexion"
-       x-cloak
-       role="alert"
-       class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+    <p x-show="sinConexion" x-cloak role="alert" class="aviso-error mt-4">
       Sin conexión a internet, conéctese a una red para iniciar sesión
     </p>
     <form method="post" novalidate class="mt-4 space-y-4">
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}">
       {% for error in form.non_field_errors %}
-        <p role="alert"
-           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+        <p role="alert" class="aviso-error">{{ error }}</p>
       {% endfor %}
       {% if form.sancion %}
-        <div class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <div class="aviso-error">
           <p>
             <strong>Motivo:</strong> {{ form.sancion.motivo }}
           </p>
@@ -29,7 +25,7 @@
           {% else %}
             <p class="mt-1">La suspensión es permanente.</p>
             <a href="{% url 'cuentas:eliminar_cuenta_suspendida' %}"
-               class="mt-3 block min-h-11 rounded border border-red-300 bg-white px-4 py-2 text-center font-semibold text-red-800">Eliminar mi cuenta</a>
+               class="boton-peligro mt-3 block text-center">Eliminar mi cuenta</a>
           {% endif %}
         </div>
       {% endif %}
@@ -39,7 +35,7 @@
         </p>
       {% endif %}
       <div>
-        <label for="id_username" class="block text-sm font-medium">Correo electrónico</label>
+        <label for="id_username" class="titulo-campo">Correo electrónico</label>
         <input type="email"
                name="username"
                id="id_username"
@@ -47,24 +43,22 @@
                autocomplete="email"
                autofocus
                required
-               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+               class="campo mt-1">
         {% include "cuentas/_errores.html" with errores=form.username.errors %}
       </div>
       <div>
-        <label for="id_password" class="block text-sm font-medium">Contraseña</label>
+        <label for="id_password" class="titulo-campo">Contraseña</label>
         {% include "cuentas/_campo_contrasena.html" with nombre="password" id="id_password" autocomplete="current-password" %}
         {% include "cuentas/_errores.html" with errores=form.password.errors %}
       </div>
       <button type="submit"
               :disabled="sinConexion"
-              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
-        Ingresar
-      </button>
+              class="boton-primario w-full disabled:cursor-not-allowed disabled:opacity-50">Ingresar</button>
     </form>
     <p class="mt-4 text-sm">
       <a href="{% url 'cuentas:recuperar' %}" class="underline">¿Olvidaste tu contraseña?</a>
     </p>
-    <p class="mt-2 text-sm text-stone-600">
+    <p class="mt-2 text-sm text-suave">
       ¿No tenés cuenta? <a href="{% url 'cuentas:registro' %}" class="underline">Crear cuenta</a>
     </p>
   </section>
