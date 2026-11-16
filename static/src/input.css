@@ -73,14 +73,44 @@
   --hu-alerta-texto: #7a4a0b;
   --hu-error-fondo: #fbe9e7;
   --hu-error-texto: #8f1d1d;
+  /* Fondo de huellas, verde lenga casi transparente para que decore sin competir */
+  --hu-huella: rgb(46 107 78 / 0.06);
+  --hu-huella-tamano: 240px;
 }
 
-/* Los `border` sin color usan el gris del borde, no el color del texto */
+/* En el celular el mosaico es más chico */
+@media (max-width: 640px) {
+  :root {
+    --hu-huella-tamano: 180px;
+  }
+}
+
 @layer base {
+  /* Los `border` sin color usan el gris del borde, no el color del texto */
   *,
   ::before,
   ::after {
     border-color: var(--hu-borde);
+  }
+
+  /* NUEVO: fondo de huellas. El SVG es una máscara (solo da la forma); el color sale de
+     --hu-huella. Capa fija detrás del contenido, sin clics, repetida en mosaico. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--hu-huella);
+    -webkit-mask: url("../img/fondo-huellas.svg") 0 0 / var(--hu-huella-tamano) repeat;
+    mask: url("../img/fondo-huellas.svg") 0 0 / var(--hu-huella-tamano) repeat;
+  }
+}
+
+/* NUEVO: el fondo no se imprime */
+@media print {
+  body::before {
+    display: none;
   }
 }
 
