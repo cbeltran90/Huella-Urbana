@@ -3,15 +3,12 @@
 {% load secuencia caso postulacion solicitar_transito postulacion_adopcion %}
 {% block titulo %}{{ ficha.nombre|default:"Ficha" }} · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-lg">
     {% if unida %}
-      <p role="status"
-         class="mb-4 rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900">
-        Esa ficha se unió a esta: es la misma mascota.
-      </p>
+      <p role="status" class="aviso-ok mb-4">Esa ficha se unió a esta: es la misma mascota.</p>
     {% endif %}
     <h1 class="text-2xl font-bold">{{ ficha.nombre|default:"Sin nombre" }}</h1>
-    <p class="mt-1 text-sm text-stone-600">
+    <p class="mt-1 text-sm text-suave">
       {{ ficha.get_especie_display }} · {{ ficha.get_estado_display }}
       {% if ficha.es_privada %}· Privada{% endif %}
     </p>
@@ -29,66 +26,66 @@
     {% endif %}
     <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
       {% if ficha.tamano %}
-        <dt class="text-stone-600">Tamaño</dt>
+        <dt class="text-suave">Tamaño</dt>
         <dd>
           {{ ficha.get_tamano_display }}
         </dd>
       {% endif %}
       {% if ficha.edad_estimada %}
-        <dt class="text-stone-600">Edad estimada</dt>
+        <dt class="text-suave">Edad estimada</dt>
         <dd>
           {{ ficha.edad_estimada }} años
         </dd>
       {% endif %}
       {% if ficha.color %}
-        <dt class="text-stone-600">Color</dt>
+        <dt class="text-suave">Color</dt>
         <dd>
           {{ ficha.color }}
         </dd>
       {% endif %}
       {% if ficha.raza %}
-        <dt class="text-stone-600">Raza</dt>
+        <dt class="text-suave">Raza</dt>
         <dd>
           {{ ficha.raza }}
         </dd>
       {% endif %}
       {% if ficha.temperamento %}
-        <dt class="text-stone-600">Temperamento</dt>
+        <dt class="text-suave">Temperamento</dt>
         <dd>
           {{ ficha.temperamento }}
         </dd>
       {% endif %}
       {% if ficha.chip and puede_editar %}
-        <dt class="text-stone-600">Chip</dt>
+        <dt class="text-suave">Chip</dt>
         <dd>
           {{ ficha.chip }}
         </dd>
       {% endif %}
-      <dt class="text-stone-600">Castrado</dt>
+      <dt class="text-suave">Castrado</dt>
       <dd>
         {{ ficha.castrado|yesno:"Sí,No" }}
       </dd>
-      <dt class="text-stone-600">Desparasitado</dt>
+      <dt class="text-suave">Desparasitado</dt>
       <dd>
         {{ ficha.desparasitado|yesno:"Sí,No" }}
       </dd>
-      <dt class="text-stone-600">Vacunado</dt>
+      <dt class="text-suave">Vacunado</dt>
       <dd>
         {{ ficha.vacunado|yesno:"Sí,No" }}
       </dd>
-      <dt class="text-stone-600">Requiere medicación</dt>
+      <dt class="text-suave">Requiere medicación</dt>
       <dd>
         {{ ficha.requiere_medicacion|yesno:"Sí,No" }}
       </dd>
-      <dt class="text-stone-600">Problemas de conducta</dt>
+      <dt class="text-suave">Problemas de conducta</dt>
       <dd>
         {{ ficha.problemas_conducta|yesno:"Sí,No" }}
       </dd>
-      <dt class="text-stone-600">Compatible con niños</dt>
+      <dt class="text-suave">Compatible con niños</dt>
       <dd>
         {{ ficha.compatible_ninos|yesno:"Sí,No" }}
       </dd>
-      <dt class="text-stone-600">Compatible con animales</dt>
+      <dt class="text-suave">Compatible con animales</dt>
       <dd>
         {{ ficha.compatible_animales|yesno:"Sí,No" }}
       </dd>
@@ -96,10 +93,7 @@
     {% secuencia_de_publicaciones ficha %}
     {% opciones_de_dueno ficha %}
     {% if request.user.is_authenticated and request.GET.retirada == "1" %}
-      <p role="status"
-         class="mt-6 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
-        Retiraste tu postulación.
-      </p>
+      <p role="status" class="aviso-ok mt-6">Retiraste tu postulación.</p>
     {% endif %}
     {% postulacion_de_transito ficha %}
     {% elegir_hogar_de_transito ficha %}
@@ -109,21 +103,14 @@
     {% boton_solicitar_transito ficha %}
     <div class="mt-6 flex flex-wrap gap-3">
       {% if puede_editar %}
-        <a href="{% url 'fichas:editar' ficha.pk %}"
-           class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
-          Editar
-        </a>
+        <a href="{% url 'fichas:editar' ficha.pk %}" class="boton-primario">Editar</a>
       {% endif %}
       {% if puede_baja %}
-        <a href="{% url 'fichas:baja' ficha.pk %}"
-           class="inline-flex min-h-11 items-center rounded border border-red-300 px-4 py-2 text-red-800">
-          Dar de baja
-        </a>
+        <a href="{% url 'fichas:baja' ficha.pk %}" class="boton-peligro">Dar de baja</a>
       {% endif %}
       {% boton_resolver_caso ficha %}
       {% if volver %}
-        <a href="{{ volver }}"
-           class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Volver</a>
+        <a href="{{ volver }}" class="boton-secundario">Volver</a>
       {% endif %}
     </div>
   </section>

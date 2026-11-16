@@ -2,11 +2,9 @@
 {% load static %}
 {% block titulo %}Posibles coincidencias · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-lg">
     <h1 class="text-2xl font-bold">¿Es alguna de estas mascotas?</h1>
-    <p class="mt-1 text-sm text-stone-600">
-      Encontramos fichas parecidas. Si alguna corresponde, avisamos a su responsable.
-    </p>
+    <p class="mt-1 text-sm text-suave">Encontramos fichas parecidas. Si alguna corresponde, avisamos a su responsable.</p>
     <form method="post" class="mt-4 space-y-4">
       {% csrf_token %}
       {% for c in coincidencias %}
@@ -26,10 +24,10 @@
           <button type="submit"
                   name="ficha"
                   value="{{ c.ficha_id }}"
-                  class="mt-2 rounded bg-stone-800 px-3 py-1 text-white">Es este</button>
+                  class="boton-primario mt-2">Es este</button>
         </div>
       {% endfor %}
-      <button type="submit" class="rounded border px-3 py-1">Ninguna corresponde</button>
+      <button type="submit" class="boton-secundario">Ninguna corresponde</button>
     </form>
   </section>
 {% endblock %}

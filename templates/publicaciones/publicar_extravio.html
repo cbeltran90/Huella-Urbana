@@ -1,17 +1,14 @@
 {% extends "base.html" %}
 {% block titulo %}Publicar extravío · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6"
+  <section class="panel mx-auto max-w-lg"
            x-data="{ paso: {{ paso_inicial }}, sinConexion: !navigator.onLine, conFicha: {% if form.ficha.value %}true{% else %}false{% endif %} }"
            @online.window="sinConexion = false"
            @offline.window="sinConexion = true"
            x-init="$watch('paso', valor => { if (valor === 3 && window.mapaUbicacion) setTimeout(() => window.mapaUbicacion.invalidateSize(), 50) })">
     <h1 class="text-2xl font-bold">Publicar extravío</h1>
-    <p class="mt-1 text-sm text-stone-600">Paso <span x-text="paso"></span> de 5</p>
-    <p x-show="sinConexion"
-       x-cloak
-       role="alert"
-       class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+    <p class="mt-1 text-sm text-suave">Paso <span x-text="paso"></span> de 5</p>
+    <p x-show="sinConexion" x-cloak role="alert" class="aviso-error mt-4">
       Sin conexión a internet, conéctese a una red para publicar
     </p>
     <form method="post"
@@ -20,27 +17,24 @@
           class="mt-4 space-y-4">
       {% csrf_token %}
       {% for error in form.non_field_errors %}
-        <p role="alert"
-           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+        <p role="alert" class="aviso-error">{{ error }}</p>
       {% endfor %}
       <div x-show="paso === 1">
         <h2 class="font-semibold">¿Qué mascota se perdió?</h2>
-        <label for="{{ form.ficha.id_for_label }}"
-               class="mt-2 block text-sm font-medium">{{ form.ficha.label }}</label>
+        <label for="{{ form.ficha.id_for_label }}" class="titulo-campo mt-2">{{ form.ficha.label }}</label>
         {{ form.ficha }}
         {% include "cuentas/_errores.html" with errores=form.ficha.errors %}
       </div>
       <div x-show="paso === 2">
         <h2 class="font-semibold">Foto</h2>
-        <p class="text-sm text-stone-600" x-show="conFicha">Opcional: la publicación usa las fotos de la ficha.</p>
-        <label for="{{ form.foto.id_for_label }}"
-               class="mt-2 block text-sm font-medium">{{ form.foto.label }}</label>
+        <p class="text-sm text-suave" x-show="conFicha">Opcional: la publicación usa las fotos de la ficha.</p>
+        <label for="{{ form.foto.id_for_label }}" class="titulo-campo mt-2">{{ form.foto.label }}</label>
         <input type="file"
                name="{{ form.foto.html_name }}"
                id="{{ form.foto.id_for_label }}"
                accept="image/jpeg,image/png,image/webp"
                capture="environment"
-               class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+               class="campo mt-1">
         {% include "cuentas/_errores.html" with errores=form.foto.errors %}
       </div>
       <div x-show="paso === 3">
@@ -58,7 +52,7 @@
           {% for campo in form.visible_fields %}
             {% if campo.name == "nombre" or campo.name == "especie" or campo.name == "tamano" or campo.name == "raza" or campo.name == "color" %}
               <div>
-                <label for="{{ campo.id_for_label }}" class="block text-sm font-medium">{{ campo.label }}</label>
+                <label for="{{ campo.id_for_label }}" class="titulo-campo">{{ campo.label }}</label>
                 {{ campo }}
                 {% include "cuentas/_errores.html" with errores=campo.errors %}
               </div>
@@ -68,7 +62,7 @@
         {% for campo in form.visible_fields %}
           {% if campo.name == "estado_aparente" or campo.name == "descripcion" %}
             <div>
-              <label for="{{ campo.id_for_label }}" class="block text-sm font-medium">{{ campo.label }}</label>
+              <label for="{{ campo.id_for_label }}" class="titulo-campo">{{ campo.label }}</label>
               {{ campo }}
               {% include "cuentas/_errores.html" with errores=campo.errors %}
             </div>
@@ -83,15 +77,15 @@
         <button type="button"
                 x-show="paso > 1"
                 x-on:click="paso--"
-                class="min-h-11 rounded border border-stone-300 px-4 py-2">Atrás</button>
+                class="boton-secundario">Atrás</button>
         <button type="button"
                 x-show="paso < 5"
                 x-on:click="paso++"
-                class="min-h-11 flex-1 rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Siguiente</button>
+                class="boton-primario flex-1">Siguiente</button>
         <button type="submit"
                 x-show="paso === 5"
                 :disabled="sinConexion"
-                class="min-h-11 flex-1 rounded bg-emerald-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Publicar</button>
+                class="boton-primario flex-1 disabled:cursor-not-allowed disabled:opacity-50">Publicar</button>
       </div>
     </form>
   </section>

@@ -1,17 +1,14 @@
 {% extends "base.html" %}
 {% block titulo %}Dar de alta una mascota · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6"
+  <section class="panel mx-auto max-w-lg"
            x-data="{ paso: {{ paso_inicial }}, sinConexion: !navigator.onLine }"
            @online.window="sinConexion = false"
            @offline.window="sinConexion = true"
            x-init="$watch('paso', valor => { if (valor === 3 && window.mapaUbicacion) setTimeout(() => window.mapaUbicacion.invalidateSize(), 50) })">
     <h1 class="text-2xl font-bold">Dar de alta una mascota en adopción</h1>
-    <p class="mt-1 text-sm text-stone-600">Paso <span x-text="paso"></span> de 4</p>
-    <p x-show="sinConexion"
-       x-cloak
-       role="alert"
-       class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+    <p class="mt-1 text-sm text-suave">Paso <span x-text="paso"></span> de 4</p>
+    <p x-show="sinConexion" x-cloak role="alert" class="aviso-error mt-4">
       Sin conexión a internet, conéctese a una red para publicar
     </p>
     <form method="post"
@@ -20,14 +17,13 @@
           class="mt-4 space-y-4">
       {% csrf_token %}
       {% for error in form.non_field_errors %}
-        <p role="alert"
-           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+        <p role="alert" class="aviso-error">{{ error }}</p>
       {% endfor %}
       <div x-show="paso === 1" class="space-y-4">
         <h2 class="font-semibold">Datos de la mascota</h2>
         {% for campo in form.campos_datos %}
           <div>
-            <label for="{{ campo.id_for_label }}" class="block text-sm font-medium">{{ campo.label }}</label>
+            <label for="{{ campo.id_for_label }}" class="titulo-campo">{{ campo.label }}</label>
             {{ campo }}
             {% include "cuentas/_errores.html" with errores=campo.errors %}
           </div>
@@ -47,9 +43,8 @@
       </div>
       <div x-show="paso === 2">
         <h2 class="font-semibold">Fotos</h2>
-        <p class="text-sm text-stone-600">Subí entre 1 y 5 fotos.</p>
-        <label for="{{ form.fotos.id_for_label }}"
-               class="mt-2 block text-sm font-medium">{{ form.fotos.label }}</label>
+        <p class="text-sm text-suave">Subí entre 1 y 5 fotos.</p>
+        <label for="{{ form.fotos.id_for_label }}" class="titulo-campo mt-2">{{ form.fotos.label }}</label>
         {{ form.fotos }}
         {% include "cuentas/_errores.html" with errores=form.fotos.errors %}
       </div>
@@ -65,32 +60,31 @@
       <div x-show="paso === 4" class="space-y-4">
         <h2 class="font-semibold">Publicación</h2>
         <div>
-          <label for="{{ form.descripcion.id_for_label }}"
-                 class="block text-sm font-medium">{{ form.descripcion.label }}</label>
+          <label for="{{ form.descripcion.id_for_label }}" class="titulo-campo">{{ form.descripcion.label }}</label>
           {{ form.descripcion }}
           {% include "cuentas/_errores.html" with errores=form.descripcion.errors %}
         </div>
         <div>
           <label for="{{ form.telefono_visible.id_for_label }}"
-                 class="block text-sm font-medium">{{ form.telefono_visible.label }}</label>
+                 class="titulo-campo">{{ form.telefono_visible.label }}</label>
           {{ form.telefono_visible }}
           {% include "cuentas/_errores.html" with errores=form.telefono_visible.errors %}
         </div>
-        <p class="text-sm text-stone-600">Al publicar, la mascota queda a tu cargo y le avisamos a los hogares compatibles.</p>
+        <p class="text-sm text-suave">Al publicar, la mascota queda a tu cargo y le avisamos a los hogares compatibles.</p>
       </div>
       <div class="flex gap-3">
         <button type="button"
                 x-show="paso > 1"
                 x-on:click="paso--"
-                class="min-h-11 rounded border border-stone-300 px-4 py-2">Atrás</button>
+                class="boton-secundario">Atrás</button>
         <button type="button"
                 x-show="paso < 4"
                 x-on:click="paso++"
-                class="min-h-11 flex-1 rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Siguiente</button>
+                class="boton-primario flex-1">Siguiente</button>
         <button type="submit"
                 x-show="paso === 4"
                 :disabled="sinConexion"
-                class="min-h-11 flex-1 rounded bg-emerald-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Publicar</button>
+                class="boton-primario flex-1 disabled:cursor-not-allowed disabled:opacity-50">Publicar</button>
       </div>
     </form>
   </section>

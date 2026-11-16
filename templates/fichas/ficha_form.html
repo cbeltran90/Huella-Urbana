@@ -1,34 +1,33 @@
 {% extends "base.html" %}
 {% block titulo %}{% if ficha %}Editar ficha{% else %}Nueva ficha{% endif %} · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-lg">
     <h1 class="text-2xl font-bold">{% if ficha %}Editar ficha{% else %}Nueva ficha{% endif %}</h1>
-    <p class="mt-1 text-sm text-stone-600">Solo la especie es obligatoria. La ficha queda privada: solo la ves vos.</p>
+    <p class="mt-1 text-sm text-suave">Solo la especie es obligatoria. La ficha queda privada: solo la ves vos.</p>
     <form method="post"
           enctype="multipart/form-data"
           novalidate
           class="mt-4 space-y-4">
       {% csrf_token %}
       {% for error in form.non_field_errors %}
-        <p role="alert"
-           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+        <p role="alert" class="aviso-error">{{ error }}</p>
       {% endfor %}
       {% for campo in form.campos_datos %}
         <div>
-          <label for="{{ campo.id_for_label }}" class="block text-sm font-medium">{{ campo.label }}</label>
+          <label for="{{ campo.id_for_label }}" class="titulo-campo">{{ campo.label }}</label>
           {{ campo }}
           {% include "cuentas/_errores.html" with errores=campo.errors %}
         </div>
       {% endfor %}
       <div>
-        <label for="{{ form.fotos.id_for_label }}" class="block text-sm font-medium">{{ form.fotos.label }}</label>
+        <label for="{{ form.fotos.id_for_label }}" class="titulo-campo">{{ form.fotos.label }}</label>
         <input type="file"
                name="{{ form.fotos.html_name }}"
                id="{{ form.fotos.id_for_label }}"
                accept="image/jpeg,image/png,image/webp"
                multiple
                class="mt-1 w-full text-sm">
-        <p class="mt-1 text-xs text-stone-600">JPEG, PNG o WEBP, hasta 10 MB cada una.</p>
+        <p class="mt-1 text-xs text-suave">JPEG, PNG o WEBP, hasta 10 MB cada una.</p>
         {% include "cuentas/_errores.html" with errores=form.fotos.errors %}
       </div>
       <fieldset class="space-y-1">
@@ -44,10 +43,9 @@
         {% endfor %}
       </fieldset>
       <div class="flex gap-3">
-        <button type="submit"
-                class="min-h-11 flex-1 rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Guardar</button>
+        <button type="submit" class="boton-primario flex-1">Guardar</button>
         <a href="{% if ficha %}{% url 'fichas:detalle' ficha.pk %}{% else %}{% url 'fichas:mis_fichas' %}{% endif %}"
-           class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar</a>
+           class="boton-secundario">Cancelar</a>
       </div>
     </form>
   </section>

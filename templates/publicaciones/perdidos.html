@@ -7,11 +7,11 @@
           id="filtros"
           class="mt-4 flex flex-wrap items-end gap-3 text-sm">
       {% include "publicaciones/_filtros_listado.html" %}
-      <button type="submit" class="min-h-11 rounded bg-stone-800 px-3 text-white">Filtrar</button>
+      <button type="submit" class="boton-secundario">Filtrar</button>
       <input type="hidden" name="lat" id="id_lat" value="{{ filtros.lat }}">
       <input type="hidden" name="lon" id="id_lon" value="{{ filtros.lon }}">
       <div class="w-full">
-        <p class="text-stone-600">Tocá el mapa para ver primero los más cercanos a ese lugar.</p>
+        <p class="text-suave">Tocá el mapa para ver primero los más cercanos a ese lugar.</p>
         <div id="mapa-cercania" class="mt-1 h-64 w-full rounded"></div>
         {% if con_punto %}
           <button type="button" id="quitar-punto" class="mt-1 underline">Quitar el punto</button>

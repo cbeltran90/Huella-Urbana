@@ -1,6 +1,6 @@
 <label class="flex flex-col">
   Tipo
-  <select name="tipo" class="rounded border px-2 py-1">
+  <select name="tipo" class="campo w-auto">
     <option value="">Todos</option>
     {% for valor, nombre in tipos %}
       <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ nombre }}</option>
@@ -9,7 +9,7 @@
 </label>
 <label class="flex flex-col">
   Especie
-  <select name="especie" class="rounded border px-2 py-1">
+  <select name="especie" class="campo w-auto">
     <option value="">Todas</option>
     {% for valor, nombre in especies %}
       <option value="{{ valor }}"
@@ -19,7 +19,7 @@
 </label>
 <label class="flex flex-col">
   Tamaño
-  <select name="tamano" class="rounded border px-2 py-1">
+  <select name="tamano" class="campo w-auto">
     <option value="">Todos</option>
     {% for valor, nombre in tamanos %}
       <option value="{{ valor }}"
