@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.auth.hashers import identify_hasher
 from django.urls import reverse
 
 from apps.cuentas.models import EstadoCuenta, Rol, Sancion, Usuario
@@ -68,7 +69,7 @@ def test_el_moderador_ve_la_ficha_solo_con_datos_basicos(client, moderador, ana)
 
     assert respuesta.status_code == 200
     assert "ana@example.com" in contenido
-    assert "pbkdf2_sha256" not in contenido
+    assert identify_hasher(ana.password).algorithm not in contenido
     assert 'name="user_permissions"' not in contenido
     assert 'name="rol"' not in contenido
     assert 'name="_save"' not in contenido
