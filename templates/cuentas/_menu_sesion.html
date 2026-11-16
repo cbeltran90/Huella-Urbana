@@ -1,12 +1,32 @@
-<div class="flex items-center gap-3 text-sm">
-  {% if user.is_authenticated %}
-    <a href="{% url 'cuentas:perfil' %}" class="min-h-11 px-2 underline">{{ user.nombre_usuario }}</a>
-    <form method="post" action="{% url 'cuentas:logout' %}">
-      {% csrf_token %}
-      <button type="submit" class="min-h-11 px-2 underline">Cerrar sesión</button>
-    </form>
-  {% else %}
-    <a href="{% url 'cuentas:login' %}" class="underline">Ingresar</a>
-    <a href="{% url 'cuentas:registro' %}" class="underline">Crear cuenta</a>
-  {% endif %}
-</div>
+{% if user.is_authenticated %}
+  <details class="menu-grupo"
+           @click.outside="$el.open = false"
+           @keydown.escape="$el.open = false; $el.querySelector('summary').focus()">
+    <summary class="menu-titulo">{{ user.nombre_usuario }}</summary>
+    <ul class="menu-lista md:right-0">
+      <li>
+        <a href="{% url 'cuentas:perfil' %}" class="menu-enlace">Mi perfil</a>
+      </li>
+      <li>
+        <a href="{% url 'cuentas:perfil_adoptante' %}" class="menu-enlace">Hogar y familia</a>
+      </li>
+      {% if user.is_staff %}
+        <li>
+          <a href="{% url 'admin:index' %}" class="menu-enlace">Moderación</a>
+        </li>
+      {% endif %}
+      <li>
+        <form method="post" action="{% url 'cuentas:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="menu-enlace w-full">Cerrar sesión</button>
+        </form>
+      </li>
+    </ul>
+  </details>
+{% else %}
+  <div class="flex flex-col gap-1 md:flex-row md:items-center">
+    <a href="{% url 'cuentas:login' %}" class="menu-enlace">Ingresar</a>
+    <a href="{% url 'cuentas:registro' %}"
+       class="menu-enlace font-semibold text-primario">Crear cuenta</a>
+  </div>
+{% endif %}

@@ -1,74 +1,91 @@
 {% load navegacion avisos %}
-<div class="flex flex-1 flex-wrap items-center justify-between gap-3">
-  <ul class="flex flex-wrap items-center gap-1 text-sm">
-    <li>
-      <a href="{% url 'mapa:mapa' %}"
-         class="inline-block min-h-11 px-2 py-2 underline">Mapa</a>
-    </li>
-    <li>
-      <a href="{% url 'publicaciones:perdidos' %}"
-         class="inline-block min-h-11 px-2 py-2 underline">Perdidos</a>
-    </li>
-    <li>
-      <a href="{% url 'publicaciones:disponibles' %}"
-         class="inline-block min-h-11 px-2 py-2 underline">Disponibles</a>
-    </li>
-    {% if user.is_authenticated %}
-      {% coincidencias_pendientes as pendientes %}
-      {% avisos_sin_leer as sin_leer %}
+<div x-data="{ abierto: false }"
+     class="max-md:contents md:flex md:flex-1 md:items-center">
+  <button type="button"
+          class="menu-enlace ml-auto md:hidden"
+          aria-controls="menu-principal"
+          :aria-expanded="abierto"
+          @click="abierto = !abierto">☰ Menú</button>
+  <div id="menu-principal"
+       class="w-full flex-col gap-1 pt-2 md:flex md:w-auto md:flex-1 md:flex-row md:items-center md:justify-between md:pt-0"
+       :class="abierto ? 'flex' : 'hidden'">
+    <ul class="flex flex-col gap-1 md:flex-row md:items-center md:pl-4">
       <li>
-        <a href="{% url 'fichas:mis_fichas' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">Mis fichas</a>
+        <a href="{% url 'mapa:mapa' %}" class="menu-enlace">Mapa</a>
       </li>
       <li>
-        <a href="{% url 'publicaciones:mis_publicaciones' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">Mis publicaciones</a>
+        <a href="{% url 'publicaciones:perdidos' %}" class="menu-enlace">Perdidos</a>
       </li>
       <li>
-        <a href="{% url 'publicaciones:publicar_extravio' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">Publicar extravío</a>
+        <a href="{% url 'publicaciones:disponibles' %}" class="menu-enlace">Disponibles</a>
       </li>
-      <li>
-        <a href="{% url 'publicaciones:publicar_hallazgo' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">Publicar hallazgo</a>
-      </li>
-      <li>
-        <a href="{% url 'publicaciones:alta_adopcion' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">Dar en adopción</a>
-      </li>
-      <li>
-        <a href="{% url 'cuentas:perfil_adoptante' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">Hogar y familia</a>
-      </li>
-      <li>
-        <a href="{% url 'transito:perfil_transito' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">Mi hogar de tránsito</a>
-      </li>
-      {% if user.is_staff %}
+      {% if user.is_authenticated %}
+        {% coincidencias_pendientes as pendientes %}
+        {% avisos_sin_leer as sin_leer %}
         <li>
-          <a href="{% url 'admin:index' %}"
-             class="inline-block min-h-11 px-2 py-2 underline">Moderación</a>
+          <details class="menu-grupo"
+                   @click.outside="$el.open = false"
+                   @keydown.escape="$el.open = false; $el.querySelector('summary').focus()">
+            <summary class="menu-titulo">Publicar</summary>
+            <ul class="menu-lista">
+              <li>
+                <a href="{% url 'publicaciones:publicar_extravio' %}"
+                   class="menu-enlace">Publicar extravío</a>
+              </li>
+              <li>
+                <a href="{% url 'publicaciones:publicar_hallazgo' %}"
+                   class="menu-enlace">Publicar hallazgo</a>
+              </li>
+              <li>
+                <a href="{% url 'publicaciones:alta_adopcion' %}" class="menu-enlace">Dar en adopción</a>
+              </li>
+            </ul>
+          </details>
+        </li>
+        <li>
+          <details class="menu-grupo"
+                   @click.outside="$el.open = false"
+                   @keydown.escape="$el.open = false; $el.querySelector('summary').focus()">
+            <summary class="menu-titulo">
+              Mis cosas
+              {% if pendientes %}
+                <span id="mis-cosas-pendientes" class="size-2 rounded-full bg-acento">
+                  <span class="sr-only">(hay coincidencias para revisar)</span>
+                </span>
+              {% endif %}
+            </summary>
+            <ul class="menu-lista">
+              <li>
+                <a href="{% url 'fichas:mis_fichas' %}" class="menu-enlace">Mis fichas</a>
+              </li>
+              <li>
+                <a href="{% url 'publicaciones:mis_publicaciones' %}"
+                   class="menu-enlace">Mis publicaciones</a>
+              </li>
+              <li>
+                <a href="{% url 'publicaciones:coincidencias' %}" class="menu-enlace">
+                  Coincidencias
+                  {% if pendientes %}
+                    <span id="coincidencias-pendientes" class="insignia ml-1">{{ pendientes }}</span>
+                  {% endif %}
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'transito:perfil_transito' %}" class="menu-enlace">Mi hogar de tránsito</a>
+              </li>
+            </ul>
+          </details>
+        </li>
+        <li>
+          <a href="{% url 'notificaciones:mis_avisos' %}" class="menu-enlace">
+            Avisos
+            {% if sin_leer %}
+              <span id="avisos-sin-leer" class="insignia ml-1">{{ sin_leer }}</span>
+            {% endif %}
+          </a>
         </li>
       {% endif %}
-      <li>
-        <a href="{% url 'publicaciones:coincidencias' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">
-          Coincidencias
-          {% if pendientes %}
-            <span id="coincidencias-pendientes" class="insignia ml-1">{{ pendientes }}</span>
-          {% endif %}
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'notificaciones:mis_avisos' %}"
-           class="inline-block min-h-11 px-2 py-2 underline">
-          Avisos
-          {% if sin_leer %}
-            <span id="avisos-sin-leer" class="insignia ml-1">{{ sin_leer }}</span>
-          {% endif %}
-        </a>
-      </li>
-    {% endif %}
-  </ul>
-  {% include "cuentas/_menu_sesion.html" %}
+    </ul>
+    {% include "cuentas/_menu_sesion.html" %}
+  </div>
 </div>

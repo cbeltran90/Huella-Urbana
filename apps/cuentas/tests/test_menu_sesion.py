@@ -32,3 +32,14 @@ def test_con_sesion_muestra_el_nombre_y_cierra_sesion_por_post(rf):
     assert 'method="post"' in html
     assert "csrfmiddlewaretoken" in html
     assert reverse("cuentas:login") not in html
+
+
+@pytest.mark.django_db
+def test_el_menu_de_la_cuenta_tiene_perfil_y_hogar_y_familia(rf):
+    usuario = Usuario.objects.create_user(
+        "ana@example.com", "Ana", CLAVE, estado_cuenta=EstadoCuenta.ACTIVA
+    )
+    html = menu(rf, usuario)
+    assert reverse("cuentas:perfil") in html
+    assert reverse("cuentas:perfil_adoptante") in html
+    assert reverse("transito:perfil_transito") not in html
