@@ -1,27 +1,24 @@
 {% if mostrar %}
   {% if elegida %}
     {% if elegido %}
-      <p role="status"
-         class="mt-6 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
-        Elegiste al hogar de tránsito. Avisamos a todos los postulantes.
-      </p>
+      <p role="status" class="aviso-ok mt-6">Elegiste al hogar de tránsito. Avisamos a todos los postulantes.</p>
     {% endif %}
-    <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
+    <div class="mt-6 rounded border border-borde p-3 text-sm">
       <h2 class="font-semibold">Hogar de tránsito elegido</h2>
       <p class="mt-1">{{ elegida.usuario.nombre_usuario }} · Contacto: {{ elegida.contacto }}</p>
       <div class="mt-2 flex flex-wrap gap-3">
         <a href="{% url 'transito:registrar_ingreso' ficha.pk %}"
-           class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Ya está en el hogar</a>
+           class="boton-primario">Ya está en el hogar</a>
         <a href="{% url 'transito:cancelar_entrega' ficha.pk %}"
-           class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar la entrega</a>
+           class="boton-secundario">Cancelar la entrega</a>
       </div>
     </div>
   {% elif cantidad %}
-    <div class="mt-6 rounded border border-stone-300 p-3 text-sm">
+    <div class="mt-6 rounded border border-borde p-3 text-sm">
       <h2 class="font-semibold">Hogares de tránsito postulados</h2>
       <p class="mt-1">Hay {{ cantidad }} postulaci{{ cantidad|pluralize:"ón,ones" }} de hogares de tránsito para elegir.</p>
       <a href="{% url 'transito:elegir_hogar' ficha.pk %}"
-         class="mt-2 inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Elegir hogar de tránsito</a>
+         class="boton-primario mt-2">Elegir hogar de tránsito</a>
     </div>
   {% endif %}
 {% endif %}

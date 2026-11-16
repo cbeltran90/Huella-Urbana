@@ -1,56 +1,52 @@
 {% extends "base.html" %}
 {% block titulo %}Solicitar tránsito · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-md">
     <h1 class="text-2xl font-bold">¿Solicitar tránsito?</h1>
-    <p class="mt-1 text-sm text-stone-600">
+    <p class="mt-1 text-sm text-suave">
       {{ ficha.nombre|default:"Sin nombre" }} · {{ ficha.get_especie_display }}
       {% if ficha.tamano %}· {{ ficha.get_tamano_display }}{% endif %}
     </p>
-    <p class="mt-4 text-sm text-stone-600">
+    <p class="mt-4 text-sm text-suave">
       La ficha pasa a «en adopción», queda visible para todos y se avisa a los hogares de tránsito que encajan con la mascota.
     </p>
     <form method="post" novalidate class="mt-6 space-y-4">
       {% csrf_token %}
       {% if pide_contacto %}
         <div>
-          <label for="id_contacto" class="block text-sm font-medium">Contacto de quien la tiene (opcional)</label>
-          <p class="text-sm text-stone-600">Cargalo solo si esa persona lo autoriza. Teléfono, correo u otro medio.</p>
+          <label for="id_contacto" class="titulo-campo">Contacto de quien la tiene (opcional)</label>
+          <p class="text-sm text-suave">Cargalo solo si esa persona lo autoriza. Teléfono, correo u otro medio.</p>
           <input type="text"
                  name="contacto"
                  id="id_contacto"
                  autocomplete="off"
                  value="{{ form.contacto.value|default_if_none:'' }}"
-                 class="mt-1 min-h-11 w-full rounded border border-stone-300 px-3 py-2">
+                 class="campo mt-1">
           {% include "cuentas/_errores.html" with errores=form.contacto.errors %}
         </div>
       {% endif %}
       {% if pide_punto %}
         <div>
-          <p class="block text-sm font-medium">¿Dónde está la mascota?</p>
+          <p class="titulo-campo">¿Dónde está la mascota?</p>
           {% if not ficha.cuidador_id %}
-            <p class="text-sm text-stone-600">
+            <p class="text-sm text-suave">
               Marcá un punto aproximado, no la puerta de la casa. En el mapa público se muestra corrido unos metros y no se guarda como domicilio de nadie.
             </p>
           {% elif es_el_cuidador %}
-            <p class="text-sm text-stone-600">
+            <p class="text-sm text-suave">
               Todavía no tenés domicilio registrado. Marcá dónde está la mascota: se muestra de forma aproximada y queda guardado como tu domicilio.
             </p>
           {% else %}
-            <p class="text-sm text-stone-600">
+            <p class="text-sm text-suave">
               Quien la tiene a su cargo no tiene domicilio registrado. Marcá dónde está la mascota: se muestra de forma aproximada y no se guarda como domicilio de nadie.
             </p>
           {% endif %}
           {% include "componentes/_selector_ubicacion.html" with mapa_id="mapa-ubicacion" %}
         </div>
       {% endif %}
-      <button type="submit"
-              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
-        Sí, solicitar tránsito
-      </button>
+      <button type="submit" class="boton-primario w-full">Sí, solicitar tránsito</button>
     </form>
-    <a href="{% url 'fichas:detalle' ficha.pk %}"
-       class="mt-4 block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+    <a href="{% url 'fichas:detalle' ficha.pk %}" class="enlace-volver mt-4">Cancelar</a>
   </section>
 {% endblock %}
 {% block extra_js %}

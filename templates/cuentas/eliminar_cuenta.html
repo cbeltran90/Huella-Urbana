@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 {% block titulo %}Eliminar cuenta · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-md">
     <h1 class="text-2xl font-bold">Eliminar mi cuenta</h1>
     {% if impedimentos %}
       {% for impedimento in impedimentos %}
-        <div role="alert"
-             class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <div role="alert" class="aviso-error mt-4">
           <p>{{ impedimento.mensaje }}</p>
           {% if impedimento.fichas %}
             <ul class="mt-2 list-disc pl-5">
@@ -22,13 +21,13 @@
         </div>
       {% endfor %}
       <a href="{{ volver_url }}"
-         class="mt-6 block min-h-11 rounded border border-stone-300 px-4 py-2 text-center">{{ volver_texto }}</a>
+         class="boton-secundario mt-6 block text-center">{{ volver_texto }}</a>
     {% else %}
-      <p class="mt-4 text-sm text-stone-700">
+      <p class="mt-4 text-sm text-suave">
         Eliminar tu cuenta no se puede deshacer. Esto es lo que va a pasar con tus datos.
       </p>
       <h2 class="mt-4 font-semibold">Qué se borra</h2>
-      <ul class="mt-1 list-disc pl-5 text-sm text-stone-700">
+      <ul class="mt-1 list-disc pl-5 text-sm text-suave">
         <li>Tu nombre, tu correo, tu domicilio y los datos de tu hogar.</li>
         <li>Los datos de tus perfiles de adopción y de hogar de tránsito.</li>
         <li>
@@ -37,7 +36,7 @@
         <li>Las fotografías y descripciones de tus publicaciones.</li>
       </ul>
       <h2 class="mt-4 font-semibold">Qué se conserva, sin tu nombre</h2>
-      <ul class="mt-1 list-disc pl-5 text-sm text-stone-700">
+      <ul class="mt-1 list-disc pl-5 text-sm text-suave">
         <li>Tus publicaciones vigentes pasan a resueltas, con su ubicación, fecha, tipo y cantidad.</li>
         <li>De tus denuncias, solo la fecha, el canal y si se declaró el envío.</li>
         <li>Las fichas con una adopción registrada de las que eras responsable: van a mostrar «usuario eliminado».</li>
@@ -47,10 +46,8 @@
       </ul>
       <form method="post" class="mt-6 space-y-3">
         {% csrf_token %}
-        <button type="submit"
-                class="min-h-11 w-full rounded bg-red-700 px-4 py-2 font-semibold text-white">Sí, eliminar mi cuenta</button>
-        <a href="{{ volver_url }}"
-           class="block min-h-11 px-4 py-2 text-center underline">Cancelar</a>
+        <button type="submit" class="boton-peligro w-full">Sí, eliminar mi cuenta</button>
+        <a href="{{ volver_url }}" class="enlace-volver">Cancelar</a>
       </form>
     {% endif %}
   </section>

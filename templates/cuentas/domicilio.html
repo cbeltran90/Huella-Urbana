@@ -1,41 +1,34 @@
 {% extends "base.html" %}
 {% block titulo %}Mi domicilio · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6"
+  <section class="panel mx-auto max-w-lg"
            x-data="{ sinConexion: !navigator.onLine }"
            @online.window="sinConexion = false"
            @offline.window="sinConexion = true">
     <h1 class="text-2xl font-bold">Mi domicilio</h1>
-    <p class="mt-1 text-sm text-stone-600">
+    <p class="mt-1 text-sm text-suave">
       Marcá en el mapa dónde vivís. Para el resto de las personas siempre se muestra de forma aproximada, a menos de {{ radio }} metros del lugar real.
     </p>
-    <p x-show="sinConexion"
-       x-cloak
-       role="alert"
-       class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+    <p x-show="sinConexion" x-cloak role="alert" class="aviso-error mt-4">
       Sin conexión a internet, conéctese a una red para guardar el domicilio
     </p>
     <form method="post" novalidate class="mt-4 space-y-4">
       {% csrf_token %}
       {% for error in form.non_field_errors %}
-        <p role="alert"
-           class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+        <p role="alert" class="aviso-error">{{ error }}</p>
       {% endfor %}
       <div>
         {% include "componentes/_selector_ubicacion.html" with mapa_id="mapa-domicilio" %}
         {% if centro %}
-          <p class="mt-1 text-sm text-stone-600">
+          <p class="mt-1 text-sm text-suave">
             El marcador muestra cómo se ve tu domicilio para los demás. Para cambiarlo, marcá otro lugar.
           </p>
         {% endif %}
       </div>
       <button type="submit"
               :disabled="sinConexion"
-              class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
-        Guardar domicilio
-      </button>
-      <a href="{% url 'cuentas:perfil' %}"
-         class="block min-h-11 px-4 py-2 text-center underline">Volver a mi perfil</a>
+              class="boton-primario w-full disabled:cursor-not-allowed disabled:opacity-50">Guardar domicilio</button>
+      <a href="{% url 'cuentas:perfil' %}" class="enlace-volver">Volver a mi perfil</a>
     </form>
   </section>
 {% endblock %}

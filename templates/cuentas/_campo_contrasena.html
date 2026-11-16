@@ -6,13 +6,13 @@
          autocomplete="{{ autocomplete }}"
          {% if autofocus %}autofocus{% endif %}
          required
-         class="min-h-11 w-full rounded border border-stone-300 py-2 pl-3 pr-12">
+         class="campo pr-12">
   <button type="button"
           x-cloak
           @click="visible = !visible"
           :aria-pressed="visible"
           :aria-label="visible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-          class="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-stone-600 hover:text-stone-900">
+          class="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-suave hover:text-texto">
     <svg x-show="!visible"
          xmlns="http://www.w3.org/2000/svg"
          viewBox="0 0 24 24"

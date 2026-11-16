@@ -93,7 +93,13 @@
     border-color: var(--hu-borde);
   }
 
-  /* NUEVO: fondo de huellas. El SVG es una máscara (solo da la forma); el color sale de
+  /* Casillas y opciones tildadas en el verde del sitio, no en el azul del navegador */
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--hu-primario);
+  }
+
+  /* Fondo de huellas. El SVG es una máscara (solo da la forma); el color sale de
      --hu-huella. Capa fija detrás del contenido, sin clics, repetida en mosaico. */
   body::before {
     content: "";
@@ -107,7 +113,7 @@
   }
 }
 
-/* NUEVO: el fondo no se imprime */
+/* El fondo no se imprime */
 @media print {
   body::before {
     display: none;

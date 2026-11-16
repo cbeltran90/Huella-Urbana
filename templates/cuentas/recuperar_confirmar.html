@@ -1,30 +1,26 @@
 {% extends "base.html" %}
 {% block titulo %}Nueva contraseña · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-md rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-md">
     {% if validlink %}
       <h1 class="text-2xl font-bold">Elegí tu nueva contraseña</h1>
       <form method="post" novalidate class="mt-4 space-y-4">
         {% csrf_token %}
         {% for error in form.non_field_errors %}
-          <p role="alert"
-             class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+          <p role="alert" class="aviso-error">{{ error }}</p>
         {% endfor %}
         <div>
-          <label for="id_new_password1" class="block text-sm font-medium">Contraseña nueva</label>
-          <p class="text-sm text-stone-600">Mínimo 10 caracteres.</p>
+          <label for="id_new_password1" class="titulo-campo">Contraseña nueva</label>
+          <p class="text-sm text-suave">Mínimo 10 caracteres.</p>
           {% include "cuentas/_campo_contrasena.html" with nombre="new_password1" id="id_new_password1" autocomplete="new-password" autofocus=True %}
           {% include "cuentas/_errores.html" with errores=form.new_password1.errors %}
         </div>
         <div>
-          <label for="id_new_password2" class="block text-sm font-medium">Confirmar contraseña</label>
+          <label for="id_new_password2" class="titulo-campo">Confirmar contraseña</label>
           {% include "cuentas/_campo_contrasena.html" with nombre="new_password2" id="id_new_password2" autocomplete="new-password" %}
           {% include "cuentas/_errores.html" with errores=form.new_password2.errors %}
         </div>
-        <button type="submit"
-                class="min-h-11 w-full rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
-          Guardar contraseña
-        </button>
+        <button type="submit" class="boton-primario w-full">Guardar contraseña</button>
       </form>
     {% else %}
       <h1 class="text-2xl font-bold">Este enlace ya no sirve</h1>
