@@ -166,4 +166,29 @@
   .insignia {
     @apply rounded-full bg-acento px-2 text-xs font-semibold text-sobre-acento;
   }
+
+  /* Menú: enlaces chicos sin subrayar; los grupos son <details> que se abren hacia abajo.
+     En el celular las listas quedan dentro de la columna; desde md flotan sobre la página
+     (z-index por encima de los controles de Leaflet, que usan 1000). */
+  .menu-enlace {
+    @apply flex min-h-11 items-center rounded px-3 text-sm whitespace-nowrap hover:bg-fondo;
+  }
+  .menu-grupo {
+    @apply md:relative;
+  }
+  .menu-titulo {
+    @apply flex min-h-11 cursor-pointer list-none items-center gap-1 rounded px-3 text-sm
+      hover:bg-fondo;
+  }
+  .menu-titulo::-webkit-details-marker {
+    display: none;
+  }
+  .menu-titulo::after {
+    content: "▾";
+    @apply text-xs text-suave;
+  }
+  .menu-lista {
+    @apply mt-1 flex flex-col rounded-lg border border-borde bg-superficie p-1 md:absolute
+      md:z-[1100] md:min-w-52 md:shadow-lg;
+  }
 }
