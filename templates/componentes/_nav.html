@@ -1,5 +1,7 @@
 {% load navegacion avisos %}
 <div x-data="{ abierto: false }"
+     @click.outside="abierto = false"
+     @keydown.escape="abierto = false"
      class="max-md:contents md:flex md:flex-1 md:items-center">
   <button type="button"
           class="menu-enlace ml-auto md:hidden"
