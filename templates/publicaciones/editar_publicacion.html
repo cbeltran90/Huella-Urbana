@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block titulo %}Editar publicación · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-lg">
     <h1 class="text-2xl font-bold">Editar publicación</h1>
-    <p class="mt-1 text-sm text-stone-600">
+    <p class="mt-1 text-sm text-suave">
       {{ publicacion.get_tipo_display }}
       {% if publicacion.ficha.nombre %}· {{ publicacion.ficha.nombre }}{% endif %}
       · {{ publicacion.fecha|date:"j/n/Y" }}
@@ -12,16 +12,15 @@
       {% csrf_token %}
       {% for campo in form %}
         <div>
-          <label for="{{ campo.id_for_label }}" class="block text-sm font-medium">{{ campo.label }}</label>
+          <label for="{{ campo.id_for_label }}" class="titulo-campo">{{ campo.label }}</label>
           {{ campo }}
           {% include "cuentas/_errores.html" with errores=campo.errors %}
         </div>
       {% endfor %}
       <div class="flex gap-3">
-        <button type="submit"
-                class="min-h-11 flex-1 rounded bg-emerald-600 px-4 py-2 font-semibold text-white">Guardar</button>
+        <button type="submit" class="boton-primario flex-1">Guardar</button>
         <a href="{% url 'publicaciones:mis_publicaciones' %}"
-           class="inline-flex min-h-11 items-center rounded border border-stone-300 px-4 py-2">Cancelar</a>
+           class="boton-secundario">Cancelar</a>
       </div>
     </form>
   </section>

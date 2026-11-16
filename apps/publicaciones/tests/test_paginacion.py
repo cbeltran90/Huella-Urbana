@@ -14,7 +14,7 @@ pytestmark = pytest.mark.django_db
 
 
 def tarjetas(html):
-    return html.count('<li class="rounded-lg')
+    return html.count('<li class="panel')
 
 
 def test_la_primera_pagina_muestra_el_tope_y_ver_mas(client, ana):

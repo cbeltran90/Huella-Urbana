@@ -6,12 +6,12 @@
     {% if filas %}
       <ul class="mt-4 space-y-3">
         {% for publicacion, retiro in filas %}
-          <li class="rounded-lg border bg-white p-4">
+          <li class="panel p-4">
             <p class="font-semibold">
               {{ publicacion.get_tipo_display }}
               {% if publicacion.ficha.nombre %}· {{ publicacion.ficha.nombre }}{% endif %}
             </p>
-            <p class="text-sm text-stone-600">{{ publicacion.fecha|date:"j/n/Y" }}</p>
+            <p class="text-sm text-suave">{{ publicacion.fecha|date:"j/n/Y" }}</p>
             {% if publicacion.descripcion %}
               <p class="mt-2">{{ publicacion.descripcion|truncatechars:140 }}</p>
             {% endif %}
@@ -26,15 +26,15 @@
               {% endif %}
             </div>
             {% if retiro == "moderador" %}
-              <p class="mt-1 text-sm text-stone-600">Este caso lo cierra un moderador.</p>
+              <p class="mt-1 text-sm text-suave">Este caso lo cierra un moderador.</p>
             {% elif retiro == "ficha" %}
-              <p class="mt-1 text-sm text-stone-600">Se cierra sola cuando la mascota consiga un hogar.</p>
+              <p class="mt-1 text-sm text-suave">Se cierra sola cuando la mascota consiga un hogar.</p>
             {% endif %}
           </li>
         {% endfor %}
       </ul>
     {% else %}
-      <p class="mt-6 rounded-lg border bg-white p-6 text-center text-stone-600">No tenés publicaciones abiertas.</p>
+      <p class="panel mt-6 text-center text-suave">No tenés publicaciones abiertas.</p>
     {% endif %}
   </section>
 {% endblock %}

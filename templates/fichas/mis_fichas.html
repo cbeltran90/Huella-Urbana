@@ -5,10 +5,7 @@
     <div class="flex items-center justify-between gap-4">
       <h1 class="text-2xl font-bold">Mis fichas</h1>
       {% if puede_crear %}
-        <a href="{% url 'fichas:nueva' %}"
-           class="inline-flex min-h-11 items-center rounded bg-emerald-600 px-4 py-2 font-semibold text-white">
-          Nueva ficha
-        </a>
+        <a href="{% url 'fichas:nueva' %}" class="boton-primario">Nueva ficha</a>
       {% endif %}
     </div>
     {% if fichas %}
@@ -18,7 +15,7 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p class="mt-6 rounded-lg border bg-white p-6 text-center text-stone-600">
+      <p class="panel mt-6 text-center text-suave">
         Todavía no tenés fichas.{% if puede_crear %} Creá la primera para registrar a una mascota.{% endif %}
       </p>
     {% endif %}

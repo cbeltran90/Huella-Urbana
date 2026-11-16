@@ -2,11 +2,9 @@
 {% load static contacto %}
 {% block titulo %}{{ publicacion.get_tipo_display }} · Huella Urbana{% endblock %}
 {% block contenido %}
-  <section class="mx-auto max-w-lg rounded-lg border bg-white p-6">
+  <section class="panel mx-auto max-w-lg">
     <h1 class="text-2xl font-bold">{{ publicacion.get_tipo_display }}</h1>
-    <p class="mt-1 text-sm text-stone-600">
-      {{ publicacion.fecha|date:"d/m/Y H:i" }} · {{ publicacion.get_estado_display }}
-    </p>
+    <p class="mt-1 text-sm text-suave">{{ publicacion.fecha|date:"d/m/Y H:i" }} · {{ publicacion.get_estado_display }}</p>
     {% for foto in fotos %}
       <img src="{% get_media_prefix %}{{ foto.archivo }}"
            alt="Foto de la mascota"
@@ -14,25 +12,25 @@
     {% endfor %}
     <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
       {% if publicacion.especie %}
-        <dt class="text-stone-600">Especie</dt>
+        <dt class="text-suave">Especie</dt>
         <dd>
           {{ publicacion.get_especie_display }}
         </dd>
       {% endif %}
       {% if publicacion.raza %}
-        <dt class="text-stone-600">Raza</dt>
+        <dt class="text-suave">Raza</dt>
         <dd>
           {{ publicacion.raza }}
         </dd>
       {% endif %}
       {% if publicacion.color %}
-        <dt class="text-stone-600">Color</dt>
+        <dt class="text-suave">Color</dt>
         <dd>
           {{ publicacion.color }}
         </dd>
       {% endif %}
       {% if publicacion.estado_aparente %}
-        <dt class="text-stone-600">Estado aparente</dt>
+        <dt class="text-suave">Estado aparente</dt>
         <dd>
           {{ publicacion.estado_aparente }}
         </dd>
@@ -40,12 +38,12 @@
     </dl>
     {% if publicacion.descripcion %}<p class="mt-4 text-sm">{{ publicacion.descripcion }}</p>{% endif %}
     <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-      <dt class="text-stone-600">Publicó</dt>
+      <dt class="text-suave">Publicó</dt>
       <dd>
         {% if publicacion.autor %}{{ publicacion.autor.nombre_usuario }}{% else %}Usuario eliminado{% endif %}
       </dd>
       {% if publicacion.ficha %}
-        <dt class="text-stone-600">Ficha</dt>
+        <dt class="text-suave">Ficha</dt>
         <dd>
           {% if ficha_visible %}
             <a href="{% url 'fichas:detalle' publicacion.ficha.pk %}"
@@ -66,13 +64,13 @@
             action="{% url 'publicaciones:crear_ficha' publicacion.pk %}"
             class="mt-4">
         {% csrf_token %}
-        <p class="text-sm text-stone-600">Esta publicación no está vinculada a ninguna ficha.</p>
-        <button type="submit" class="mt-2 rounded border px-3 py-1 text-sm">Crear una ficha nueva</button>
+        <p class="text-sm text-suave">Esta publicación no está vinculada a ninguna ficha.</p>
+        <button type="submit" class="boton-secundario mt-2">Crear una ficha nueva</button>
       </form>
     {% endif %}
     {% if puede_desvincular %}
       <a href="{% url 'publicaciones:desvincular' publicacion.pk %}"
-         class="mt-4 inline-block rounded border px-3 py-1 text-sm">Desvincular de la ficha</a>
+         class="boton-secundario mt-4">Desvincular de la ficha</a>
     {% endif %}
   </section>
 {% endblock %}
