@@ -7,6 +7,7 @@ apps/core/datos_prueba/vaciar.py). Como también se usa en el servidor, pide con
 
 from django.core.management.base import BaseCommand, CommandError
 
+from apps.core.datos_prueba.personas import cargar_personas
 from apps.core.datos_prueba.vaciar import vaciar_base
 
 CONFIRMACION = "vaciar"
@@ -23,7 +24,9 @@ class Command(BaseCommand):
     def handle(self, *args, password, vaciar, sin_preguntar, **opciones):
         if vaciar:
             self._vaciar(sin_preguntar)
-        self.stdout.write(self.style.SUCCESS("Listo."))
+        personas = cargar_personas(password)
+        self.stdout.write(f"Personas: {len(personas)} cuentas.")
+        self.stdout.write(self.style.SUCCESS("Listo. Probá con lucia.fernandez@example.com."))
 
     def _vaciar(self, sin_preguntar):
         if not sin_preguntar:
