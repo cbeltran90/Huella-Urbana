@@ -166,10 +166,11 @@
   .insignia {
     @apply rounded-full bg-acento px-2 text-xs font-semibold text-sobre-acento;
   }
-
-  /* Menú: enlaces chicos sin subrayar; los grupos son <details> que se abren hacia abajo.
-     En el celular las listas quedan dentro de la columna; desde md flotan sobre la página
-     (z-index por encima de los controles de Leaflet, que usan 1000). */
+  .icono-sitio {
+    @apply inline-block size-8 shrink-0 bg-primario;
+    -webkit-mask: url("../img/favicon.svg") center / contain no-repeat;
+    mask: url("../img/favicon.svg") center / contain no-repeat;
+  }
   .menu-enlace {
     @apply flex min-h-11 items-center rounded px-3 text-sm whitespace-nowrap hover:bg-fondo;
   }
