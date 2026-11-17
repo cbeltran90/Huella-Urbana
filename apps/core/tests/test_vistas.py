@@ -20,3 +20,12 @@ def test_el_inicio_muestra_el_mapa(client):
 @pytest.mark.django_db
 def test_la_prueba_del_stack_ya_no_existe(client):
     assert client.get("/prueba/").status_code == 404
+
+
+@pytest.mark.django_db
+def test_todas_las_paginas_enlazan_el_icono_del_sitio(client):
+    html = client.get(reverse("core:inicio")).content.decode()
+
+    assert 'rel="icon" href="/static/img/favicon.ico"' in html
+    assert 'href="/static/img/favicon.svg" type="image/svg+xml"' in html
+    assert 'rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"' in html
